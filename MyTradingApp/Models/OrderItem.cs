@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using System;
 
 namespace MyTradingApp.Models
 {
@@ -10,7 +11,13 @@ namespace MyTradingApp.Models
         private double _entryPrice;
         private double _initialStopLossPrice;
         private OrderStatus _status;
-        
+        private double _priceIncrement;
+
+        public OrderItem()
+        {
+            PriceIncrement = 0.05;
+        }
+
         public Symbol Symbol
         {
             get => _symbol;
@@ -32,7 +39,17 @@ namespace MyTradingApp.Models
         public double EntryPrice
         {
             get => _entryPrice;
-            set => Set(ref _entryPrice, value);
+            set
+            {
+                Set(ref _entryPrice, value);
+                PriceIncrement = Math.Round(_entryPrice * 0.005, 2);
+            }
+        }
+
+        public double PriceIncrement
+        {
+            get => _priceIncrement;
+            set => Set(ref _priceIncrement, value);
         }
 
         public double InitialStopLossPrice

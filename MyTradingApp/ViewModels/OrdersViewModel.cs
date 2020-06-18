@@ -101,7 +101,7 @@ namespace MyTradingApp.ViewModels
             {
                 return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order =>
                 {
-                    MessageBox.Show("Find command fired for symbol " + order.Symbol.Code);
+                    order.Symbol.Name = order.Symbol.Code + " Name";
                 }, order => CanFindOrder(order)));
             }
         }

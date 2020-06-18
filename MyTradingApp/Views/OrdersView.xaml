@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vms="clr-namespace:MyTradingApp.ViewModels"
+             xmlns:exceed="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
              d:DesignHeight="310" d:DesignWidth="1000"   
              d:DataContext ="{d:DesignInstance {x:Type vms:OrdersViewModel}, IsDesignTimeCreatable=True}"
@@ -80,16 +81,29 @@
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
 
-                    <GridViewColumn Header="Qty" Width="auto">
+                    <GridViewColumn Header="Qty" Width="75">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Quantity}" MaxLength="5" Width="50" />
+                                <exceed:IntegerUpDown Value="{Binding Quantity}" Width="60" MaxLength="5" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
 
-                    <GridViewColumn Header="Entry Price" Width="90" DisplayMemberBinding="{Binding EntryPrice}" />
-                    <GridViewColumn Header="Inital Stop Loss" Width="110" DisplayMemberBinding="{Binding InitialStopLossPrice}" />
+                    <GridViewColumn Header="Entry Price" Width="85">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <exceed:DecimalUpDown Value="{Binding EntryPrice}" Increment="{Binding PriceIncrement}"  Width="70" MaxLength="5" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                    <GridViewColumn Header="Inital Stop Loss" Width="85">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <exceed:DecimalUpDown Value="{Binding InitialStopLossPrice}" Increment="{Binding PriceIncrement}" Width="70" MaxLength="5"  />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     
                     <GridViewColumn Width="70">
                         <GridViewColumn.CellTemplate>
