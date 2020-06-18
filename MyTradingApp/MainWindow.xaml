@@ -1,0 +1,46 @@
+﻿<Window x:Class="MyTradingApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MyTradingApp"
+        xmlns:vms="clr-namespace:MyTradingApp.ViewModels"
+        xmlns:views="clr-namespace:MyTradingApp.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="650" Width="800"
+        DataContext="{Binding Main, Source={StaticResource Locator}}"
+        >
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="160" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Button HorizontalAlignment="Right" Content="{Binding ConnectButtonCaption}" Command="{Binding ConnectCommand}" />
+        </Grid>
+
+        <!--<Button Grid.Row="1" Width="100" Height="50" Content="Send Order" Command="{Binding SendOrderCommand}" ></Button>-->
+
+        <views:OrdersView Grid.Row="1" DataContext="{Binding OrdersViewModel}" />
+
+        <TextBox Grid.Row="2" IsReadOnly="True" MinLines="8" VerticalScrollBarVisibility="Visible"
+                 Text="{Binding ErrorText, Mode=OneWay}"
+                 />
+        
+        <!-- Status Bar-->
+        <StatusBar Grid.Row="3">
+            <StatusBarItem Content="{Binding StatusBarText, Mode=OneWay}" Padding="6,4" />
+        </StatusBar>
+    </Grid>
+</Window>
