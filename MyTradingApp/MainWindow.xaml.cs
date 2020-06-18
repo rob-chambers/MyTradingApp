@@ -1,13 +1,13 @@
-﻿using MyTradingApp.ViewModels;
+﻿using MahApps.Metro.Controls;
+using MyTradingApp.ViewModels;
 using System.ComponentModel;
-using System.Windows;
 
 namespace MyTradingApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         public MainWindow()
         {
