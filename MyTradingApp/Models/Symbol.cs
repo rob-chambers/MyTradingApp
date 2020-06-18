@@ -1,11 +1,29 @@
-﻿namespace MyTradingApp.Models
+﻿using GalaSoft.MvvmLight;
+
+namespace MyTradingApp.Models
 {
-    internal class Symbol
+    internal class Symbol : ViewModelBase
     {
-        public string Code { get; set; }
+        private string _code;
+        private Exchange _exchange;
+        private string _name;
 
-        public Exchange Exchange { get; set; }
+        public string Code
+        {
+            get => _code;
+            set => Set(ref _code, value);
+        }
 
-        public string Name { get; set; }
+        public Exchange Exchange
+        {
+            get => _exchange;
+            set => Set(ref _exchange, value);
+        }
+
+        public string Name 
+        { 
+            get => _name; 
+            set => Set(ref _name, value); 
+        }
     }
 }

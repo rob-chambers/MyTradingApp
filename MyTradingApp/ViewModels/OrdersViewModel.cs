@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight.Command;
 using MyTradingApp.Models;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 
@@ -75,8 +76,22 @@ namespace MyTradingApp.ViewModels
             {
                 return _addCommand ?? (_addCommand = new RelayCommand(() =>
                 {
-                    Orders.Add(new OrderItem());
+                    var order = new OrderItem();
+                    order.Symbol.PropertyChanged += OnSymbolPropertyChanged;
+                    Orders.Add(order);
                 }));
+            }
+        }
+
+        private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Symbol.Code))
+            {
+                FindCommand.RaiseCanExecuteChanged();
+            }
+            else if (e.PropertyName == nameof(Symbol.Exchange))
+            {
+                FindCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -97,7 +112,7 @@ namespace MyTradingApp.ViewModels
             {
                 return _submitCommand ?? (_submitCommand = new RelayCommand<OrderItem>(order =>
                 {
-                    MessageBox.Show("Submit command fired for symbol " + order.Symbol.Code);
+                    order.Status = OrderStatus.Submitted;
                 }, order => CanSubmitOrder(order)));
             }
         }
@@ -127,18 +142,5 @@ namespace MyTradingApp.ViewModels
                     item => item != null));
             }
         }
-
-        /*
-         *         public Symbol Symbol { get; set; }
-
-        public Direction Direction { get; set; }
-
-        public double Quantity { get; set; }
-
-        public double EntryPrice { get; set; }
-
-        public double InitialStopLossPrice { get; set; }
-         */
-
     }
 }

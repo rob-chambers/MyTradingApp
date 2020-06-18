@@ -12,12 +12,40 @@
 
     <StackPanel>
         <ListView ItemsSource="{Binding Orders}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Focusable" Value="false"/>
+                    <Setter Property="Height" Value="40" />
+                    <Style.Triggers>
+                        <!-- Hide selection -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{x:Null}" />
+                            <Setter Property="BorderBrush" Value="{x:Null}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{x:Null}" />
+                            <Setter Property="BorderBrush" Value="{x:Null}" />
+                        </Trigger>
+                    
+                    
+                        <DataTrigger Binding="{Binding Status}" Value="Submitted" >
+                            <Setter Property="Background" Value="LightGreen" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Filled" >
+                            <Setter Property="Background" Value="Green" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Error" >
+                            <Setter Property="Background" Value="OrangeRed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Symbol" Width="70">
+                    <GridViewColumn Header="Symbol" Width="75">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Symbol.Code}" MaxLength="6" Padding="6,2" Width="50" />
+                                <TextBox Text="{Binding Symbol.Code}" MaxLength="6" Padding="6,2" Width="60" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -46,20 +74,27 @@
                     <GridViewColumn Header="Direction" Width="65" >
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <ComboBox Padding="6,2" SelectedItem="{Binding Direction}" 
+                                <ComboBox SelectedItem="{Binding Direction}" 
                                           ItemsSource="{Binding Path=DataContext.DirectionList, RelativeSource={RelativeSource AncestorType=UserControl, Mode=FindAncestor}}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
 
-                    <GridViewColumn Header="Qty" Width="60" DisplayMemberBinding="{Binding Quantity}" />
+                    <GridViewColumn Header="Qty" Width="auto">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Quantity}" MaxLength="5" Width="50" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
                     <GridViewColumn Header="Entry Price" Width="90" DisplayMemberBinding="{Binding EntryPrice}" />
                     <GridViewColumn Header="Inital Stop Loss" Width="110" DisplayMemberBinding="{Binding InitialStopLossPrice}" />
                     
                     <GridViewColumn Width="70">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Content="Submit" Padding="6,2"
+                                <Button Content="Submit"
                                         Command="{Binding DataContext.SubmitCommand, RelativeSource={RelativeSource AncestorType=UserControl, Mode=FindAncestor}}"
                                         CommandParameter="{Binding}" />
                             </DataTemplate>
@@ -71,7 +106,7 @@
                     <GridViewColumn Width="70">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Content="Delete" Padding="6,2"
+                                <Button Content="Delete"
                                         Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl, Mode=FindAncestor}}"
                                         CommandParameter="{Binding}"
                                         />
@@ -82,7 +117,7 @@
             </ListView.View>
         </ListView>
 
-        <Button Content="Add" Command="{Binding AddCommand}" Width="100" HorizontalAlignment="Left" Margin="0,10" Padding="8,4" />
+        <Button Content="Add" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" Margin="0,20" />
     </StackPanel>
 
 </UserControl>
