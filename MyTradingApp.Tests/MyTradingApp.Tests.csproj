@@ -82,6 +82,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FundamentalDataTests.cs" />
     <Compile Include="OrdersViewModelTests.cs" />
     <Compile Include="Orders\OrderBuilder.cs" />
     <Compile Include="Orders\OrdersViewModelFactory.cs" />
@@ -104,6 +105,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Content Include="Resources\fundamentaldata.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -1,4 +1,7 @@
-﻿namespace MyTradingApp.Models
+﻿using System.Linq;
+using System.Xml.Linq;
+
+namespace MyTradingApp.Models
 {
     public class FundamentalData
     {
@@ -6,10 +9,23 @@
 
         public static FundamentalData Parse(string data)
         {
-            return new FundamentalData
+            var result = new FundamentalData();
+
+            var root = XDocument.Parse(data);
+            var companyIds = root.Descendants("CoIDs").FirstOrDefault();
+            if (companyIds != null)
             {
-                CompanyName = "Microsoft"
-            };
+                var element = (from el in companyIds.Elements() select el)
+                    .Where(e => e.HasAttributes && e.Attribute("Type").Value.Equals("CompanyName"))
+                    .FirstOrDefault();
+
+                if (element != null)
+                {
+                    result.CompanyName = element.Value.ToString();
+                }
+            }
+
+            return result;
         }
     }
 }

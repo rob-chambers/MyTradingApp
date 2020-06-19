@@ -11,7 +11,7 @@ namespace MyTradingApp.Models
         public string Code
         {
             get => _code;
-            set => Set(ref _code, value);
+            set => Set(ref _code, value.ToUpperInvariant());
         }
 
         public Exchange Exchange

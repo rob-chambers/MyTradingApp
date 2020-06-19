@@ -3,7 +3,6 @@ using MyTradingApp.Services;
 using MyTradingApp.Tests.Orders;
 using MyTradingApp.ViewModels;
 using NSubstitute;
-using System.Diagnostics.Contracts;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -117,6 +116,16 @@ namespace MyTradingApp.Tests
                 x.Exchange == order.Symbol.Exchange.ToString() &&
                 x.Currency == "USD" &&
                 x.SecType == "STK"), Arg.Is("ReportSnapshot"));
+        }
+
+        [Fact]
+        public void SymbolGetsCapitalized()
+        {
+            var builder = new OrderBuilder();
+            var order = builder.Default.SetSymbol("msft").Order;
+
+            // Assert
+            Assert.Equal("MSFT", order.Symbol.Code);
         }
     }
 }
