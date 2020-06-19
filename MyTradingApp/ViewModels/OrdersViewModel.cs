@@ -1,17 +1,25 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using IBApi;
 using MyTradingApp.Models;
+using MyTradingApp.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows;
 
 namespace MyTradingApp.ViewModels
 {
     internal class OrdersViewModel : ObservableObject
     {
-        public OrdersViewModel()
+        private RelayCommand _addCommand;
+        private RelayCommand<OrderItem> _deleteCommand;
+        private RelayCommand<OrderItem> _findCommand;
+        private RelayCommand<OrderItem> _submitCommand;
+        private readonly IContractManager _contractManager;
+        private OrderItem _requestedOrder;
+
+        public OrdersViewModel(IContractManager contractManager)
         {
             Debug.WriteLine("Instantiating Orders vm");
             Orders = new ObservableCollection<OrderItem>
@@ -33,6 +41,13 @@ namespace MyTradingApp.ViewModels
 
             PopulateDirectionList();
             PopulateExchangeList();
+            _contractManager = contractManager;
+            _contractManager.FundamentalData += OnContractManagerFundamentalData;
+        }
+
+        private void OnContractManagerFundamentalData(object sender, FundamentalDataEventArgs e)
+        {
+            _requestedOrder.Symbol.Name = e.Data.CompanyName;
         }
 
         private void PopulateDirectionList()
@@ -54,11 +69,6 @@ namespace MyTradingApp.ViewModels
                 ExchangeList.Add((Exchange)value);
             }
         }
-
-        private RelayCommand _addCommand;
-        private RelayCommand<OrderItem> _deleteCommand;
-        private RelayCommand<OrderItem> _findCommand;
-        private RelayCommand<OrderItem> _submitCommand;
 
         public ObservableCollection<OrderItem> Orders
         {
@@ -99,11 +109,16 @@ namespace MyTradingApp.ViewModels
         {
             get
             {
-                return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order =>
-                {
-                    order.Symbol.Name = order.Symbol.Code + " Name";
-                }, order => CanFindOrder(order)));
+                return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order => 
+                    IssueFindSymbolRequest(order), order => CanFindOrder(order)));
             }
+        }
+
+        private void IssueFindSymbolRequest(OrderItem order)
+        {
+            _requestedOrder = order;
+            order.Symbol.Name = string.Empty;
+            _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
         }
 
         public RelayCommand<OrderItem> SubmitCommand
@@ -119,7 +134,7 @@ namespace MyTradingApp.ViewModels
 
         private bool CanSubmitOrder(OrderItem order)
         {
-            return !string.IsNullOrEmpty(order.Symbol.Code);
+            return !string.IsNullOrEmpty(order.Symbol.Name) && order.Status == OrderStatus.Pending;
         }
 
         private bool CanFindOrder(OrderItem order)
@@ -139,8 +154,25 @@ namespace MyTradingApp.ViewModels
                             Orders.Remove(order);
                         }
                     },
-                    item => item != null));
+                    order => order?.Status == OrderStatus.Pending));
             }
+        }
+
+        private static Contract MapOrderToContract(OrderItem order)
+        {
+            var contract = new Contract
+            {
+                Symbol = order.Symbol.Code,
+                SecType = "STK",
+                Exchange = order.Symbol.Exchange.ToString(),
+                Currency = "USD",
+                LastTradeDateOrContractMonth = string.Empty,
+                Strike = 0,
+                Multiplier = string.Empty,
+                LocalSymbol = string.Empty
+            };
+
+            return contract;
         }
     }
 }
