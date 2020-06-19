@@ -111,6 +111,8 @@
     <Compile Include="Services\IConnectionService.cs" />
     <Compile Include="ManagedAccountsEventArgs.cs" />
     <Compile Include="Services\IContractManager.cs" />
+    <Compile Include="Services\IMarketDataManager.cs" />
+    <Compile Include="Services\MarketDataManager.cs" />
     <Compile Include="Services\OrderManager.cs" />
     <Compile Include="Services\IOrderManager.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />

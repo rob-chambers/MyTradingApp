@@ -12,6 +12,7 @@
              >
 
     <StackPanel>
+        <Button Command="{Binding StartStopStreamingCommand}" Content="{Binding StreamingButtonCaption}" Width="80" HorizontalAlignment="Left" Margin="0,0,0,20" />
         <ListView ItemsSource="{Binding Orders}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">

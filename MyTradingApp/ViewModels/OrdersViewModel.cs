@@ -12,14 +12,18 @@ namespace MyTradingApp.ViewModels
 {
     internal class OrdersViewModel : ObservableObject
     {
+        private readonly IContractManager _contractManager;
+        private readonly IMarketDataManager _marketDataManager;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
         private RelayCommand<OrderItem> _submitCommand;
-        private readonly IContractManager _contractManager;
+        private RelayCommand _startStopStreamingCommand;
         private OrderItem _requestedOrder;
+        private bool _isStreaming;
+        private string _streamingButtonCaption;
 
-        public OrdersViewModel(IContractManager contractManager)
+        public OrdersViewModel(IContractManager contractManager, IMarketDataManager marketDataManager)
         {
             Debug.WriteLine("Instantiating Orders vm");
             Orders = new ObservableCollection<OrderItem>
@@ -42,12 +46,14 @@ namespace MyTradingApp.ViewModels
             PopulateDirectionList();
             PopulateExchangeList();
             _contractManager = contractManager;
+            _marketDataManager = marketDataManager;
             _contractManager.FundamentalData += OnContractManagerFundamentalData;
+            SetStreamingButtonCaption();
         }
 
         private void OnContractManagerFundamentalData(object sender, FundamentalDataEventArgs e)
         {
-            _requestedOrder.Symbol.Name = e.Data.CompanyName;
+            _requestedOrder.Symbol.Name = e.Data.CompanyName;          
         }
 
         private void PopulateDirectionList()
@@ -114,6 +120,45 @@ namespace MyTradingApp.ViewModels
             }
         }
 
+        public RelayCommand StartStopStreamingCommand
+        {
+            get
+            {
+                return _startStopStreamingCommand ?? 
+                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming));
+            }
+        }
+
+        private void StartStopStreaming()
+        {
+            IsStreaming = !IsStreaming;
+            if (IsStreaming)
+            {
+                GetMarketData();
+            }
+            else
+            {
+                CancelStreaming();
+            }
+        }
+
+        private void GetMarketData()
+        {
+            var contract = MapOrderToContract(_requestedOrder);
+            var genericTickList = string.Empty;
+            _marketDataManager.AddRequest(contract, genericTickList);
+        }
+
+        private void CancelStreaming()
+        {
+            _marketDataManager.StopActiveRequests();
+        }
+
+        private bool CanStartStopStreaming()
+        {
+            return true;
+        }
+
         private void IssueFindSymbolRequest(OrderItem order)
         {
             _requestedOrder = order;
@@ -173,6 +218,38 @@ namespace MyTradingApp.ViewModels
             };
 
             return contract;
+        }
+        //private Contract GetMDContract()
+        //{
+        //    Contract contract = new Contract();
+        //    contract.LastTradeDateOrContractMonth = this.lastTradeDateOrContractMonth_TMD_MDT.Text;
+        //    contract.PrimaryExch = this.primaryExchange.Text;
+        //    contract.IncludeExpired = includeExpired.Checked;
+
+        //    return contract;
+        //}
+
+        public bool IsStreaming
+        {
+            get => _isStreaming;
+            set 
+            {
+                Set(ref _isStreaming, value);
+                SetStreamingButtonCaption();
+            }
+        }
+
+        public string StreamingButtonCaption
+        {
+            get => _streamingButtonCaption;
+            set => Set(ref _streamingButtonCaption, value);
+        }
+
+        private void SetStreamingButtonCaption()
+        {
+            StreamingButtonCaption = IsStreaming
+                ? "Cancel"
+                : "Stream";
         }
     }
 }

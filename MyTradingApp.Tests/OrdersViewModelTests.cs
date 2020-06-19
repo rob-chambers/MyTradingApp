@@ -9,27 +9,33 @@ namespace MyTradingApp.Tests
 {
     public class OrdersViewModelTests
     {
+        private IContractManager _contractManager;
+
+        private OrdersViewModel GetVm()
+        {
+            _contractManager = Substitute.For<IContractManager>();
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            return new OrdersViewModel(_contractManager, marketDataManager);
+        }
+
         [Fact]
         public void ExchangeListPopulatedInitially()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             Assert.NotEmpty(vm.ExchangeList);
         }
 
         [Fact]
         public void DirectionListPopulatedInitially()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             Assert.NotEmpty(vm.DirectionList);
         }
 
         [Fact]
         public void InitiallyCannotFind()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.Order;
             vm.Orders.Add(order);
@@ -41,8 +47,7 @@ namespace MyTradingApp.Tests
         [Fact]
         public void CanFindWhenSymbolEntered()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.SetSymbol("MSFT").Order;
             vm.Orders.Add(order);
@@ -54,8 +59,7 @@ namespace MyTradingApp.Tests
         [Fact]
         public void CanDeleteOrderIfPending()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.Order;
             vm.Orders.Add(order);
@@ -68,8 +72,7 @@ namespace MyTradingApp.Tests
         [Fact]
         public void CannotDeleteOrderIfNotPending()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.Order;
             vm.Orders.Add(order);
@@ -85,8 +88,7 @@ namespace MyTradingApp.Tests
         [Fact]
         public void CannotSubmitOrderUnlessPending()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.SetSymbol("MSFT").Order;
             vm.Orders.Add(order);
@@ -99,9 +101,7 @@ namespace MyTradingApp.Tests
         [Fact]
         public void FindCommandReturnsName()
         {
-            var contractManager = Substitute.For<IContractManager>();
-            var vm = new OrdersViewModel(contractManager);
-
+            var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.SetSymbol("MSFT").Order;
             order.Symbol.Exchange = Exchange.NYSE;
@@ -111,7 +111,7 @@ namespace MyTradingApp.Tests
             vm.FindCommand.Execute(commandParameter);
 
             // Assert
-            contractManager.Received()
+            _contractManager.Received()
                 .RequestFundamentals(Arg.Is<IBApi.Contract>(x => x.Symbol == order.Symbol.Code &&
                 x.Exchange == order.Symbol.Exchange.ToString() &&
                 x.Currency == "USD" &&
