@@ -12,7 +12,7 @@ namespace MyTradingApp
         public MainWindow()
         {
             InitializeComponent();
-            Closing += OnMainWindowClosing; ;
+            Closing += OnMainWindowClosing;
         }
 
         private void OnMainWindowClosing(object sender, CancelEventArgs e)

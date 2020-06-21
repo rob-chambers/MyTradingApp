@@ -1,12 +1,13 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Linq;
 
 namespace MyTradingApp.ViewModels
 {
@@ -14,6 +15,8 @@ namespace MyTradingApp.ViewModels
     {
         private readonly IContractManager _contractManager;
         private readonly IMarketDataManager _marketDataManager;
+        private readonly IHistoricalDataManager _historicalDataManager;
+        private readonly IOrderCalculationService _orderCalculationService;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
@@ -23,9 +26,12 @@ namespace MyTradingApp.ViewModels
         private bool _isStreaming;
         private string _streamingButtonCaption;
 
-        public OrdersViewModel(IContractManager contractManager, IMarketDataManager marketDataManager)
+        public OrdersViewModel(
+            IContractManager contractManager, 
+            IMarketDataManager marketDataManager,
+            IHistoricalDataManager historicalDataManager,
+            IOrderCalculationService orderCalculationService)
         {
-            Debug.WriteLine("Instantiating Orders vm");
             Orders = new ObservableCollection<OrderItem>
             {
                 new OrderItem
@@ -47,13 +53,33 @@ namespace MyTradingApp.ViewModels
             PopulateExchangeList();
             _contractManager = contractManager;
             _marketDataManager = marketDataManager;
+            _historicalDataManager = historicalDataManager;
+            _orderCalculationService = orderCalculationService;
+            _historicalDataManager.HistoricalDataCompleted += OnHistoricalDataManagerDataCompleted;
             _contractManager.FundamentalData += OnContractManagerFundamentalData;
             SetStreamingButtonCaption();
+
+            Messenger.Default.Register<GenericMessage<OrderItem>>(this, HandleOrderMessage);
+        }
+
+        private void OnHistoricalDataManagerDataCompleted(object sender, HistoricalDataCompletedEventArgs e)
+        {            
+            _orderCalculationService.SetHistoricalData(e.Bars);
+            var sl = _orderCalculationService.CalculateInitialStopLoss();
+
+            _requestedOrder.EntryPrice = e.Bars.First().Close;
+            _requestedOrder.InitialStopLossPrice = sl;
+        }
+
+        private void HandleOrderMessage(GenericMessage<OrderItem> message)
+        {
+            IssueHistoricalDataRequest(message.Content);
         }
 
         private void OnContractManagerFundamentalData(object sender, FundamentalDataEventArgs e)
         {
-            _requestedOrder.Symbol.Name = e.Data.CompanyName;          
+            _requestedOrder.Symbol.Name = e.Data.CompanyName;
+            Messenger.Default.Send(new GenericMessage<OrderItem>(_requestedOrder));
         }
 
         private void PopulateDirectionList()
@@ -164,6 +190,15 @@ namespace MyTradingApp.ViewModels
             _requestedOrder = order;
             order.Symbol.Name = string.Empty;
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
+        }
+
+        private void IssueHistoricalDataRequest(OrderItem order)
+        {
+            _requestedOrder = order;
+            //historicalDataManager.AddRequest(contract, endTime, duration, barSize, whatToShow, outsideRTH, 1, cbKeepUpToDate.Checked);
+
+            var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
+            _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
         }
 
         public RelayCommand<OrderItem> SubmitCommand

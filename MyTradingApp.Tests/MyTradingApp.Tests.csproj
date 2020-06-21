@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FundamentalDataTests.cs" />
+    <Compile Include="OrderCalculationServiceTests.cs" />
     <Compile Include="OrderItemTests.cs" />
     <Compile Include="OrdersViewModelTests.cs" />
     <Compile Include="Orders\OrderBuilder.cs" />

@@ -5,19 +5,17 @@ using System.Diagnostics;
 
 namespace MyTradingApp.Services
 {
-    internal class MarketDataManager : IMarketDataManager
+    internal class MarketDataManager : DataManager, IMarketDataManager
     {
         public const int TICK_ID_BASE = 10000000;
-        private readonly IBClient _iBClient;
         private int _currentTicker = 1;
 
         private List<Contract> _activeRequests = new List<Contract>();
 
-        public MarketDataManager(IBClient iBClient)
+        public MarketDataManager(IBClient iBClient) : base(iBClient)
         {
-            _iBClient = iBClient;
-            _iBClient.TickGeneric += OnClientTickGeneric;
-            _iBClient.TickPrice += OnTickPrice;
+            iBClient.TickGeneric += OnClientTickGeneric;
+            iBClient.TickPrice += OnTickPrice;
         }
 
         private void OnTickPrice(TickPriceMessage msg)
@@ -56,7 +54,7 @@ namespace MyTradingApp.Services
             _activeRequests.Add(contract);
             var nextRequestId = TICK_ID_BASE + _currentTicker++;
             //checkToAddRow(nextReqId);
-            _iBClient.ClientSocket.reqMktData(nextRequestId, contract, genericTickList, false, false, new List<TagValue>());
+            ibClient.ClientSocket.reqMktData(nextRequestId, contract, genericTickList, false, false, new List<TagValue>());
 
             //if (!uiControl.Visible)
             //    uiControl.Visible = true;
@@ -67,11 +65,21 @@ namespace MyTradingApp.Services
         {
             for (var i = 1; i < _currentTicker; i++)
             {
-                _iBClient.ClientSocket.cancelMktData(i + TICK_ID_BASE);
+                ibClient.ClientSocket.cancelMktData(i + TICK_ID_BASE);
             }
 
             //if (clearTable)
             //    Clear();
+        }
+
+        public override void NotifyError(int requestId)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Clear()
+        {
+            currentTicker = 1;
         }
 
         //private void checkToAddRow(int requestId)

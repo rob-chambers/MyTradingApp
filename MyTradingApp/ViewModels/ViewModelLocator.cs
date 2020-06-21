@@ -3,7 +3,6 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using IBApi;
 using MyTradingApp.Services;
-using MyTradingApp.Views;
 
 namespace MyTradingApp.ViewModels
 {
@@ -37,7 +36,9 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IOrderManager, OrderManager>();
             SimpleIoc.Default.Register<IContractManager, ContractManager>();
             SimpleIoc.Default.Register<IMarketDataManager, MarketDataManager>();
-        }
+            SimpleIoc.Default.Register<IHistoricalDataManager, HistoricalDataManager>();
+            SimpleIoc.Default.Register<IOrderCalculationService, OrderCalculationService>();
+        }        
 
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
 

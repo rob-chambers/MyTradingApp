@@ -100,20 +100,26 @@
     </ApplicationDefinition>
     <Compile Include="ClientError.cs" />
     <Compile Include="ConnectionStatusChangedEventArgs.cs" />
+    <Compile Include="Models\Bar.cs" />
     <Compile Include="Models\FundamentalDataEventArgs.cs" />
     <Compile Include="Models\Direction.cs" />
     <Compile Include="Models\Exchange.cs" />
     <Compile Include="Models\FundamentalData.cs" />
+    <Compile Include="Models\HistoricalDataCompletedEventArgs.cs" />
     <Compile Include="Models\OrderStatus.cs" />
     <Compile Include="Services\AccountManager.cs" />
     <Compile Include="Models\AccountSummaryEventArgs.cs" />
     <Compile Include="Services\ContractManager.cs" />
+    <Compile Include="Services\HistoricalDataManager.cs" />
     <Compile Include="Services\IAccountManager.cs" />
     <Compile Include="Services\IConnectionService.cs" />
     <Compile Include="ManagedAccountsEventArgs.cs" />
     <Compile Include="Services\IContractManager.cs" />
+    <Compile Include="Services\IHistoricalDataManager.cs" />
     <Compile Include="Services\IMarketDataManager.cs" />
+    <Compile Include="Services\IOrderCalculationService.cs" />
     <Compile Include="Services\MarketDataManager.cs" />
+    <Compile Include="Services\OrderCalculationService.cs" />
     <Compile Include="Services\OrderManager.cs" />
     <Compile Include="Services\IOrderManager.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
@@ -136,7 +142,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Services\ConnectionService.cs" />
-    <Compile Include="DataManager.cs" />
+    <Compile Include="Services\DataManager.cs" />
     <Compile Include="IBClient.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

@@ -1,17 +1,13 @@
-﻿using System.Windows.Controls;
-
-namespace MyTradingApp
+﻿namespace MyTradingApp.Services
 {
     abstract class DataManager
     {
-        protected Control uiControl;
         protected IBClient ibClient;
         protected int currentTicker = 1;
 
-        public DataManager(IBClient client, Control dataGrid)
+        public DataManager(IBClient client)
         {
             ibClient = client;
-            uiControl = dataGrid;
         }
 
         public abstract void NotifyError(int requestId);

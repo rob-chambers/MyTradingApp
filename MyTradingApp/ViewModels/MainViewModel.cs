@@ -21,6 +21,7 @@ namespace MyTradingApp.ViewModels
         private readonly IOrderManager _orderManager;
         private readonly IAccountManager _accountManager;
         private readonly StatusBarViewModel _statusBarViewModel;
+        private readonly IHistoricalDataManager _historicalDataManager;
         private ICommand _connectCommand;
         private ICommand _sendOrderCommand;
         private ICommand _accountSummaryCommand;
@@ -36,7 +37,8 @@ namespace MyTradingApp.ViewModels
             IOrderManager orderManager,
             IAccountManager accountManager,
             OrdersViewModel ordersViewModel,
-            StatusBarViewModel statusBarViewModel)
+            StatusBarViewModel statusBarViewModel,
+            IHistoricalDataManager historicalDataManager)
         {
             _iBClient = iBClient;
             _connectionService = connectionService;
@@ -45,6 +47,10 @@ namespace MyTradingApp.ViewModels
             _accountManager.AccountSummary += OnAccountManagerAccountSummary;
             OrdersViewModel = ordersViewModel;
             _statusBarViewModel = statusBarViewModel;
+            _historicalDataManager = historicalDataManager;
+            _iBClient.HistoricalData += _historicalDataManager.HandleMessage;
+            _iBClient.HistoricalDataUpdate += _historicalDataManager.HandleMessage;
+            _iBClient.HistoricalDataEnd += _historicalDataManager.HandleMessage;
             _iBClient.OrderStatus += _orderManager.HandleOrderStatus;
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += UpdateUI;
