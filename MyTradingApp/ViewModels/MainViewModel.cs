@@ -1,12 +1,11 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
@@ -45,7 +44,6 @@ namespace MyTradingApp.ViewModels
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
-            _accountManager.AccountSummary += OnAccountManagerAccountSummary;
             OrdersViewModel = ordersViewModel;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
@@ -56,16 +54,18 @@ namespace MyTradingApp.ViewModels
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += UpdateUI;
 
-            _connectionService.ConnectionStatusChanged += (sender, args) => UpdateUI(new ConnectionStatusMessage(args.IsConnected));
+            Messenger.Default.Register<ConnectionStatusChangedMessage>(this, OnConnectionStatusMessage);
+
             _connectionService.ClientError += OnClientError;
             _connectionService.ManagedAccounts += OnManagedAccounts;
             SetConnectionStatus();
         }
 
-        private void OnAccountManagerAccountSummary(object sender, AccountSummaryEventArgs e)
+        private void OnConnectionStatusMessage(ConnectionStatusChangedMessage message)
         {
-            _statusBarViewModel.AvailableFunds = e.AvailableFunds.ToString("C", CultureInfo.GetCultureInfo("en-US"));
-            _statusBarViewModel.BuyingPower = e.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            _statusBarViewModel.ConnectionStatusText = message.IsConnected 
+                ? "Connected to TWS"
+                : "Disconnected...";
         }
 
         private void OnManagedAccounts(object sender, ManagedAccountsEventArgs args)
@@ -96,18 +96,6 @@ namespace MyTradingApp.ViewModels
         private void AddTextToBox(string text)
         {
             HandleErrorMessage(new ErrorMessage(-1, -1, text));
-        }
-
-        private void UpdateUI(ConnectionStatusMessage statusMessage)
-        {
-            if (statusMessage.IsConnected)
-            {
-                _statusBarViewModel.ConnectionStatusText = "Connected to TWS";
-            }
-            else
-            {
-                _statusBarViewModel.ConnectionStatusText = "Disconnected...";
-            }
         }
 
         private void UpdateUI(AccountSummaryEndMessage message)

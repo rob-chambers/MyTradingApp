@@ -55,31 +55,26 @@ namespace MyTradingApp.ViewModels
             _marketDataManager = marketDataManager;
             _historicalDataManager = historicalDataManager;
             _orderCalculationService = orderCalculationService;
-            _historicalDataManager.HistoricalDataCompleted += OnHistoricalDataManagerDataCompleted;
-            _contractManager.FundamentalData += OnContractManagerFundamentalData;
+            Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
+            Messenger.Default.Register<HistoricalDataCompletedMessage>(this, OnHistoricalDataManagerDataCompleted);
             SetStreamingButtonCaption();
-
-            Messenger.Default.Register<GenericMessage<OrderItem>>(this, HandleOrderMessage);
         }
 
-        private void OnHistoricalDataManagerDataCompleted(object sender, HistoricalDataCompletedEventArgs e)
+        private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
         {            
-            _orderCalculationService.SetHistoricalData(e.Bars);
+            _orderCalculationService.SetHistoricalData(message.Bars);
             var sl = _orderCalculationService.CalculateInitialStopLoss();
 
-            _requestedOrder.EntryPrice = e.Bars.First().Close;
+            _requestedOrder.EntryPrice = message.Bars.First().Close;
             _requestedOrder.InitialStopLossPrice = sl;
+            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
         }
 
-        private void HandleOrderMessage(GenericMessage<OrderItem> message)
+        private void OnContractManagerFundamentalData(FundamentalDataMessage message)
         {
-            IssueHistoricalDataRequest(message.Content);
-        }
-
-        private void OnContractManagerFundamentalData(object sender, FundamentalDataEventArgs e)
-        {
-            _requestedOrder.Symbol.Name = e.Data.CompanyName;
+            _requestedOrder.Symbol.Name = message.Data.CompanyName;
             Messenger.Default.Send(new GenericMessage<OrderItem>(_requestedOrder));
+            IssueHistoricalDataRequest(_requestedOrder);
         }
 
         private void PopulateDirectionList()

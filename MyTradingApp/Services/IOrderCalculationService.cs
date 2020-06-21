@@ -8,5 +8,6 @@ namespace MyTradingApp.Services
         void SetHistoricalData(ICollection<Bar> bars);
         double CalculateStandardDeviation();
         double CalculateInitialStopLoss();
+        double GetCalculatedQuantity();
     }
 }

@@ -1,7 +1,7 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
-using System;
 using System.Collections.Generic;
 
 namespace MyTradingApp.Services
@@ -21,12 +21,10 @@ namespace MyTradingApp.Services
             _iBClient.FundamentalData += OnClientFundamentalData;
         }
 
-        public event EventHandler<FundamentalDataEventArgs> FundamentalData;
-
         private void OnClientFundamentalData(FundamentalsMessage message)
         {
-            FundamentalData?.Invoke(this, new FundamentalDataEventArgs(Models.FundamentalData.Parse(message.Data)));
             _fundamentalsRequestActive = false;
+            Messenger.Default.Send(new FundamentalDataMessage(FundamentalData.Parse(message.Data)));            
         }
 
         public void RequestFundamentals(Contract contract, string reportType)

@@ -1,4 +1,5 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using System;
@@ -16,8 +17,6 @@ namespace MyTradingApp.Services
         private readonly IBClient _ibClient;
 
         private List<HistoricalDataMessage> _historicalData;
-
-        public event EventHandler<HistoricalDataCompletedEventArgs> HistoricalDataCompleted;
 
         public HistoricalDataManager(IBClient ibClient) : base(ibClient)
         {
@@ -42,7 +41,7 @@ namespace MyTradingApp.Services
 
         public void HandleMessage(HistoricalDataEndMessage message)
         {
-            HistoricalDataCompleted?.Invoke(this, new HistoricalDataCompletedEventArgs(PrepareEventData()));
+            Messenger.Default.Send(new HistoricalDataCompletedMessage(PrepareEventData()));
         }
 
         private ICollection<Models.Bar> PrepareEventData()

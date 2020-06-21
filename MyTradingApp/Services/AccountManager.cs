@@ -1,5 +1,5 @@
-﻿using MyTradingApp.Messages;
-using MyTradingApp.Models;
+﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.Messages;
 using System;
 using System.Collections.Generic;
 
@@ -24,8 +24,6 @@ namespace MyTradingApp.Services
         private int _dataCount = 0;
         private Dictionary<string, string> _accountData = new Dictionary<string, string>();
 
-        public event EventHandler<AccountSummaryEventArgs> AccountSummary;
-
         public AccountManager(IBClient iBClient)
         {
             _iBClient = iBClient;
@@ -47,9 +45,9 @@ namespace MyTradingApp.Services
             }
         }
 
-        public void HandleAccountSummary(AccountSummaryMessage message)
+        public void HandleAccountSummary(Messages.AccountSummaryMessage msg)
         {
-            _accountData.Add(message.Tag, message.Value);
+            _accountData.Add(msg.Tag, msg.Value);
             _dataCount++;            
             if (_dataCount <= 1)
             {                
@@ -57,18 +55,18 @@ namespace MyTradingApp.Services
             }
 
             // We have both data fields - raise event now
-            var args = new AccountSummaryEventArgs();
+            var message = new EventMessages.AccountSummaryMessage();
             if (_accountData.ContainsKey(AccountSummaryTags.AvailableFunds))
             {
-                args.AvailableFunds = double.Parse(_accountData[AccountSummaryTags.AvailableFunds]);
+                message.AvailableFunds = double.Parse(_accountData[AccountSummaryTags.AvailableFunds]);
             }
 
             if (_accountData.ContainsKey(AccountSummaryTags.BuyingPower))
             {
-                args.BuyingPower = double.Parse(_accountData[AccountSummaryTags.BuyingPower]);
+                message.BuyingPower = double.Parse(_accountData[AccountSummaryTags.BuyingPower]);
             }
 
-            AccountSummary?.Invoke(this, args);
+            Messenger.Default.Send(message);
         }
 
         public void HandleAccountSummaryEnd()

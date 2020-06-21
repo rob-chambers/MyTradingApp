@@ -1,4 +1,6 @@
-﻿using MyTradingApp.Models;
+﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.EventMessages;
+using MyTradingApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,17 @@ namespace MyTradingApp.Services
         /// </summary>
         private const double MinBuffer = 0.05;
         private ICollection<Bar> _bars;
+        private double _accountSize;
+
+        public OrderCalculationService()
+        {
+            Messenger.Default.Register<AccountSummaryMessage>(this, HandleAccountSummaryMessage);
+        }
+
+        private void HandleAccountSummaryMessage(AccountSummaryMessage args)
+        {
+            _accountSize = args.AvailableFunds;
+        }
 
         public void SetHistoricalData(ICollection<Bar> bars)
         {
@@ -73,6 +86,14 @@ namespace MyTradingApp.Services
         private double CalculateMovingAverage()
         {
             return _bars.Average(x => x.Close);
+        }
+
+        public double GetCalculatedQuantity()
+        {
+            var risk = _accountSize * 0.01;
+            var price = 10;
+
+            return Math.Round(risk / price, 0);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
 using MyTradingApp.Messages;
 using System;
 using System.Threading;
@@ -11,7 +12,6 @@ namespace MyTradingApp.Services
         private readonly EReaderSignal _signal;
         private bool _isConnected;
 
-        public event EventHandler<ConnectionStatusChangedEventArgs> ConnectionStatusChanged;
         public event EventHandler<ClientError> ClientError;
         public event EventHandler<ManagedAccountsEventArgs> ManagedAccounts;
 
@@ -43,13 +43,8 @@ namespace MyTradingApp.Services
             {
                 if (_isConnected == value) return;
                 _isConnected = value;
-                RaiseConnectionStatusChanged();
+                Messenger.Default.Send(new ConnectionStatusChangedMessage(value));
             }
-        }
-
-        private void RaiseConnectionStatusChanged()
-        {
-            ConnectionStatusChanged?.Invoke(this, new ConnectionStatusChangedEventArgs(IsConnected));
         }
 
         public void Connect()

@@ -1,6 +1,6 @@
-﻿namespace MyTradingApp.Models
+﻿namespace MyTradingApp.EventMessages
 {
-    public class AccountSummaryEventArgs
+    public class AccountSummaryMessage
     {
         public double AvailableFunds { get; set; }
         public double BuyingPower { get; set; }
