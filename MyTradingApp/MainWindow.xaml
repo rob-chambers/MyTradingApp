@@ -42,8 +42,17 @@
                  />
 
         <!-- Status Bar-->
-        <StatusBar Grid.Row="4">
-            <StatusBarItem Content="{Binding StatusBarText, Mode=OneWay}" Padding="6,4" />
+        <StatusBar Grid.Row="4" DataContext="{Binding StatusBar, Source={StaticResource Locator}}" MinHeight="30">
+            <StatusBarItem Content="{Binding ConnectionStatusText, Mode=OneWay}" />
+            <StatusBarItem HorizontalAlignment="Right" >
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Available Funds: " />
+                    <TextBlock Text="{Binding AvailableFunds, Mode=OneWay}" Width="100" />
+
+                    <TextBlock Text="Buying Power: " Margin="10,0,0,0" />
+                    <TextBlock Text="{Binding BuyingPower, Mode=OneWay}" Width="100" />
+                </StackPanel>
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </mah:MetroWindow>

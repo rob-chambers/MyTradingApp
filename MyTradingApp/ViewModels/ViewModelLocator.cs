@@ -30,6 +30,7 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<OrdersViewModel>();
             SimpleIoc.Default.Register<SettingsViewModel>();
+            SimpleIoc.Default.Register<StatusBarViewModel>();
             SimpleIoc.Default.Register<IBClient>();
             SimpleIoc.Default.Register<IAccountManager, AccountManager>();
             SimpleIoc.Default.Register<IConnectionService, ConnectionService>();
@@ -38,28 +39,12 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IMarketDataManager, MarketDataManager>();
         }
 
-        public MainViewModel Main
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<MainViewModel>();
-            }
-        }
+        public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
 
-        public SettingsViewModel Settings
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<SettingsViewModel>(); ;
-            }
-        }
+        public SettingsViewModel Settings => ServiceLocator.Current.GetInstance<SettingsViewModel>();
 
-        public OrdersViewModel Orders
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<OrdersViewModel>();
-            }
-        }
+        public OrdersViewModel Orders => ServiceLocator.Current.GetInstance<OrdersViewModel>();
+
+        public StatusBarViewModel StatusBar => ServiceLocator.Current.GetInstance<StatusBarViewModel>();
     }
 }

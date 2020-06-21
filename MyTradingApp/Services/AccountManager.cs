@@ -1,5 +1,7 @@
 ﻿using MyTradingApp.Messages;
-using System.Diagnostics;
+using MyTradingApp.Models;
+using System;
+using System.Collections.Generic;
 
 namespace MyTradingApp.Services
 {
@@ -11,8 +13,18 @@ namespace MyTradingApp.Services
              + "GrossPositionValue,ReqTEquity,ReqTMargin,SMA,InitMarginReq,MaintMarginReq,AvailableFunds,ExcessLiquidity,Cushion,FullInitMarginReq,FullMaintMarginReq,FullAvailableFunds,"
              + "FullExcessLiquidity,LookAheadNextChange,LookAheadInitMarginReq ,LookAheadMaintMarginReq,LookAheadAvailableFunds,LookAheadExcessLiquidity,HighestSeverity,DayTradesRemaining,Leverage";
 
+        private static class AccountSummaryTags
+        {
+            public const string BuyingPower = "BuyingPower";
+            public const string AvailableFunds = "AvailableFunds";
+        }
+
         private readonly IBClient _iBClient;
         private bool _accountSummaryRequestActive;
+        private int _dataCount = 0;
+        private Dictionary<string, string> _accountData = new Dictionary<string, string>();
+
+        public event EventHandler<AccountSummaryEventArgs> AccountSummary;
 
         public AccountManager(IBClient iBClient)
         {
@@ -23,9 +35,11 @@ namespace MyTradingApp.Services
         {
             if (!_accountSummaryRequestActive)
             {
+                _dataCount = 0;
+                _accountData.Clear();
                 _accountSummaryRequestActive = true;
-                //accountSummaryGrid.Rows.Clear();
-                _iBClient.ClientSocket.reqAccountSummary(ACCOUNT_SUMMARY_ID, "All", ACCOUNT_SUMMARY_TAGS);
+                var tags = AccountSummaryTags.BuyingPower + "," + AccountSummaryTags.AvailableFunds;
+                _iBClient.ClientSocket.reqAccountSummary(ACCOUNT_SUMMARY_ID, "All", tags);
             }
             else
             {
@@ -35,9 +49,26 @@ namespace MyTradingApp.Services
 
         public void HandleAccountSummary(AccountSummaryMessage message)
         {
-            // TODO: Output to UI
-            Debug.WriteLine("Account summary info for account {0} in currency {1}: {2}={3}",
-                message.Account, message.Currency, message.Tag, message.Value);
+            _accountData.Add(message.Tag, message.Value);
+            _dataCount++;            
+            if (_dataCount <= 1)
+            {                
+                return;
+            }
+
+            // We have both data fields - raise event now
+            var args = new AccountSummaryEventArgs();
+            if (_accountData.ContainsKey(AccountSummaryTags.AvailableFunds))
+            {
+                args.AvailableFunds = double.Parse(_accountData[AccountSummaryTags.AvailableFunds]);
+            }
+
+            if (_accountData.ContainsKey(AccountSummaryTags.BuyingPower))
+            {
+                args.BuyingPower = double.Parse(_accountData[AccountSummaryTags.BuyingPower]);
+            }
+
+            AccountSummary?.Invoke(this, args);
         }
 
         public void HandleAccountSummaryEnd()

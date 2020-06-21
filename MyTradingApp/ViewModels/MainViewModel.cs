@@ -4,10 +4,9 @@ using IBApi;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
-using MyTradingApp.Views;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
@@ -21,12 +20,10 @@ namespace MyTradingApp.ViewModels
         private readonly IConnectionService _connectionService;
         private readonly IOrderManager _orderManager;
         private readonly IAccountManager _accountManager;
+        private readonly StatusBarViewModel _statusBarViewModel;
         private ICommand _connectCommand;
         private ICommand _sendOrderCommand;
         private ICommand _accountSummaryCommand;
-        private RelayCommand _addCommand;
-        private RelayCommand<OrderItem> _deleteCommand;
-        private string _statusBarText;
         private string _connectButtonCaption;
         private int _numberOfLinesInMessageBox;
         private int _orderId;
@@ -38,13 +35,16 @@ namespace MyTradingApp.ViewModels
             IConnectionService connectionService,
             IOrderManager orderManager,
             IAccountManager accountManager,
-            OrdersViewModel ordersViewModel)
+            OrdersViewModel ordersViewModel,
+            StatusBarViewModel statusBarViewModel)
         {
             _iBClient = iBClient;
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
+            _accountManager.AccountSummary += OnAccountManagerAccountSummary;
             OrdersViewModel = ordersViewModel;
+            _statusBarViewModel = statusBarViewModel;
             _iBClient.OrderStatus += _orderManager.HandleOrderStatus;
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += UpdateUI;
@@ -53,6 +53,12 @@ namespace MyTradingApp.ViewModels
             _connectionService.ClientError += OnClientError;
             _connectionService.ManagedAccounts += OnManagedAccounts;
             SetConnectionStatus();
+        }
+
+        private void OnAccountManagerAccountSummary(object sender, AccountSummaryEventArgs e)
+        {
+            _statusBarViewModel.AvailableFunds = e.AvailableFunds.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            _statusBarViewModel.BuyingPower = e.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
         }
 
         private void OnManagedAccounts(object sender, ManagedAccountsEventArgs args)
@@ -89,11 +95,11 @@ namespace MyTradingApp.ViewModels
         {
             if (statusMessage.IsConnected)
             {
-                StatusBarText = "Connected to TWS";
+                _statusBarViewModel.ConnectionStatusText = "Connected to TWS";
             }
             else
             {
-                StatusBarText = "Disconnected...";
+                _statusBarViewModel.ConnectionStatusText = "Disconnected...";
             }
         }
 
@@ -106,12 +112,6 @@ namespace MyTradingApp.ViewModels
         {
             get => _errorText;
             private set => Set(ref _errorText, value);
-        }
-
-        public string StatusBarText
-        {
-            get => _statusBarText;
-            private set => Set(ref _statusBarText, value);
         }
 
         public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(Connect)));
