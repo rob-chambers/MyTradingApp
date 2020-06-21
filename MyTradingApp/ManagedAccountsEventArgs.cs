@@ -3,7 +3,7 @@ using System;
 
 namespace MyTradingApp
 {
-    internal class ManagedAccountsEventArgs : EventArgs
+    public class ManagedAccountsEventArgs : EventArgs
     {
         public ManagedAccountsEventArgs(ManagedAccountsMessage message)
         {

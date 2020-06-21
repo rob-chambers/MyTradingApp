@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MyTradingApp.Services
 {
-    internal interface IOrderManager
+    public interface IOrderManager
     {
         List<string> ManagedAccounts { get; set; }
 

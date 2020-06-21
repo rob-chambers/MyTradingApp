@@ -2,7 +2,7 @@
 
 namespace MyTradingApp
 {
-    internal class ClientError
+    public class ClientError
     {
         public ClientError(int id, int errorCode, string errorMessage, Exception exception)
         {

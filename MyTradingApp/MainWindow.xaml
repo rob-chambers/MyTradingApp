@@ -37,9 +37,12 @@
 
         <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
 
-        <TextBox Grid.Row="3" IsReadOnly="True" MinLines="8" VerticalScrollBarVisibility="Visible"
+        <StackPanel Grid.Row="3">
+            <Button Width="60" Margin="0,10,0,2" Content="Clear" FontSize="10" Command="{Binding ClearCommand}" />
+            <TextBox IsReadOnly="True" MinLines="8" VerticalScrollBarVisibility="Visible"                 
                  Text="{Binding ErrorText, Mode=OneWay}"
-                 />
+                 FontSize="11" />
+        </StackPanel>
 
         <!-- Status Bar-->
         <StatusBar Grid.Row="4" DataContext="{Binding StatusBar, Source={StaticResource Locator}}" MinHeight="30">

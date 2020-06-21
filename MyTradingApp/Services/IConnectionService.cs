@@ -2,7 +2,7 @@
 
 namespace MyTradingApp.Services
 {
-    internal interface IConnectionService
+    public interface IConnectionService
     {
         event EventHandler<ConnectionStatusChangedEventArgs> ConnectionStatusChanged;
         event EventHandler<ClientError> ClientError;

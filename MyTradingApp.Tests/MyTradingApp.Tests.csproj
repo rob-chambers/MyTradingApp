@@ -85,6 +85,7 @@
     <Compile Include="FundamentalDataTests.cs" />
     <Compile Include="OrderCalculationServiceTests.cs" />
     <Compile Include="OrderItemTests.cs" />
+    <Compile Include="MainViewModelTests.cs" />
     <Compile Include="OrdersViewModelTests.cs" />
     <Compile Include="Orders\OrderBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

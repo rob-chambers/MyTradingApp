@@ -7,11 +7,6 @@ namespace IBApi
 {
     public class EReaderMonitorSignal : EReaderSignal
     {
-        public EReaderMonitorSignal()
-        {
-            Debug.WriteLine("Instantiating EReaderMonitorSignal");
-        }
-
         object cs = new object();
         bool open = false;
 

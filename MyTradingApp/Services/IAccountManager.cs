@@ -4,7 +4,7 @@ using System;
 
 namespace MyTradingApp.Services
 {
-    internal interface IAccountManager
+    public interface IAccountManager
     {
         event EventHandler<AccountSummaryEventArgs> AccountSummary;
         void RequestAccountSummary();

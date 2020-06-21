@@ -16,7 +16,6 @@ namespace MyTradingApp
 
         public IBClient(EReaderSignal signal)
         {
-            Debug.WriteLine("Initializing IB Client.");
             ClientSocket = new EClientSocket(this, signal);
             sc = SynchronizationContext.Current;
         }

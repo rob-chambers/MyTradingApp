@@ -25,11 +25,12 @@ namespace MyTradingApp.ViewModels
         private ICommand _connectCommand;
         private ICommand _sendOrderCommand;
         private ICommand _accountSummaryCommand;
+        private ICommand _clearCommand;
         private string _connectButtonCaption;
         private int _numberOfLinesInMessageBox;
         private int _orderId;
         private int _parentOrderId;
-        private string _errorText;
+        private string _errorText;        
 
         public MainViewModel(
             IBClient iBClient,
@@ -125,6 +126,13 @@ namespace MyTradingApp.ViewModels
         public ICommand SendOrderCommand => _sendOrderCommand ?? (_sendOrderCommand = new RelayCommand(new Action(SendOrder)));
 
         public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
+
+        public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
+
+        private void ClearLog()
+        {
+            ErrorText = string.Empty;
+        }
 
         public OrdersViewModel OrdersViewModel { get; private set; }
 
@@ -228,7 +236,7 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _connectButtonCaption, value);
         }
 
-        public void Connect()
+        private void Connect()
         {
             try
             {
@@ -289,7 +297,7 @@ namespace MyTradingApp.ViewModels
 
             _linesInMessageBox.Add(message);
             _numberOfLinesInMessageBox++;
-            ErrorText = string.Join(Environment.NewLine, _linesInMessageBox);
+            ErrorText = string.Join(string.Empty, _linesInMessageBox);
         }
 
         private string EnsureMessageHasNewline(string message)

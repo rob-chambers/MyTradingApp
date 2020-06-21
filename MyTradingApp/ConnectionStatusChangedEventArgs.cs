@@ -2,7 +2,7 @@
 
 namespace MyTradingApp
 {
-    internal class ConnectionStatusChangedEventArgs : EventArgs
+    public class ConnectionStatusChangedEventArgs : EventArgs
     {
         public ConnectionStatusChangedEventArgs(bool isConnected)
         {

@@ -2,7 +2,7 @@
 
 namespace MyTradingApp.ViewModels
 {
-    internal class StatusBarViewModel : ViewModelBase
+    public class StatusBarViewModel : ViewModelBase
     {
         private string _connectionStatusText;
         private string _availableFunds;
