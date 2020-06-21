@@ -10,18 +10,20 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Emerald.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            
+
             <!--Global View Model Locator-->
             <vms:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
-            <Style TargetType="Button">
-                <Setter Property="Padding" Value="8,4" />
+
+            <Style TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}">
+                <Setter Property="Padding" Value="8,6" />
+                <Setter Property="MinWidth" Value="60" />
             </Style>
-            <Style TargetType="ComboBox">
+            <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
                 <Setter Property="Padding" Value="6,2" />
             </Style>
-            <Style TargetType="TextBox">
+            <Style TargetType="TextBox" BasedOn="{StaticResource MahApps.Styles.TextBox}">
                 <Setter Property="Padding" Value="6,2" />
             </Style>
         </ResourceDictionary>

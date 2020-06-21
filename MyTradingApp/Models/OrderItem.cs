@@ -12,6 +12,7 @@ namespace MyTradingApp.Models
         private double _initialStopLossPrice;
         private OrderStatus _status;
         private double _priceIncrement;
+        private int _quantityInterval = 1;
 
         public OrderItem()
         {
@@ -33,7 +34,15 @@ namespace MyTradingApp.Models
         public double Quantity
         {
             get => _quantity;
-            set => Set(ref _quantity, value);
+            set
+            {
+                Set(ref _quantity, value);
+                QuantityInterval = _quantity >= 5000
+                    ? 10
+                    : _quantity >= 1000
+                        ? 5
+                        : 1;
+            }
         }
 
         public double EntryPrice
@@ -56,6 +65,15 @@ namespace MyTradingApp.Models
         {
             get => _initialStopLossPrice;
             set => Set(ref _initialStopLossPrice, value);
+        }        
+
+        public int QuantityInterval
+        {
+            get { return _quantityInterval; }
+            set 
+            { 
+                Set(ref _quantityInterval, value); 
+            }
         }
 
         public OrderStatus Status 
