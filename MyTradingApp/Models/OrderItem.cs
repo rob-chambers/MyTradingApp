@@ -13,10 +13,17 @@ namespace MyTradingApp.Models
         private OrderStatus _status;
         private double _priceIncrement;
         private int _quantityInterval = 1;
+        private int _id;
 
         public OrderItem()
         {
             PriceIncrement = 0.05;
+        }
+
+        public int Id 
+        { 
+            get => _id;
+            set => Set(ref _id, value); 
         }
 
         public Symbol Symbol
@@ -65,19 +72,19 @@ namespace MyTradingApp.Models
         {
             get => _initialStopLossPrice;
             set => Set(ref _initialStopLossPrice, value);
-        }        
+        }
 
         public int QuantityInterval
         {
             get { return _quantityInterval; }
-            set 
-            { 
-                Set(ref _quantityInterval, value); 
+            set
+            {
+                Set(ref _quantityInterval, value);
             }
         }
 
-        public OrderStatus Status 
-        { 
+        public OrderStatus Status
+        {
             get => _status;
             set => Set(ref _status, value);
         }

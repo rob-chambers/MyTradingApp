@@ -5,6 +5,7 @@
         Pending,
         Submitted,
         Filled,
-        Error
+        Error,
+        Cancelled
     }
 }

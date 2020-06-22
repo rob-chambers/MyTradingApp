@@ -22,7 +22,6 @@ namespace MyTradingApp.ViewModels
         private readonly StatusBarViewModel _statusBarViewModel;
         private readonly IHistoricalDataManager _historicalDataManager;
         private ICommand _connectCommand;
-        private ICommand _sendOrderCommand;
         private ICommand _accountSummaryCommand;
         private ICommand _clearCommand;
         private string _connectButtonCaption;
@@ -55,9 +54,9 @@ namespace MyTradingApp.ViewModels
             _iBClient.AccountSummaryEnd += UpdateUI;
 
             Messenger.Default.Register<ConnectionStatusChangedMessage>(this, OnConnectionStatusMessage);
+            //Messenger.Default.Register<ManagedAccountsEventArgs>(this, OnManagedAccounts);
 
             _connectionService.ClientError += OnClientError;
-            _connectionService.ManagedAccounts += OnManagedAccounts;
             SetConnectionStatus();
         }
 
@@ -68,12 +67,12 @@ namespace MyTradingApp.ViewModels
                 : "Disconnected...";
         }
 
-        private void OnManagedAccounts(object sender, ManagedAccountsEventArgs args)
-        {
-            _orderManager.ManagedAccounts = args.Message.ManagedAccounts;
-            //accountManager.ManagedAccounts = message.ManagedAccounts;
-            //exerciseAccount.Items.AddRange(message.ManagedAccounts.ToArray());
-        }
+        //private void OnManagedAccounts(ManagedAccountsEventArgs args)
+        //{
+        //    _orderManager.ManagedAccounts = args.Message.ManagedAccounts;
+        //    //accountManager.ManagedAccounts = message.ManagedAccounts;
+        //    //exerciseAccount.Items.AddRange(message.ManagedAccounts.ToArray());
+        //}
 
         private void OnClientError(object sender, ClientError e)
         {
@@ -111,7 +110,7 @@ namespace MyTradingApp.ViewModels
 
         public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(Connect)));
 
-        public ICommand SendOrderCommand => _sendOrderCommand ?? (_sendOrderCommand = new RelayCommand(new Action(SendOrder)));
+        //public ICommand SendOrderCommand => _sendOrderCommand ?? (_sendOrderCommand = new RelayCommand(new Action(SendOrder)));
 
         public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
 
@@ -124,99 +123,7 @@ namespace MyTradingApp.ViewModels
 
         public OrdersViewModel OrdersViewModel { get; private set; }
 
-        private void SendOrder()
-        {
-            var contract = GetOrderContract();
-            var order = GetOrder();
-            _orderManager.PlaceOrder(contract, order);
-            if (_orderId != 0)
-            {
-                _orderId = 0;
-            }
-        }
 
-        private Contract GetOrderContract()
-        {
-            var contract = new Contract();
-
-            /* To be entered in UI */
-            var symbol = "JKS";
-            var localSymbol = string.Empty;
-            var primaryExchange = "NYSE";
-            /* To be entered in UI */
-
-            contract.Symbol = symbol;
-            contract.SecType = "STK"; // Stock
-            contract.Currency = "USD"; // US Dollars
-            contract.Exchange = "IDEALPRO"; // Exchange
-            contract.LastTradeDateOrContractMonth = string.Empty;
-            contract.LocalSymbol = localSymbol;
-            contract.PrimaryExch = primaryExchange;
-            return contract;
-        }
-
-        private Order GetOrder()
-        {
-            var order = new Order();
-            if (_orderId != 0)
-            {
-                order.OrderId = _orderId;
-            }
-
-            if (_parentOrderId != 0)
-            {
-                order.ParentId = _parentOrderId;
-            }
-
-            /* actions:
-             * "BUY",
-            "SELL",
-            "SSHORT"});
-            */
-
-            order.Action = "BUY";
-
-            /* Order types
-            "MKT",
-            "LMT",
-            "STP",
-            "STP LMT",
-            "REL",
-            "TRAIL",
-            */
-
-            order.OrderType = "STP";
-
-            var stopPrice = 16.40D;
-            order.AuxPrice = stopPrice;
-            order.TotalQuantity = 111;
-            order.Account = "DU1070034";
-            order.ModelCode = string.Empty;
-
-            /* Time in force values              
-            "DAY",
-            "GTC",
-            "OPG",
-            "IOC",
-            "GTD",
-            "GTT",
-            "AUC",
-            "FOK",
-            "GTX",
-            "DTC" */
-
-            order.Tif = "DAY";
-            //FillExtendedOrderAttributes(order);
-            //FillAdvisorAttributes(order);
-            //FillVolatilityAttributes(order);
-            //FillScaleAttributes(order);
-            //FillAlgoAttributes(order);
-            //FillPegToBench(order);
-            //FillAdjustedStops(order);
-            //FillConditions(order);
-
-            return order;
-        }
 
         public string ConnectButtonCaption
         {

@@ -2,11 +2,13 @@
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MyTradingApp.ViewModels
@@ -17,6 +19,7 @@ namespace MyTradingApp.ViewModels
         private readonly IMarketDataManager _marketDataManager;
         private readonly IHistoricalDataManager _historicalDataManager;
         private readonly IOrderCalculationService _orderCalculationService;
+        private readonly IOrderManager _orderManager;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
@@ -25,12 +28,16 @@ namespace MyTradingApp.ViewModels
         private OrderItem _requestedOrder;
         private bool _isStreaming;
         private string _streamingButtonCaption;
+        private int _orderId;
+        private int _parentOrderId;
+        private string _accountId;
 
         public OrdersViewModel(
             IContractManager contractManager, 
             IMarketDataManager marketDataManager,
             IHistoricalDataManager historicalDataManager,
-            IOrderCalculationService orderCalculationService)
+            IOrderCalculationService orderCalculationService,
+            IOrderManager orderManager)
         {
             Orders = new ObservableCollection<OrderItem>
             {
@@ -55,9 +62,17 @@ namespace MyTradingApp.ViewModels
             _marketDataManager = marketDataManager;
             _historicalDataManager = historicalDataManager;
             _orderCalculationService = orderCalculationService;
+            _orderManager = orderManager;            
             Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
             Messenger.Default.Register<HistoricalDataCompletedMessage>(this, OnHistoricalDataManagerDataCompleted);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
+            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             SetStreamingButtonCaption();
+        }
+
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
+        {
+            _accountId = message.AccountId;
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
@@ -68,6 +83,35 @@ namespace MyTradingApp.ViewModels
             _requestedOrder.EntryPrice = message.Bars.First().Close;
             _requestedOrder.InitialStopLossPrice = sl;
             _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
+        }
+
+        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        {
+            // Find corresponding order
+            var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
+            if (order == null)
+            {
+                // Most likely an existing pending order (i.e. one that wasn't submitted via this app while it is currently open)
+                return;
+            }
+
+            Debug.WriteLine("Order status: {0}", message.Message.Status);
+
+            UpdateOrderStatus(order, message.Message.Status);
+        }
+
+        private void UpdateOrderStatus(OrderItem order, string status)
+        {
+            switch (status)
+            {
+                case "PreSubmitted":
+                    order.Status = OrderStatus.Submitted;
+                    break;
+
+                case "Cancelled":
+                    order.Status = OrderStatus.Cancelled;
+                    break;
+            }
         }
 
         private void OnContractManagerFundamentalData(FundamentalDataMessage message)
@@ -202,7 +246,7 @@ namespace MyTradingApp.ViewModels
             {
                 return _submitCommand ?? (_submitCommand = new RelayCommand<OrderItem>(order =>
                 {
-                    order.Status = OrderStatus.Submitted;
+                    SubmitOrder(order);
                 }, order => CanSubmitOrder(order)));
             }
         }
@@ -249,15 +293,6 @@ namespace MyTradingApp.ViewModels
 
             return contract;
         }
-        //private Contract GetMDContract()
-        //{
-        //    Contract contract = new Contract();
-        //    contract.LastTradeDateOrContractMonth = this.lastTradeDateOrContractMonth_TMD_MDT.Text;
-        //    contract.PrimaryExch = this.primaryExchange.Text;
-        //    contract.IncludeExpired = includeExpired.Checked;
-
-        //    return contract;
-        //}
 
         public bool IsStreaming
         {
@@ -280,6 +315,89 @@ namespace MyTradingApp.ViewModels
             StreamingButtonCaption = IsStreaming
                 ? "Cancel"
                 : "Stream";
+        }
+
+        private void SubmitOrder(OrderItem orderItem)
+        {
+            var contract = MapOrderToContract(orderItem);
+            contract.LocalSymbol = orderItem.Symbol.Code;
+            contract.PrimaryExch = orderItem.Symbol.Exchange.ToString();
+            contract.Exchange = "IDEALPRO";
+
+            var order = GetOrder(orderItem);
+            var id = _orderManager.PlaceNewOrder(contract, order);
+
+            // Find this order in the collection and update its id
+            var index = Orders.IndexOf(orderItem);
+            if (index >= 0)
+            {
+                Orders[index].Id = id;
+            }
+        }
+
+        private Order GetOrder(OrderItem orderItem)
+        {
+            var order = new Order();
+            if (orderItem.Id != 0)
+            {
+                order.OrderId = orderItem.Id;
+            }
+
+            if (_parentOrderId != 0)
+            {
+                order.ParentId = _parentOrderId;
+            }
+
+            /* actions:
+             * "BUY",
+            "SELL",
+            "SSHORT"});
+            */
+
+            order.Action = orderItem.Direction == Direction.Buy
+                ? "BUY"
+                : "SELL";
+
+            /* Order types
+            "MKT",
+            "LMT",
+            "STP",
+            "STP LMT",
+            "REL",
+            "TRAIL",
+            */
+
+            order.OrderType = "STP";
+
+            var stopPrice = orderItem.EntryPrice;
+            order.AuxPrice = stopPrice;
+            order.TotalQuantity = orderItem.Quantity;
+            order.Account = _accountId;
+            order.ModelCode = string.Empty;
+
+            /* Time in force values              
+            "DAY",
+            "GTC",
+            "OPG",
+            "IOC",
+            "GTD",
+            "GTT",
+            "AUC",
+            "FOK",
+            "GTX",
+            "DTC" */
+
+            order.Tif = "DAY";
+            //FillExtendedOrderAttributes(order);
+            //FillAdvisorAttributes(order);
+            //FillVolatilityAttributes(order);
+            //FillScaleAttributes(order);
+            //FillAlgoAttributes(order);
+            //FillPegToBench(order);
+            //FillAdjustedStops(order);
+            //FillConditions(order);
+
+            return order;
         }
     }
 }

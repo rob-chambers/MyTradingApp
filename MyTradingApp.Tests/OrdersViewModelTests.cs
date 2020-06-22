@@ -17,7 +17,8 @@ namespace MyTradingApp.Tests
             var marketDataManager = Substitute.For<IMarketDataManager>();
             var historicalDataManager = Substitute.For<IHistoricalDataManager>();
             var orderCalculationService = Substitute.For<IOrderCalculationService>();
-            return new OrdersViewModel(_contractManager, marketDataManager, historicalDataManager, orderCalculationService);
+            var orderManager = Substitute.For<IOrderManager>();
+            return new OrdersViewModel(_contractManager, marketDataManager, historicalDataManager, orderCalculationService, orderManager);
         }
 
         [Fact]

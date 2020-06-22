@@ -13,10 +13,10 @@ namespace MyTradingApp.ViewModels
 
         public StatusBarViewModel()
         {
-            Messenger.Default.Register<AccountSummaryMessage>(this, HandleAccountSummaryMessage);
+            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
         }
 
-        private void HandleAccountSummaryMessage(AccountSummaryMessage args)
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
         {
             AvailableFunds = args.AvailableFunds.ToString("C", CultureInfo.GetCultureInfo("en-US"));
             BuyingPower = args.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));

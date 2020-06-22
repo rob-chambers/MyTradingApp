@@ -18,10 +18,10 @@ namespace MyTradingApp.Services
 
         public OrderCalculationService()
         {
-            Messenger.Default.Register<AccountSummaryMessage>(this, HandleAccountSummaryMessage);
+            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
         }
 
-        private void HandleAccountSummaryMessage(AccountSummaryMessage args)
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
         {
             _accountSize = args.AvailableFunds;
         }

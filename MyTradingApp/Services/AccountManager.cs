@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using System;
 using System.Collections.Generic;
 
 namespace MyTradingApp.Services
@@ -45,8 +45,13 @@ namespace MyTradingApp.Services
             }
         }
 
-        public void HandleAccountSummary(Messages.AccountSummaryMessage msg)
+        public void HandleAccountSummary(AccountSummaryMessage msg)
         {
+            if (_accountData.ContainsKey(msg.Tag))
+            {
+                return;
+            }
+                
             _accountData.Add(msg.Tag, msg.Value);
             _dataCount++;            
             if (_dataCount <= 1)
@@ -55,7 +60,7 @@ namespace MyTradingApp.Services
             }
 
             // We have both data fields - raise event now
-            var message = new EventMessages.AccountSummaryMessage();
+            var message = new AccountSummaryCompletedMessage();
             if (_accountData.ContainsKey(AccountSummaryTags.AvailableFunds))
             {
                 message.AvailableFunds = double.Parse(_accountData[AccountSummaryTags.AvailableFunds]);
@@ -65,6 +70,8 @@ namespace MyTradingApp.Services
             {
                 message.BuyingPower = double.Parse(_accountData[AccountSummaryTags.BuyingPower]);
             }
+
+            message.AccountId = msg.Account;
 
             Messenger.Default.Send(message);
         }

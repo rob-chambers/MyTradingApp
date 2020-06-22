@@ -1,6 +1,7 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace MyTradingApp.Services
@@ -12,13 +13,14 @@ namespace MyTradingApp.Services
         public OrderManager(IBClient ibClient)
         {
             _ibClient = ibClient;
+            ibClient.OrderStatus += HandleOrderStatus;            
         }
-
-        public List<string> ManagedAccounts { get; set; }
 
         public void HandleOrderStatus(OrderStatusMessage message)
         {
             Debug.WriteLine("Order status: {0}, permid: {1}", message.Status, message.PermId);
+
+            Messenger.Default.Send(new OrderStatusChangedMessage(message));
 
             //for (int i = 0; i < liveOrdersGrid.Rows.Count; i++)
             //{
@@ -30,17 +32,12 @@ namespace MyTradingApp.Services
             //}
         }
 
-        public void PlaceOrder(Contract contract, Order order)
+        public int PlaceNewOrder(Contract contract, Order order)
         {
-            if (order.OrderId != 0)
-            {
-                _ibClient.ClientSocket.placeOrder(order.OrderId, contract, order);
-            }
-            else
-            {
-                _ibClient.ClientSocket.placeOrder(_ibClient.NextOrderId, contract, order);
-                _ibClient.NextOrderId++;
-            }
+            var id = _ibClient.NextOrderId;
+            _ibClient.ClientSocket.placeOrder(id, contract, order);
+            _ibClient.NextOrderId++;
+            return id;
         }
     }
 }

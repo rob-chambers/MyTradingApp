@@ -30,7 +30,8 @@ namespace MyTradingApp.Tests
             _marketDataManager = Substitute.For<IMarketDataManager>();
             _historicalDataManager = Substitute.For<IHistoricalDataManager>();
             _orderCalculationService = Substitute.For<IOrderCalculationService>();
-            _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService);
+            var orderManager = Substitute.For<IOrderManager>();
+            _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
             return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager);
