@@ -68,7 +68,19 @@ namespace MyTradingApp.ViewModels
             Messenger.Default.Register<HistoricalDataCompletedMessage>(this, OnHistoricalDataManagerDataCompleted);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
+            Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
             SetStreamingButtonCaption();
+        }
+
+        private void HandleTickPriceMessage(TickPrice tickPrice)
+        {
+            var order = Orders.SingleOrDefault(o => o.Symbol.Code == tickPrice.Symbol);
+            if (order == null)
+            {
+                return;
+            }
+
+            order.Symbol.LatestPrice = tickPrice.Price;
         }
 
         private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
@@ -210,6 +222,8 @@ namespace MyTradingApp.ViewModels
 
         private void GetMarketData()
         {
+            if (_requestedOrder == null) return;
+
             var contract = MapOrderToContract(_requestedOrder);
             var genericTickList = string.Empty;
             _marketDataManager.AddRequest(contract, genericTickList);

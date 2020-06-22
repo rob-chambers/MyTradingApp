@@ -1,4 +1,6 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,8 +11,7 @@ namespace MyTradingApp.Services
     {
         public const int TICK_ID_BASE = 10000000;
         private int _currentTicker = 1;
-
-        private List<Contract> _activeRequests = new List<Contract>();
+        private Dictionary<int, Contract> _activeRequests = new Dictionary<int, Contract>();
 
         public MarketDataManager(IBClient iBClient) : base(iBClient)
         {
@@ -20,25 +21,11 @@ namespace MyTradingApp.Services
 
         private void OnTickPrice(TickPriceMessage msg)
         {
-            Debug.WriteLine("OnTickPrice for request {0}: {1}:",
-                msg.RequestId,
-                TickType.getField(msg.Field), msg.Price,
-                msg.Price);
-
-            /*
-            addTextToBox("Tick Price. Ticker Id:" + msg.RequestId + ", Type: " + TickType.getField(msg.Field) + 
-            ", Price: " + msg.Price + ", Pre-Open: " + msg.Attribs.PreOpen + "\n");
-
-            if (msg.RequestId < OptionsManager.OPTIONS_ID_BASE)
+            if (msg.Field == TickType.LAST)
             {
-                if (marketDataManager.IsUIUpdateRequired(msg))
-                    marketDataManager.UpdateUI(msg);
+                var symbol = _activeRequests[msg.RequestId].Symbol;
+                Messenger.Default.Send(new TickPrice(symbol, msg.Price));
             }
-            else
-            {
-                HandleTickMessage(msg);
-            }
-            */
         }
 
         private void OnClientTickGeneric(int tickerId, int field, double value)
@@ -50,16 +37,11 @@ namespace MyTradingApp.Services
         }
 
         public void AddRequest(Contract contract, string genericTickList)
-        {
-            _activeRequests.Add(contract);
+        {            
             var nextRequestId = TICK_ID_BASE + _currentTicker++;
-            //checkToAddRow(nextReqId);
             ibClient.ClientSocket.reqMktData(nextRequestId, contract, genericTickList, false, false, new List<TagValue>());
-
-            //if (!uiControl.Visible)
-            //    uiControl.Visible = true;
+            _activeRequests.Add(nextRequestId, contract);
         }
-
 
         public void StopActiveRequests()
         {

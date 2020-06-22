@@ -7,6 +7,7 @@ namespace MyTradingApp.Models
         private string _code;
         private Exchange _exchange;
         private string _name;
+        private double _latestPrice;
 
         public string Code
         {
@@ -24,6 +25,12 @@ namespace MyTradingApp.Models
         { 
             get => _name; 
             set => Set(ref _name, value); 
+        }
+
+        public double LatestPrice
+        {
+            get => _latestPrice;
+            set => Set(ref _latestPrice, value);
         }
     }
 }

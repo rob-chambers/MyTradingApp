@@ -93,6 +93,8 @@
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
 
+                    <GridViewColumn Header=" Price" Width="120" DisplayMemberBinding="{Binding Symbol.LatestPrice}" />
+
                     <GridViewColumn Header="Direction" Width="auto" >
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>

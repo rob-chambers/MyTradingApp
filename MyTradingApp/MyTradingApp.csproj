@@ -122,6 +122,7 @@
     <Compile Include="Services\OrderCalculationService.cs" />
     <Compile Include="Services\OrderManager.cs" />
     <Compile Include="Services\IOrderManager.cs" />
+    <Compile Include="EventMessages\TickPriceMessage.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="ViewModels\OrdersViewModel.cs" />
