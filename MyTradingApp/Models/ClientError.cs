@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyTradingApp
+namespace MyTradingApp.Models
 {
     public class ClientError
     {

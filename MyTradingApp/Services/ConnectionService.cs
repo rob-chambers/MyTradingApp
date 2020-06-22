@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Models;
 using System;
 using System.Threading;
 

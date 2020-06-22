@@ -32,6 +32,7 @@ namespace MyTradingApp.ViewModels
         private int _parentOrderId;
         private string _accountId;
 
+
         public OrdersViewModel(
             IContractManager contractManager, 
             IMarketDataManager marketDataManager,

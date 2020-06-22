@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Messages;
+using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,8 @@ namespace MyTradingApp.ViewModels
         private int _numberOfLinesInMessageBox;
         private int _orderId;
         private int _parentOrderId;
-        private string _errorText;        
+        private string _errorText;
+        private bool _isEnabled;
 
         public MainViewModel(
             IBClient iBClient,
@@ -60,11 +62,18 @@ namespace MyTradingApp.ViewModels
             SetConnectionStatus();
         }
 
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set => Set(ref _isEnabled, value);
+        }
+
         private void OnConnectionStatusMessage(ConnectionStatusChangedMessage message)
         {
             _statusBarViewModel.ConnectionStatusText = message.IsConnected 
                 ? "Connected to TWS"
                 : "Disconnected...";
+            IsEnabled = message.IsConnected;
         }
 
         //private void OnManagedAccounts(ManagedAccountsEventArgs args)

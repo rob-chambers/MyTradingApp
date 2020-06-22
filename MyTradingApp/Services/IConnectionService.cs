@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyTradingApp.Models;
+using System;
 
 namespace MyTradingApp.Services
 {

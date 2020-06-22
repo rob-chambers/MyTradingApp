@@ -98,7 +98,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ClientError.cs" />
+    <Compile Include="Models\ClientError.cs" />
     <Compile Include="EventMessages\ConnectionStatusChangedMessage.cs" />
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
     <Compile Include="Models\Bar.cs" />
@@ -114,7 +114,6 @@
     <Compile Include="Services\HistoricalDataManager.cs" />
     <Compile Include="Services\IAccountManager.cs" />
     <Compile Include="Services\IConnectionService.cs" />
-    <Compile Include="ManagedAccountsEventArgs.cs" />
     <Compile Include="Services\IContractManager.cs" />
     <Compile Include="Services\IHistoricalDataManager.cs" />
     <Compile Include="Services\IMarketDataManager.cs" />

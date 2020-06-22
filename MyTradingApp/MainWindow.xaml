@@ -33,7 +33,8 @@
 
         <!--<Button Grid.Row="1" Width="100" Height="50" Content="Send Order" Command="{Binding SendOrderCommand}" ></Button>-->
 
-        <views:OrdersView Grid.Row="1" DataContext="{Binding OrdersViewModel}" />
+        <views:OrdersView Grid.Row="1" DataContext="{Binding OrdersViewModel}" 
+                          IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mah:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
 
         <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
 

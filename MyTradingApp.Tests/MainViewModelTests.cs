@@ -1,4 +1,5 @@
 ﻿using IBApi;
+using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
