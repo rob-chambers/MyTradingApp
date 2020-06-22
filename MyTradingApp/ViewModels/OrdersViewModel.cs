@@ -40,23 +40,7 @@ namespace MyTradingApp.ViewModels
             IOrderCalculationService orderCalculationService,
             IOrderManager orderManager)
         {
-            Orders = new ObservableCollection<OrderItem>
-            {
-                new OrderItem
-                {
-                    Direction = Direction.Buy,
-                    EntryPrice = 16.11D,
-                    InitialStopLossPrice = 15.03,
-                    Quantity = 100,
-                    Symbol = new Symbol
-                    {
-                        Code = "JKS",
-                        Exchange = Exchange.NYSE,
-                        Name = "JinkoSolar"
-                    }
-                }
-            };
-
+            Orders = new ObservableCollection<OrderItem>();
             PopulateDirectionList();
             PopulateExchangeList();
             _contractManager = contractManager;
@@ -129,9 +113,11 @@ namespace MyTradingApp.ViewModels
 
         private void OnContractManagerFundamentalData(FundamentalDataMessage message)
         {
+            _requestedOrder.Symbol.IsFound = true;
             _requestedOrder.Symbol.Name = message.Data.CompanyName;
-            Messenger.Default.Send(new GenericMessage<OrderItem>(_requestedOrder));
             IssueHistoricalDataRequest(_requestedOrder);
+            StartStopStreamingCommand.RaiseCanExecuteChanged();
+            SubmitCommand.RaiseCanExecuteChanged();
         }
 
         private void PopulateDirectionList()
@@ -203,7 +189,7 @@ namespace MyTradingApp.ViewModels
             get
             {
                 return _startStopStreamingCommand ?? 
-                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming));
+                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming, CanStartStopStreaming));
             }
         }
 
@@ -236,12 +222,13 @@ namespace MyTradingApp.ViewModels
 
         private bool CanStartStopStreaming()
         {
-            return true;
+            return IsStreaming || Orders.Any(o => o.Symbol.IsFound);
         }
 
         private void IssueFindSymbolRequest(OrderItem order)
         {
             _requestedOrder = order;
+            order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
         }
@@ -268,7 +255,7 @@ namespace MyTradingApp.ViewModels
 
         private bool CanSubmitOrder(OrderItem order)
         {
-            return !string.IsNullOrEmpty(order.Symbol.Name) && order.Status == OrderStatus.Pending;
+            return order.Symbol.IsFound && order.Status == OrderStatus.Pending;
         }
 
         private bool CanFindOrder(OrderItem order)
@@ -328,8 +315,8 @@ namespace MyTradingApp.ViewModels
         private void SetStreamingButtonCaption()
         {
             StreamingButtonCaption = IsStreaming
-                ? "Cancel"
-                : "Stream";
+                ? "Stop Streaming"
+                : "Start Streaming";
         }
 
         private void SubmitOrder(OrderItem orderItem)

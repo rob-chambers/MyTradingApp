@@ -1,4 +1,6 @@
-﻿namespace MyTradingApp.Models
+﻿using MyTradingApp.Models;
+
+namespace MyTradingApp.EventMessages
 {
     public class FundamentalDataMessage
     {

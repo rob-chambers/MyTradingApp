@@ -8,6 +8,7 @@ namespace MyTradingApp.Models
         private Exchange _exchange;
         private string _name;
         private double _latestPrice;
+        private bool _isFound;
 
         public string Code
         {
@@ -31,6 +32,12 @@ namespace MyTradingApp.Models
         {
             get => _latestPrice;
             set => Set(ref _latestPrice, value);
+        }
+
+        public bool IsFound
+        {
+            get => _isFound;
+            set => Set(ref _isFound, value);
         }
     }
 }

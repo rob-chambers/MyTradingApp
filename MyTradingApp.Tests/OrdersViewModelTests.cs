@@ -1,8 +1,12 @@
-﻿using MyTradingApp.Models;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
+using MyTradingApp.EventMessages;
+using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.Tests.Orders;
 using MyTradingApp.ViewModels;
 using NSubstitute;
+using System.IO;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -129,6 +133,48 @@ namespace MyTradingApp.Tests
 
             // Assert
             Assert.Equal("MSFT", order.Symbol.Code);
+        }
+
+        [Fact]
+        public void StreamingInitiallyDisabled()
+        {
+            var vm = GetVm();
+            Assert.False(vm.StartStopStreamingCommand.CanExecute(null));
+        }
+
+        [Fact]
+        public void CanOnlyStartStreamingWhenAtLeastOneOrder()
+        {
+            // Arrange
+            var fired = false;
+            var vm = GetVm();
+            vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true; ;
+
+            var xml = File.ReadAllText(@"Resources\fundamentaldata.xml");
+            var fundamentalData = FundamentalData.Parse(xml);
+            _contractManager
+                .When(x => x.RequestFundamentals(Arg.Any<Contract>(), Arg.Any<string>()))
+                .Do(x => Messenger.Default.Send(new FundamentalDataMessage(fundamentalData)));
+
+            var builder = new OrderBuilder();
+            var order = builder.Default.SetSymbol("MSFT").Order;
+            order.Symbol.Exchange = Exchange.NYSE;
+            vm.Orders.Add(order);
+
+            var commandParameter = order;
+
+            // Act
+            vm.FindCommand.Execute(commandParameter);
+
+            // Assert
+            Assert.True(order.Symbol.IsFound);
+            Assert.True(vm.StartStopStreamingCommand.CanExecute(null));
+            Assert.True(fired);
+        }
+
+        private void StartStopStreamingCommand_CanExecuteChanged(object sender, System.EventArgs e)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

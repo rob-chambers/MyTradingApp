@@ -5,12 +5,17 @@ namespace MyTradingApp.Models
 {
     public class FundamentalData
     {
-        public string CompanyName { get; set; }
+        // Hide constructor - can only instantiate via Parse method
+        private FundamentalData(string companyName)
+        {
+            CompanyName = companyName;
+        }
+
+        public string CompanyName { get; }
 
         public static FundamentalData Parse(string data)
         {
-            var result = new FundamentalData();
-
+            var companyName = string.Empty;
             var root = XDocument.Parse(data);
             var companyIds = root.Descendants("CoIDs").FirstOrDefault();
             if (companyIds != null)
@@ -21,11 +26,11 @@ namespace MyTradingApp.Models
 
                 if (element != null)
                 {
-                    result.CompanyName = element.Value.ToString();
+                    companyName = element.Value.ToString();
                 }
             }
 
-            return result;
+            return new FundamentalData(companyName);
         }
     }
 }

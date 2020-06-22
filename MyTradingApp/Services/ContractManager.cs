@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using System.Collections.Generic;
