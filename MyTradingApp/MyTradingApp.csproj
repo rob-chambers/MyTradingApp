@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>iconfinder_17_3319627.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommonServiceLocator, Version=2.0.2.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
       <HintPath>..\packages\CommonServiceLocator.2.0.2\lib\net47\CommonServiceLocator.dll</HintPath>
@@ -126,6 +129,7 @@
     <Compile Include="Services\IOrderManager.cs" />
     <Compile Include="EventMessages\TickPriceMessage.cs" />
     <Compile Include="Services\IExchangeRateService.cs" />
+    <Compile Include="Utils\VisualTreeUtility.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="ViewModels\OrdersViewModel.cs" />
@@ -253,6 +257,9 @@
       <Project>{8ede0744-96c2-40b0-a8dc-37df79370203}</Project>
       <Name>CSharpAPI</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="iconfinder_17_3319627.ico" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -112,6 +112,10 @@ namespace MyTradingApp.ViewModels
                 case "Cancelled":
                     order.Status = OrderStatus.Cancelled;
                     break;
+
+                case "Filled":
+                    order.Status = OrderStatus.Filled;
+                    break;
             }
         }
 

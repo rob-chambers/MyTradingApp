@@ -9,10 +9,11 @@
         xmlns:views="clr-namespace:MyTradingApp.Views"
         mc:Ignorable="d"
         Title="My Trading App" 
-        Width="1200"
-        Height="450" 
-        WindowStartupLocation="CenterScreen"
+        Width="1261"
+        Height="587" 
+        WindowStartupLocation="CenterScreen" 
         ResizeMode="CanResizeWithGrip"
+        Icon="iconfinder_17_3319627.ico"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         >
     <Grid Margin="8">

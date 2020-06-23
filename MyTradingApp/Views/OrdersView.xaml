@@ -49,7 +49,7 @@
                     <GridViewColumn Header=" Symbol" Width="75">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Symbol.Code}" MaxLength="6" Padding="6,2" Width="60" />
+                                <TextBox Text="{Binding Symbol.Code}" KeyUp="OnSymbolTextBoxKeyUp" MaxLength="6" Padding="6,2" Width="60" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

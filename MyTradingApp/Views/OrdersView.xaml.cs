@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using MyTradingApp.Utils;
+using MyTradingApp.ViewModels;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MyTradingApp.Views
 {
@@ -23,6 +13,30 @@ namespace MyTradingApp.Views
         public OrdersView()
         {
             InitializeComponent();
+        }
+
+        private void OnSymbolTextBoxKeyUp(object sender, KeyEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if (textBox == null || textBox.Text.Length == 0)
+            {
+                return;
+            }
+
+            if (e.Key == Key.Enter)
+            {
+                // Execute Find Command
+                var vm = (OrdersViewModel)DataContext;
+
+                // Find the ListViewItem the textbox corresponds with
+                var item = VisualTreeUtility.FindParentOfType<ListViewItem>(textBox);
+                if (item != null)
+                {
+                    // The command parameter is the binding of the element
+                    var orderItem = item.DataContext;
+                    vm.FindCommand.Execute(orderItem);
+                }
+            }
         }
     }
 }
