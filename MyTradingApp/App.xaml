@@ -29,6 +29,9 @@
             <Style TargetType="StatusBarItem" >
                 <Setter Property="Padding" Value="6,4" />
             </Style>
+            <Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
+                
+            </Style>
         </ResourceDictionary>
   </Application.Resources>
 </Application>

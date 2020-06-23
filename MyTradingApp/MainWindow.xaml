@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:MyTradingApp"
         xmlns:vms="clr-namespace:MyTradingApp.ViewModels"
         xmlns:views="clr-namespace:MyTradingApp.Views"
+        xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
         Title="My Trading App" 
         Width="1261"
@@ -27,9 +28,27 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
             <Button Width="80" HorizontalAlignment="Left" Margin="0,10" Content="{Binding ConnectButtonCaption}" Command="{Binding ConnectCommand}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Label VerticalAlignment="Center" >Risk Multiplier:</Label>
+                <mahapps:NumericUpDown Value="{Binding RiskMultiplier}" Minimum="0.01" Maximum="5" 
+                                                       Interval="0.1"
+                                                       Width="90"
+                                                       Height="28" 
+                                                       NumericInputMode="Decimal"
+                                                       ParsingNumberStyle="Float"
+                                                       StringFormat="0.00"
+                                                       />
+
+                <Label Margin="16,0,0,0" VerticalAlignment="Center" >Risk Per Trade:</Label>
+                <TextBox Margin="6,0" Text="{Binding RiskPerTrade, Mode=OneWay, StringFormat='$0.00'}" Height="28" IsReadOnly="True"
+                         VerticalContentAlignment="Center"
+                         />
+            </StackPanel>
         </Grid>
 
         <!--<Button Grid.Row="1" Width="100" Height="50" Content="Send Order" Command="{Binding SendOrderCommand}" ></Button>-->
@@ -52,7 +71,7 @@
             <StatusBarItem HorizontalAlignment="Right" >
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Available Funds: " />
-                    <TextBlock Text="{Binding AvailableFunds, Mode=OneWay}" Width="100" />
+                    <TextBlock Text="{Binding NetLiquidation, Mode=OneWay}" Width="100" />
 
                     <TextBlock Text="Buying Power: " Margin="10,0,0,0" />
                     <TextBlock Text="{Binding BuyingPower, Mode=OneWay}" Width="100" />

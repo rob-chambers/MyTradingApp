@@ -13,10 +13,10 @@ namespace MyTradingApp.Services
              + "GrossPositionValue,ReqTEquity,ReqTMargin,SMA,InitMarginReq,MaintMarginReq,AvailableFunds,ExcessLiquidity,Cushion,FullInitMarginReq,FullMaintMarginReq,FullAvailableFunds,"
              + "FullExcessLiquidity,LookAheadNextChange,LookAheadInitMarginReq ,LookAheadMaintMarginReq,LookAheadAvailableFunds,LookAheadExcessLiquidity,HighestSeverity,DayTradesRemaining,Leverage";
 
-        private static class AccountSummaryTags
+        public static class AccountSummaryTags
         {
             public const string BuyingPower = "BuyingPower";
-            public const string AvailableFunds = "AvailableFunds";
+            public const string NetLiquidation = "NetLiquidation";
         }
 
         private readonly IBClient _iBClient;
@@ -36,7 +36,7 @@ namespace MyTradingApp.Services
                 _dataCount = 0;
                 _accountData.Clear();
                 _accountSummaryRequestActive = true;
-                var tags = AccountSummaryTags.BuyingPower + "," + AccountSummaryTags.AvailableFunds;
+                var tags = AccountSummaryTags.BuyingPower + "," + AccountSummaryTags.NetLiquidation;
                 _iBClient.ClientSocket.reqAccountSummary(ACCOUNT_SUMMARY_ID, "All", tags);
             }
             else
@@ -61,9 +61,9 @@ namespace MyTradingApp.Services
 
             // We have both data fields - raise event now
             var message = new AccountSummaryCompletedMessage();
-            if (_accountData.ContainsKey(AccountSummaryTags.AvailableFunds))
+            if (_accountData.ContainsKey(AccountSummaryTags.NetLiquidation))
             {
-                message.AvailableFunds = double.Parse(_accountData[AccountSummaryTags.AvailableFunds]);
+                message.NetLiquidation = double.Parse(_accountData[AccountSummaryTags.NetLiquidation]);
             }
 
             if (_accountData.ContainsKey(AccountSummaryTags.BuyingPower))

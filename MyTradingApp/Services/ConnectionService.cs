@@ -37,7 +37,6 @@ namespace MyTradingApp.Services
             {
                 if (_isConnected == value) return;
                 _isConnected = value;
-                Messenger.Default.Send(new ConnectionStatusChangedMessage(value));
             }
         }
 

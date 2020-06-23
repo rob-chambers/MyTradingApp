@@ -1,6 +1,4 @@
-﻿using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
+﻿using MyTradingApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,19 +12,8 @@ namespace MyTradingApp.Services
         /// </summary>
         private const double MinBuffer = 0.05;
         private ICollection<Bar> _bars;
-        private double _accountSize;
         private double _latestPrice;
-        private double _exchangeRate;
-
-        public OrderCalculationService()
-        {
-            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
-        }
-
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
-        {
-            _accountSize = args.AvailableFunds;
-        }
+        private double _riskPerTrade;
 
         public void SetHistoricalData(ICollection<Bar> bars)
         {
@@ -46,6 +33,11 @@ namespace MyTradingApp.Services
 
             var avg = values.Average();
             return Math.Sqrt(avg);
+        }
+
+        private double CalculateMovingAverage()
+        {
+            return _bars.Average(x => x.Close);
         }
 
         public double CalculateInitialStopLoss()
@@ -85,16 +77,10 @@ namespace MyTradingApp.Services
             return result;
         }
 
-        private double CalculateMovingAverage()
-        {
-            return _bars.Average(x => x.Close);
-        }
-
         public double GetCalculatedQuantity()
-        {
-            var riskPerTrade = _accountSize * 0.01 * _exchangeRate;
+        {            
             var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
-            var size = riskPerTrade / diff;
+            var size = _riskPerTrade / diff;
 
             return Math.Round(size, 0);
         }
@@ -116,9 +102,9 @@ namespace MyTradingApp.Services
             return _latestPrice + buffer;
         }
 
-        public void SetExchangeRate(double rate)
+        public void SetRiskPerTrade(double value)
         {
-            _exchangeRate = rate;
+            _riskPerTrade = value;
         }
     }
 }

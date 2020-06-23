@@ -11,6 +11,6 @@ namespace MyTradingApp.Services
         double CalculateInitialStopLoss();
         double GetCalculatedQuantity();
         double GetEntryPrice();
-        void SetExchangeRate(double rate);
+        void SetRiskPerTrade(double value);
     }
 }

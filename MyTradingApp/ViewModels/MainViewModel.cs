@@ -33,6 +33,9 @@ namespace MyTradingApp.ViewModels
         private int _parentOrderId;
         private string _errorText;
         private bool _isEnabled;
+        private double _riskMultiplier;
+        private double _exchangeRate;
+        private double _netLiquidation;
 
         public MainViewModel(
             IBClient iBClient,
@@ -61,16 +64,24 @@ namespace MyTradingApp.ViewModels
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += UpdateUI;
 
-            Messenger.Default.Register<ConnectionStatusChangedMessage>(this, OnConnectionStatusMessage);
             Messenger.Default.Register<ExchangeRateMessage>(this, OnExchangeRateMessage);
+            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
 
             _connectionService.ClientError += OnClientError;
             SetConnectionStatus();
+            RiskMultiplier = 1.0;
+        }
+
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
+        {
+            _netLiquidation = message.NetLiquidation;
+            RaisePropertyChanged(nameof(RiskPerTrade));
         }
 
         private void OnExchangeRateMessage(ExchangeRateMessage message)
         {
-            _orderCalculationService.SetExchangeRate(message.Price);
+            _exchangeRate = message.Price;
+            RaisePropertyChanged(nameof(RiskPerTrade));
         }
 
         public bool IsEnabled
@@ -79,26 +90,25 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _isEnabled, value);
         }
 
-        private void OnConnectionStatusMessage(ConnectionStatusChangedMessage message)
+        public double RiskMultiplier
         {
-            _statusBarViewModel.ConnectionStatusText = message.IsConnected 
-                ? "Connected to TWS"
-                : "Disconnected...";
-            IsEnabled = message.IsConnected;
-
-            // Send a request to get the exchange rate
-            if (message.IsConnected)
+            get => _riskMultiplier;
+            set
             {
-                _exchangeRateService.RequestExchangeRate();
+                Set(ref _riskMultiplier, value);
+                _orderCalculationService.SetRiskPerTrade(value);
+                RaisePropertyChanged(nameof(RiskPerTrade));
             }
         }
 
-        //private void OnManagedAccounts(ManagedAccountsEventArgs args)
-        //{
-        //    _orderManager.ManagedAccounts = args.Message.ManagedAccounts;
-        //    //accountManager.ManagedAccounts = message.ManagedAccounts;
-        //    //exerciseAccount.Items.AddRange(message.ManagedAccounts.ToArray());
-        //}
+        public double RiskPerTrade 
+        {
+            get => _netLiquidation * 0.01 * _exchangeRate * RiskMultiplier;
+            set
+            {
+                _orderCalculationService.SetRiskPerTrade(value);
+            }
+        }
 
         private void OnClientError(object sender, ClientError e)
         {
@@ -134,9 +144,7 @@ namespace MyTradingApp.ViewModels
             private set => Set(ref _errorText, value);
         }
 
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(Connect)));
-
-        //public ICommand SendOrderCommand => _sendOrderCommand ?? (_sendOrderCommand = new RelayCommand(new Action(SendOrder)));
+        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
 
         public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
 
@@ -155,7 +163,7 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _connectButtonCaption, value);
         }
 
-        private void Connect()
+        private void ToggleConnection()
         {
             try
             {
@@ -166,9 +174,14 @@ namespace MyTradingApp.ViewModels
                 else
                 {
                     _connectionService.Connect();
+                    if (_connectionService.IsConnected)
+                    {
+                        // Fire off account summary command
+                        AccountSummaryCommand.Execute(null);
 
-                    // Fire off account summary command
-                    AccountSummaryCommand.Execute(null);
+                        // Send a request to get the exchange rate
+                        _exchangeRateService.RequestExchangeRate();
+                    }
                 }
 
                 SetConnectionStatus();
@@ -194,9 +207,16 @@ namespace MyTradingApp.ViewModels
 
         private void SetConnectionStatus()
         {
-            ConnectButtonCaption = _connectionService.IsConnected
+            var isConnected = _connectionService.IsConnected;
+            ConnectButtonCaption = isConnected
                 ? "Disconnect"
                 : "Connect";
+
+            _statusBarViewModel.ConnectionStatusText = isConnected
+                ? "Connected to TWS"
+                : "Disconnected...";
+            
+            IsEnabled = isConnected;
         }
 
         private void HandleErrorMessage(ErrorMessage message)

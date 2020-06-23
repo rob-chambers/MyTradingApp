@@ -103,7 +103,6 @@
     </ApplicationDefinition>
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
     <Compile Include="Models\ClientError.cs" />
-    <Compile Include="EventMessages\ConnectionStatusChangedMessage.cs" />
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
     <Compile Include="Models\Bar.cs" />
     <Compile Include="EventMessages\FundamentalDataMessage.cs" />

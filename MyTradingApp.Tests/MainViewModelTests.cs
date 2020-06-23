@@ -1,4 +1,7 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
+using MyTradingApp.EventMessages;
+using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
@@ -45,6 +48,7 @@ namespace MyTradingApp.Tests
         {
             var vm = GetVm();
             Assert.Equal("Connect", vm.ConnectButtonCaption);
+            Assert.False(vm.IsEnabled);
         }
 
         [Fact]
@@ -62,6 +66,71 @@ namespace MyTradingApp.Tests
             vm.ClearCommand.Execute(null);
 
             Assert.Equal(string.Empty, vm.ErrorText);            
+        }
+
+        [Theory]
+        [InlineData(100000, 0.5, 1, 500)]
+        [InlineData(60000, 0.75, 1, 450)]
+        [InlineData(200000, 0.75, 2, 3000)]
+        public void RiskPerTradeCalculatedOnConnectionCorrectly(double netLiquidationValue, double exchangeRate, double riskMultiplier, double expected)
+        {
+            // Arrange
+            var fired = false;            
+
+            var vm = GetVm();
+            vm.RiskMultiplier = riskMultiplier;
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(MainViewModel.RiskPerTrade))
+                {
+                    fired = true;
+                }
+            };
+
+            ConnectionTest(netLiquidationValue, exchangeRate);
+
+            // Act
+            vm.ConnectCommand.Execute(null);
+
+            // Assert
+            Assert.Equal(expected, vm.RiskPerTrade);
+            Assert.True(fired);
+        }
+
+        [Fact]
+        public void StatusShownCorrectlyWhenConnected()
+        {
+            // Arrange
+            var vm = GetVm();
+            ConnectionTest(10000, 0.5);
+
+            // Act
+            vm.ConnectCommand.Execute(null);
+
+            // Assert
+            Assert.Equal("Disconnect", vm.ConnectButtonCaption);
+            Assert.True(vm.IsEnabled);
+        }
+
+        private void ConnectionTest(double netLiquidationValue, double exchangeRate)
+        {
+            _connectionService
+                .When(x => x.Connect())
+                .Do(x =>
+                {
+                    _connectionService.IsConnected.Returns(true);
+                });
+
+            _accountManager
+                .When(x => x.RequestAccountSummary())
+                .Do(x => Messenger.Default.Send(new AccountSummaryCompletedMessage
+                {
+                    NetLiquidation = netLiquidationValue
+                }));
+
+            _exchangeRateService
+                .When(x => x.RequestExchangeRate())
+                .Do(x => Messenger.Default.Send(new ExchangeRateMessage(exchangeRate)));
         }
     }
 }
