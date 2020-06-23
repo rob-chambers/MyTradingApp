@@ -1,6 +1,6 @@
 ﻿namespace MyTradingApp.Services
 {
-    abstract class DataManager
+    internal abstract class DataManager
     {
         protected IBClient ibClient;
         protected int currentTicker = 1;

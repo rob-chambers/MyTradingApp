@@ -13,7 +13,7 @@ namespace MyTradingApp.Services
         public OrderManager(IBClient ibClient)
         {
             _ibClient = ibClient;
-            ibClient.OrderStatus += HandleOrderStatus;            
+            ibClient.OrderStatus += HandleOrderStatus;
         }
 
         public void HandleOrderStatus(OrderStatusMessage message)

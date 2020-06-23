@@ -2,7 +2,7 @@
 
 namespace MyTradingApp.Models
 {
-    public  class HistoricalDataCompletedMessage
+    public class HistoricalDataCompletedMessage
     {
         public HistoricalDataCompletedMessage(ICollection<Bar> bars)
         {

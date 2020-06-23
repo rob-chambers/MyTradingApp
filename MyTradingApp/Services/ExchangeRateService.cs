@@ -42,7 +42,7 @@ namespace MyTradingApp.Services
             // Was it a request for the exchange rate?
             if (tickPrice.Symbol == ExchangeRatePair)
             {
-                Messenger.Default.Send(new ExchangeRateMessage(tickPrice.Price));                
+                Messenger.Default.Send(new ExchangeRateMessage(tickPrice.Price));
             }
         }
     }

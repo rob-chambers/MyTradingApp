@@ -25,7 +25,7 @@ namespace MyTradingApp.Services
         private void OnClientFundamentalData(FundamentalsMessage message)
         {
             _fundamentalsRequestActive = false;
-            Messenger.Default.Send(new FundamentalDataMessage(FundamentalData.Parse(message.Data)));            
+            Messenger.Default.Send(new FundamentalDataMessage(FundamentalData.Parse(message.Data)));
         }
 
         public void RequestFundamentals(Contract contract, string reportType)

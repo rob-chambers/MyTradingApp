@@ -20,10 +20,10 @@ namespace MyTradingApp.Models
             PriceIncrement = 0.05;
         }
 
-        public int Id 
-        { 
+        public int Id
+        {
             get => _id;
-            set => Set(ref _id, value); 
+            set => Set(ref _id, value);
         }
 
         public Symbol Symbol

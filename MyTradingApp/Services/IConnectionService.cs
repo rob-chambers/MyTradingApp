@@ -8,7 +8,9 @@ namespace MyTradingApp.Services
         event EventHandler<ClientError> ClientError;
 
         bool IsConnected { get; }
+
         void Connect();
+
         void Disconnect();
     }
 }

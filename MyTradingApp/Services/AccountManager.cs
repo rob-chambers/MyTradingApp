@@ -9,6 +9,7 @@ namespace MyTradingApp.Services
     {
         private const int ACCOUNT_ID_BASE = 50000000;
         private const int ACCOUNT_SUMMARY_ID = ACCOUNT_ID_BASE + 1;
+
         private const string ACCOUNT_SUMMARY_TAGS = "AccountType,NetLiquidation,TotalCashValue,SettledCash,AccruedCash,BuyingPower,EquityWithLoanValue,PreviousEquityWithLoanValue,"
              + "GrossPositionValue,ReqTEquity,ReqTMargin,SMA,InitMarginReq,MaintMarginReq,AvailableFunds,ExcessLiquidity,Cushion,FullInitMarginReq,FullMaintMarginReq,FullAvailableFunds,"
              + "FullExcessLiquidity,LookAheadNextChange,LookAheadInitMarginReq ,LookAheadMaintMarginReq,LookAheadAvailableFunds,LookAheadExcessLiquidity,HighestSeverity,DayTradesRemaining,Leverage";
@@ -51,11 +52,11 @@ namespace MyTradingApp.Services
             {
                 return;
             }
-                
+
             _accountData.Add(msg.Tag, msg.Value);
-            _dataCount++;            
+            _dataCount++;
             if (_dataCount <= 1)
-            {                
+            {
                 return;
             }
 

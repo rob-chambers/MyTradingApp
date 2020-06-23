@@ -5,7 +5,7 @@ namespace MyTradingApp.Utils
 {
     internal static class VisualTreeUtility
     {
-        public static T FindParentOfType<T>(this DependencyObject child) 
+        public static T FindParentOfType<T>(this DependencyObject child)
             where T : DependencyObject
         {
             var parentDepObj = child;

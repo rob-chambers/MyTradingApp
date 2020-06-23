@@ -11,6 +11,7 @@ namespace MyTradingApp.Services
         /// Provide a minimum buffer price of 5 cents, when setting the stop loss below a prior low
         /// </summary>
         private const double MinBuffer = 0.05;
+
         private ICollection<Bar> _bars;
         private double _latestPrice;
         private double _riskPerTrade;
@@ -78,7 +79,7 @@ namespace MyTradingApp.Services
         }
 
         public double GetCalculatedQuantity()
-        {            
+        {
             var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
             var size = _riskPerTrade / diff;
 

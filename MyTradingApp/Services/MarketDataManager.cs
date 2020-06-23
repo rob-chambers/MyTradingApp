@@ -32,7 +32,7 @@ namespace MyTradingApp.Services
                     break;
 
                 case TickType.BID:
-                    symbol = _activeRequests[msg.RequestId].Symbol;                
+                    symbol = _activeRequests[msg.RequestId].Symbol;
                     if (msg.RequestId >= TICK_ID_BASE_ONE_OFF)
                     {
                         // This is a one-off request - cancel further requests
@@ -46,7 +46,7 @@ namespace MyTradingApp.Services
         }
 
         public void RequestStreamingPrice(Contract contract)
-        {            
+        {
             var nextRequestId = TICK_ID_BASE + _currentTicker++;
             ibClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, false, false, new List<TagValue>());
             _activeRequests.Add(nextRequestId, contract);

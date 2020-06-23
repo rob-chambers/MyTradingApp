@@ -22,10 +22,10 @@ namespace MyTradingApp.Models
             set => Set(ref _exchange, value);
         }
 
-        public string Name 
-        { 
-            get => _name; 
-            set => Set(ref _name, value); 
+        public string Name
+        {
+            get => _name;
+            set => Set(ref _name, value);
         }
 
         public double LatestPrice

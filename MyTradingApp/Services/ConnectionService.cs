@@ -1,5 +1,4 @@
-﻿using GalaSoft.MvvmLight.Messaging;
-using IBApi;
+﻿using IBApi;
 using MyTradingApp.Models;
 using System;
 using System.Threading;
@@ -7,7 +6,7 @@ using System.Threading;
 namespace MyTradingApp.Services
 {
     internal class ConnectionService : IConnectionService
-    {        
+    {
         private readonly IBClient _ibClient;
         private readonly EReaderSignal _signal;
         private bool _isConnected;
@@ -21,7 +20,7 @@ namespace MyTradingApp.Services
             _ibClient.ConnectionClosed += OnClientConnectionClosed;
             _ibClient.Error += OnClientError;
             //_ibClient.ManagedAccounts += message => Messenger.Default.Send(new ManagedAccountsEventArgs(message));
-        }        
+        }
 
         private void OnClientError(int id, int errorCode, string message, Exception ex)
         {
