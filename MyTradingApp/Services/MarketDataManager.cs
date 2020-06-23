@@ -10,40 +10,49 @@ namespace MyTradingApp.Services
     internal class MarketDataManager : DataManager, IMarketDataManager
     {
         public const int TICK_ID_BASE = 10000000;
+        public const int TICK_ID_BASE_ONE_OFF = TICK_ID_BASE + 1000;
+
+        private readonly Dictionary<int, Contract> _activeRequests = new Dictionary<int, Contract>();
         private int _currentTicker = 1;
-        private Dictionary<int, Contract> _activeRequests = new Dictionary<int, Contract>();
+        private int _latestPriceTicker = 1;
 
         public MarketDataManager(IBClient iBClient) : base(iBClient)
         {
-            iBClient.TickGeneric += OnClientTickGeneric;
             iBClient.TickPrice += OnTickPrice;
         }
 
         private void OnTickPrice(TickPriceMessage msg)
         {
-            if (msg.Field == TickType.LAST)
+            string symbol;
+            switch (msg.Field)
             {
-                var symbol = _activeRequests[msg.RequestId].Symbol;
-                Messenger.Default.Send(new TickPrice(symbol, msg.Price));
+                case TickType.LAST:
+                    symbol = _activeRequests[msg.RequestId].Symbol;
+                    Messenger.Default.Send(new TickPrice(symbol, msg.Price));
+                    break;
+
+                case TickType.BID:
+                    symbol = _activeRequests[msg.RequestId].Symbol;                
+                    if (msg.RequestId >= TICK_ID_BASE_ONE_OFF)
+                    {
+                        // This is a one-off request - cancel further requests
+                        Debug.WriteLine("cancelling one-off request {0}", msg.RequestId);
+                        ibClient.ClientSocket.cancelMktData(msg.RequestId);
+                    }
+
+                    Messenger.Default.Send(new TickPrice(symbol, msg.Price));
+                    break;
             }
         }
 
-        private void OnClientTickGeneric(int tickerId, int field, double value)
-        {
-            Debug.WriteLine("OnClientTickGeneric for ticker id {0}: {1}:{2}",
-                tickerId,
-                field,
-                value);
-        }
-
-        public void AddRequest(Contract contract, string genericTickList)
+        public void RequestStreamingPrice(Contract contract)
         {            
             var nextRequestId = TICK_ID_BASE + _currentTicker++;
-            ibClient.ClientSocket.reqMktData(nextRequestId, contract, genericTickList, false, false, new List<TagValue>());
+            ibClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, false, false, new List<TagValue>());
             _activeRequests.Add(nextRequestId, contract);
         }
 
-        public void StopActiveRequests()
+        public void StopActivePriceStreaming()
         {
             for (var i = 1; i < _currentTicker; i++)
             {
@@ -62,6 +71,13 @@ namespace MyTradingApp.Services
         public override void Clear()
         {
             currentTicker = 1;
+        }
+
+        public void RequestLatestPrice(Contract contract)
+        {
+            var nextRequestId = TICK_ID_BASE_ONE_OFF + _latestPriceTicker++;
+            ibClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, false, false, new List<TagValue>());
+            _activeRequests.Add(nextRequestId, contract);
         }
 
         //private void checkToAddRow(int requestId)

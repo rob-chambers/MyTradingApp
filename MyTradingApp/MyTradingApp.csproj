@@ -98,6 +98,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="EventMessages\ExchangeRateMessage.cs" />
     <Compile Include="Models\ClientError.cs" />
     <Compile Include="EventMessages\ConnectionStatusChangedMessage.cs" />
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Services\AccountManager.cs" />
     <Compile Include="EventMessages\AccountSummaryCompletedMessage.cs" />
     <Compile Include="Services\ContractManager.cs" />
+    <Compile Include="Services\ExchangeRateService.cs" />
     <Compile Include="Services\HistoricalDataManager.cs" />
     <Compile Include="Services\IAccountManager.cs" />
     <Compile Include="Services\IConnectionService.cs" />
@@ -123,6 +125,7 @@
     <Compile Include="Services\OrderManager.cs" />
     <Compile Include="Services\IOrderManager.cs" />
     <Compile Include="EventMessages\TickPriceMessage.cs" />
+    <Compile Include="Services\IExchangeRateService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="ViewModels\OrdersViewModel.cs" />

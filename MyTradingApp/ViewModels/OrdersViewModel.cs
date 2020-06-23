@@ -14,7 +14,7 @@ using System.Linq;
 namespace MyTradingApp.ViewModels
 {
     internal class OrdersViewModel : ObservableObject
-    {
+    {        
         private readonly IContractManager _contractManager;
         private readonly IMarketDataManager _marketDataManager;
         private readonly IHistoricalDataManager _historicalDataManager;
@@ -76,7 +76,7 @@ namespace MyTradingApp.ViewModels
         {
             // TODO: Get latest price from market
             var latestPrice = message.Bars.First().Close;
-
+           
             _orderCalculationService.SetLatestPrice(latestPrice);
             _orderCalculationService.SetHistoricalData(message.Bars);
             var sl = _orderCalculationService.CalculateInitialStopLoss();
@@ -117,6 +117,11 @@ namespace MyTradingApp.ViewModels
 
         private void OnContractManagerFundamentalData(FundamentalDataMessage message)
         {
+            if (_requestedOrder == null)
+            {
+                return;
+            }
+
             _requestedOrder.Symbol.IsFound = true;
             _requestedOrder.Symbol.Name = message.Data.CompanyName;
             IssueHistoricalDataRequest(_requestedOrder);
@@ -215,13 +220,12 @@ namespace MyTradingApp.ViewModels
             if (_requestedOrder == null) return;
 
             var contract = MapOrderToContract(_requestedOrder);
-            var genericTickList = string.Empty;
-            _marketDataManager.AddRequest(contract, genericTickList);
+            _marketDataManager.RequestStreamingPrice(contract);
         }
 
         private void CancelStreaming()
         {
-            _marketDataManager.StopActiveRequests();
+            _marketDataManager.StopActivePriceStreaming();
         }
 
         private bool CanStartStopStreaming()

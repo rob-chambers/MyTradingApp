@@ -16,6 +16,7 @@ namespace MyTradingApp.Services
         private ICollection<Bar> _bars;
         private double _accountSize;
         private double _latestPrice;
+        private double _exchangeRate;
 
         public OrderCalculationService()
         {
@@ -91,10 +92,7 @@ namespace MyTradingApp.Services
 
         public double GetCalculatedQuantity()
         {
-            var riskPerTrade = _accountSize * 0.01;
-
-            // TODO: Adjust for exchange rate
-
+            var riskPerTrade = _accountSize * 0.01 * _exchangeRate;
             var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
             var size = riskPerTrade / diff;
 
@@ -116,6 +114,11 @@ namespace MyTradingApp.Services
             }
 
             return _latestPrice + buffer;
+        }
+
+        public void SetExchangeRate(double rate)
+        {
+            _exchangeRate = rate;
         }
     }
 }

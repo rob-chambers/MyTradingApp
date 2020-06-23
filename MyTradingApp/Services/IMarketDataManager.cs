@@ -4,7 +4,8 @@ namespace MyTradingApp.Services
 {
     public interface IMarketDataManager
     {
-        void AddRequest(Contract contract, string genericTickList);
-        void StopActiveRequests();
+        void RequestStreamingPrice(Contract contract);
+        void StopActivePriceStreaming();
+        void RequestLatestPrice(Contract contract);
     }
 }

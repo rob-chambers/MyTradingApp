@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
@@ -22,6 +22,8 @@ namespace MyTradingApp.ViewModels
         private readonly IAccountManager _accountManager;
         private readonly StatusBarViewModel _statusBarViewModel;
         private readonly IHistoricalDataManager _historicalDataManager;
+        private readonly IExchangeRateService _exchangeRateService;
+        private readonly IOrderCalculationService _orderCalculationService;
         private ICommand _connectCommand;
         private ICommand _accountSummaryCommand;
         private ICommand _clearCommand;
@@ -39,7 +41,9 @@ namespace MyTradingApp.ViewModels
             IAccountManager accountManager,
             OrdersViewModel ordersViewModel,
             StatusBarViewModel statusBarViewModel,
-            IHistoricalDataManager historicalDataManager)
+            IHistoricalDataManager historicalDataManager,
+            IExchangeRateService exchangeRateService,
+            IOrderCalculationService orderCalculationService)
         {
             _iBClient = iBClient;
             _connectionService = connectionService;
@@ -48,6 +52,8 @@ namespace MyTradingApp.ViewModels
             OrdersViewModel = ordersViewModel;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
+            _exchangeRateService = exchangeRateService;
+            _orderCalculationService = orderCalculationService;
             _iBClient.HistoricalData += _historicalDataManager.HandleMessage;
             _iBClient.HistoricalDataUpdate += _historicalDataManager.HandleMessage;
             _iBClient.HistoricalDataEnd += _historicalDataManager.HandleMessage;
@@ -56,10 +62,15 @@ namespace MyTradingApp.ViewModels
             _iBClient.AccountSummaryEnd += UpdateUI;
 
             Messenger.Default.Register<ConnectionStatusChangedMessage>(this, OnConnectionStatusMessage);
-            //Messenger.Default.Register<ManagedAccountsEventArgs>(this, OnManagedAccounts);
+            Messenger.Default.Register<ExchangeRateMessage>(this, OnExchangeRateMessage);
 
             _connectionService.ClientError += OnClientError;
             SetConnectionStatus();
+        }
+
+        private void OnExchangeRateMessage(ExchangeRateMessage message)
+        {
+            _orderCalculationService.SetExchangeRate(message.Price);
         }
 
         public bool IsEnabled
@@ -74,6 +85,12 @@ namespace MyTradingApp.ViewModels
                 ? "Connected to TWS"
                 : "Disconnected...";
             IsEnabled = message.IsConnected;
+
+            // Send a request to get the exchange rate
+            if (message.IsConnected)
+            {
+                _exchangeRateService.RequestExchangeRate();
+            }
         }
 
         //private void OnManagedAccounts(ManagedAccountsEventArgs args)
@@ -131,8 +148,6 @@ namespace MyTradingApp.ViewModels
         }
 
         public OrdersViewModel OrdersViewModel { get; private set; }
-
-
 
         public string ConnectButtonCaption
         {
