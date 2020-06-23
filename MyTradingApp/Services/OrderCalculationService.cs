@@ -15,6 +15,7 @@ namespace MyTradingApp.Services
         private const double MinBuffer = 0.05;
         private ICollection<Bar> _bars;
         private double _accountSize;
+        private double _latestPrice;
 
         public OrderCalculationService()
         {
@@ -48,10 +49,10 @@ namespace MyTradingApp.Services
 
         public double CalculateInitialStopLoss()
         {
-            var ma = CalculateMovingAverage();
+            //var ma = CalculateMovingAverage();
             var sd = CalculateStandardDeviation();
 
-            var lowerBand = _bars.ElementAt(0).Close - sd;
+            var lowerBand = _latestPrice - sd;
 
             lowerBand = CheckToAdjustBelowRecentLow(lowerBand);
 
@@ -90,10 +91,31 @@ namespace MyTradingApp.Services
 
         public double GetCalculatedQuantity()
         {
-            var risk = _accountSize * 0.01;
-            var price = 10;
+            var riskPerTrade = _accountSize * 0.01;
 
-            return Math.Round(risk / price, 0);
+            // TODO: Adjust for exchange rate
+
+            var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
+            var size = riskPerTrade / diff;
+
+            return Math.Round(size, 0);
+        }
+
+        public void SetLatestPrice(double price)
+        {
+            _latestPrice = price;
+        }
+
+        public double GetEntryPrice()
+        {
+            // TODO: Calculate buffer based on volatility
+            var buffer = 0.05D;
+            if (_latestPrice >= 20)
+            {
+                buffer = 0.12;
+            }
+
+            return _latestPrice + buffer;
         }
     }
 }

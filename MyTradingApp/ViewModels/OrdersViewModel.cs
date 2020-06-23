@@ -73,11 +73,15 @@ namespace MyTradingApp.ViewModels
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
-        {            
+        {
+            // TODO: Get latest price from market
+            var latestPrice = message.Bars.First().Close;
+
+            _orderCalculationService.SetLatestPrice(latestPrice);
             _orderCalculationService.SetHistoricalData(message.Bars);
             var sl = _orderCalculationService.CalculateInitialStopLoss();
 
-            _requestedOrder.EntryPrice = message.Bars.First().Close;
+            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice();
             _requestedOrder.InitialStopLossPrice = sl;
             _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
         }
