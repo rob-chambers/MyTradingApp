@@ -322,6 +322,13 @@ namespace MyTradingApp.ViewModels
 
         private void IssueFindSymbolRequest(OrderItem order)
         {
+            var symbol = order.Symbol.Code;
+            if (Orders.Any(x => x != order && x.Symbol.Code == symbol))
+            {
+                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Warning, $"There is already an order for {symbol}."));
+                return;
+            }
+
             _requestedOrder = order;
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;

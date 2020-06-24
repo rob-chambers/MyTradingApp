@@ -76,7 +76,7 @@ namespace MyTradingApp.ViewModels
 
             Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
-
+            
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
 

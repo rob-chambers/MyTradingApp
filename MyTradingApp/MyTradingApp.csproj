@@ -110,6 +110,7 @@
     <Compile Include="Models\Exchange.cs" />
     <Compile Include="Models\FundamentalData.cs" />
     <Compile Include="EventMessages\HistoricalDataCompletedEventArgs.cs" />
+    <Compile Include="Models\NotificationType.cs" />
     <Compile Include="Models\OrderStatus.cs" />
     <Compile Include="Services\AccountManager.cs" />
     <Compile Include="EventMessages\AccountSummaryCompletedMessage.cs" />
