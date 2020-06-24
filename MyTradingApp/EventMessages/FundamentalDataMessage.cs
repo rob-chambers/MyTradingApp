@@ -2,9 +2,10 @@
 
 namespace MyTradingApp.EventMessages
 {
-    public class FundamentalDataMessage
+    public class FundamentalDataMessage : SymbolMessage
     {
-        public FundamentalDataMessage(FundamentalData data)
+        public FundamentalDataMessage(string symbol, FundamentalData data) 
+            : base(symbol)
         {
             Data = data;
         }

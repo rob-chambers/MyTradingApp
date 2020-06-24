@@ -2,9 +2,10 @@
 
 namespace MyTradingApp.EventMessages
 {
-    public class OrderStatusChangedMessage
+    public class OrderStatusChangedMessage : SymbolMessage
     {
-        public OrderStatusChangedMessage(OrderStatusMessage message)
+        public OrderStatusChangedMessage(string symbol, OrderStatusMessage message)
+            : base(symbol)
         {
             Message = message;
         }

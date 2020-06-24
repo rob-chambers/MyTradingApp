@@ -16,7 +16,8 @@ namespace MyTradingApp.Services
         private const string YearMonthDayPattern = "yyyyMMdd";
         private readonly IBClient _ibClient;
 
-        private List<HistoricalDataMessage> _historicalData;
+        private List<HistoricalDataMessage> _historicalData = new List<HistoricalDataMessage>();
+        private string _symbol;
 
         public HistoricalDataManager(IBClient ibClient) : base(ibClient)
         {
@@ -26,6 +27,7 @@ namespace MyTradingApp.Services
         public void AddRequest(Contract contract, string endDateTime, string durationString, string barSizeSetting, string whatToShow, int useRTH, int dateFormat, bool keepUpToDate)
         {
             Clear();
+            _symbol = contract.Symbol;
             _ibClient.ClientSocket.reqHistoricalData(currentTicker + HISTORICAL_ID_BASE, contract, endDateTime, durationString, barSizeSetting, whatToShow, useRTH, 1, keepUpToDate, new List<TagValue>());
         }
 
@@ -41,7 +43,7 @@ namespace MyTradingApp.Services
 
         public void HandleMessage(HistoricalDataEndMessage message)
         {
-            Messenger.Default.Send(new HistoricalDataCompletedMessage(PrepareEventData()));
+            Messenger.Default.Send(new HistoricalDataCompletedMessage(_symbol, PrepareEventData()));
         }
 
         private ICollection<Models.Bar> PrepareEventData()

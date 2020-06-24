@@ -5,19 +5,19 @@ namespace MyTradingApp.Services
 {
     public interface IOrderCalculationService
     {
-        bool CanCalculate { get; }
+        bool CanCalculate(string symbol);
 
-        void SetLatestPrice(double price);
+        void SetLatestPrice(string symbol, double price);
 
-        void SetHistoricalData(ICollection<Bar> bars);
+        void SetHistoricalData(string symbol, ICollection<Bar> bars);
 
-        double CalculateStandardDeviation();
+        double CalculateStandardDeviation(string symbol);
 
-        double CalculateInitialStopLoss();
+        double CalculateInitialStopLoss(string symbol);
 
-        double GetCalculatedQuantity();
+        double GetCalculatedQuantity(string symbol);
 
-        double GetEntryPrice();
+        double GetEntryPrice(string symbol);
 
         void SetRiskPerTrade(double value);
     }

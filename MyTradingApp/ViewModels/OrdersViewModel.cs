@@ -28,8 +28,6 @@ namespace MyTradingApp.ViewModels
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
         private bool _isStreaming;
-        private int _orderId;
-        private int _parentOrderId;
         private OrderItem _requestedOrder;
         private RelayCommand _startStopStreamingCommand;
         private string _streamingButtonCaption;
@@ -170,18 +168,18 @@ namespace MyTradingApp.ViewModels
             return contract;
         }
 
-        private void CalculateRisk()
+        private void CalculateRisk(string symbol)
         {
-            if (!_orderCalculationService.CanCalculate)
+            if (!_orderCalculationService.CanCalculate(symbol))
             {
                 return;
             }
 
-            var sl = _orderCalculationService.CalculateInitialStopLoss();
+            var sl = _orderCalculationService.CalculateInitialStopLoss(symbol);
 
-            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice();
+            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice(symbol);
             _requestedOrder.InitialStopLossPrice = sl;
-            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
+            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity(symbol);
         }
 
         private void CancelStreaming()
@@ -218,11 +216,6 @@ namespace MyTradingApp.ViewModels
             if (orderItem.Id != 0)
             {
                 order.OrderId = orderItem.Id;
-            }
-
-            if (_parentOrderId != 0)
-            {
-                order.ParentId = _parentOrderId;
             }
 
             /* actions:
@@ -316,8 +309,8 @@ namespace MyTradingApp.ViewModels
             }
 
             order.Symbol.LatestPrice = tickPrice.Price;
-            _orderCalculationService.SetLatestPrice(tickPrice.Price);
-            CalculateRisk();
+            _orderCalculationService.SetLatestPrice(tickPrice.Symbol, tickPrice.Price);
+            CalculateRisk(tickPrice.Symbol);
         }
 
         private void IssueFindSymbolRequest(OrderItem order)
@@ -346,14 +339,15 @@ namespace MyTradingApp.ViewModels
 
         private void OnContractManagerFundamentalData(FundamentalDataMessage message)
         {
-            if (_requestedOrder == null)
+            var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
+            if (order == null)
             {
                 return;
             }
 
-            _requestedOrder.Symbol.IsFound = true;
-            _requestedOrder.Symbol.Name = message.Data.CompanyName;
-            IssueHistoricalDataRequest(_requestedOrder);
+            order.Symbol.IsFound = true;
+            order.Symbol.Name = message.Data.CompanyName;
+            IssueHistoricalDataRequest(order);
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();
 
@@ -361,9 +355,15 @@ namespace MyTradingApp.ViewModels
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
-        {                       
-            _orderCalculationService.SetHistoricalData(message.Bars);
-            CalculateRisk();
+        {
+            var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
+            if (order == null)
+            {
+                return;
+            }
+
+            _orderCalculationService.SetHistoricalData(order.Symbol.Code, message.Bars);
+            CalculateRisk(order.Symbol.Code);
         }
 
         private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -482,6 +482,14 @@ namespace MyTradingApp.ViewModels
 
                 case "Filled":
                     order.Status = OrderStatus.Filled;
+                    break;
+
+                default:
+                    Debug.WriteLine("Status that isn't handled: {0}", status);
+                    if (Debugger.IsAttached)
+                    {
+                        break;
+                    }
                     break;
             }
         }

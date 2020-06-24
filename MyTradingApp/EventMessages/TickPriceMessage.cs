@@ -1,14 +1,14 @@
 ﻿namespace MyTradingApp.EventMessages
 {
-    public class TickPrice
+    public class TickPrice : SymbolMessage
     {
         public TickPrice(string symbol, double price)
+            : base(symbol)
         {
             Symbol = symbol;
             Price = price;
         }
 
-        public string Symbol { get; }
         public double Price { get; }
     }
 }

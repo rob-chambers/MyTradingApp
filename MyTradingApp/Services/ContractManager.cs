@@ -15,6 +15,7 @@ namespace MyTradingApp.Services
 
         private readonly IBClient _iBClient;
         private bool _fundamentalsRequestActive = false;
+        private string _symbol;
 
         public ContractManager(IBClient iBClient)
         {
@@ -25,7 +26,7 @@ namespace MyTradingApp.Services
         private void OnClientFundamentalData(FundamentalsMessage message)
         {
             _fundamentalsRequestActive = false;
-            Messenger.Default.Send(new FundamentalDataMessage(FundamentalData.Parse(message.Data)));
+            Messenger.Default.Send(new FundamentalDataMessage(_symbol, FundamentalData.Parse(message.Data)));
         }
 
         public void RequestFundamentals(Contract contract, string reportType)
@@ -33,6 +34,7 @@ namespace MyTradingApp.Services
             if (!_fundamentalsRequestActive)
             {
                 _fundamentalsRequestActive = true;
+                _symbol = contract.Symbol;
                 _iBClient.ClientSocket.reqFundamentalData(FUNDAMENTALS_ID, contract, reportType, new List<TagValue>());
             }
             else

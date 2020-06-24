@@ -109,7 +109,7 @@
 
                     <GridViewColumn
                         Width="120"
-                        DisplayMemberBinding="{Binding Symbol.LatestPrice}"
+                        DisplayMemberBinding="{Binding Symbol.LatestPrice, StringFormat='0.00'}"
                         Header=" Price" />
 
                     <GridViewColumn Width="auto" Header="Direction">

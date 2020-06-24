@@ -35,8 +35,8 @@ namespace MyTradingApp.Tests
                 new Bar { Close = 9 },
                 new Bar { Close = 4 },
             };
-            service.SetHistoricalData(bars);
-            var sd = Math.Round(service.CalculateStandardDeviation(), 3);
+            service.SetHistoricalData("MSFT", bars);
+            var sd = Math.Round(service.CalculateStandardDeviation("MSFT"), 3);
 
             Assert.Equal(2.983, sd);
         }

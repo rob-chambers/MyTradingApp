@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using MyTradingApp.EventMessages;
+using System.Collections.Generic;
 
 namespace MyTradingApp.Models
 {
-    public class HistoricalDataCompletedMessage
+    public class HistoricalDataCompletedMessage : SymbolMessage
     {
-        public HistoricalDataCompletedMessage(ICollection<Bar> bars)
+        public HistoricalDataCompletedMessage(string symbol, ICollection<Bar> bars)
+            : base(symbol)
         {
             Bars = bars;
         }

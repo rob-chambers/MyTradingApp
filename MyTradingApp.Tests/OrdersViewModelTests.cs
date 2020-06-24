@@ -146,6 +146,7 @@ namespace MyTradingApp.Tests
         public void CanOnlyStartStreamingWhenAtLeastOneOrder()
         {
             // Arrange
+            const string Symbol = "MSFT";
             var fired = false;
             var vm = GetVm();
             vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true; ;
@@ -154,10 +155,10 @@ namespace MyTradingApp.Tests
             var fundamentalData = FundamentalData.Parse(xml);
             _contractManager
                 .When(x => x.RequestFundamentals(Arg.Any<Contract>(), Arg.Any<string>()))
-                .Do(x => Messenger.Default.Send(new FundamentalDataMessage(fundamentalData)));
+                .Do(x => Messenger.Default.Send(new FundamentalDataMessage(Symbol, fundamentalData)));
 
             var builder = new OrderBuilder();
-            var order = builder.Default.SetSymbol("MSFT").Order;
+            var order = builder.Default.SetSymbol(Symbol).Order;
             order.Symbol.Exchange = Exchange.NYSE;
             vm.Orders.Add(order);
 

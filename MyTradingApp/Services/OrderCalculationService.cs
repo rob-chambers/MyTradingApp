@@ -12,33 +12,34 @@ namespace MyTradingApp.Services
         /// </summary>
         private const double MinBuffer = 0.05;
 
-        private ICollection<Bar> _bars;
+        private readonly Dictionary<string, ICollection<Bar>> _bars = new Dictionary<string, ICollection<Bar>>();
         private double _latestPrice;
         private double _riskPerTrade;
 
-        public bool CanCalculate => !double.IsNaN(_latestPrice) &&
+        public bool CanCalculate(string symbol)  => !double.IsNaN(_latestPrice) &&
             _latestPrice != 0 &&
-            _bars != null;
+            _bars != null &&
+            _bars.ContainsKey(symbol);
 
-        public double CalculateInitialStopLoss()
+        public double CalculateInitialStopLoss(string symbol)
         {
             //var ma = CalculateMovingAverage();
-            var sd = CalculateStandardDeviation();
+            var sd = CalculateStandardDeviation(symbol);
 
             var lowerBand = _latestPrice - sd;
 
-            lowerBand = CheckToAdjustBelowRecentLow(lowerBand);
+            lowerBand = CheckToAdjustBelowRecentLow(symbol, lowerBand);
 
             return Math.Round(lowerBand, 2);
         }
 
-        public double CalculateStandardDeviation()
+        public double CalculateStandardDeviation(string symbol)
         {
             var values = new List<double>();
-            var mean = CalculateMovingAverage();
-            for (var i = 0; i < _bars.Count; i++)
+            var mean = CalculateMovingAverage(symbol);
+            for (var i = 0; i < _bars[symbol].Count; i++)
             {
-                var value = _bars.ElementAt(i).Close - mean;
+                var value = _bars[symbol].ElementAt(i).Close - mean;
                 value *= value;
                 values.Add(value);
             }
@@ -47,15 +48,15 @@ namespace MyTradingApp.Services
             return Math.Sqrt(avg);
         }
 
-        public double GetCalculatedQuantity()
+        public double GetCalculatedQuantity(string symbol)
         {
-            var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
+            var diff = Math.Abs(GetEntryPrice(symbol) - CalculateInitialStopLoss(symbol));
             var size = _riskPerTrade / diff;
 
             return Math.Round(size, 0);
         }
 
-        public double GetEntryPrice()
+        public double GetEntryPrice(string symbol)
         {
             // TODO: Calculate buffer based on volatility
             var buffer = 0.05D;
@@ -67,12 +68,17 @@ namespace MyTradingApp.Services
             return _latestPrice + buffer;
         }
 
-        public void SetHistoricalData(ICollection<Bar> bars)
+        public void SetHistoricalData(string symbol, ICollection<Bar> bars)
         {
-            _bars = bars;
+            if (_bars.ContainsKey(symbol))
+            {
+                _bars.Remove(symbol);
+            }
+
+            _bars.Add(symbol, bars);
         }
 
-        public void SetLatestPrice(double price)
+        public void SetLatestPrice(string symbol, double price)
         {
             _latestPrice = price;
         }
@@ -82,14 +88,14 @@ namespace MyTradingApp.Services
             _riskPerTrade = value;
         }
 
-        private double CalculateMovingAverage()
+        private double CalculateMovingAverage(string symbol)
         {
-            return _bars.Average(x => x.Close);
+            return _bars[symbol].Average(x => x.Close);
         }
 
-        private double CheckToAdjustBelowRecentLow(double lowerBand)
+        private double CheckToAdjustBelowRecentLow(string symbol, double lowerBand)
         {
-            var highestPrice = _bars.Max(x => x.Close);
+            var highestPrice = _bars[symbol].Max(x => x.Close);
             var ratio = (highestPrice - lowerBand) / 30;
             var maxDistanceAboveLow = Math.Round(ratio, 2);
             var buffer = maxDistanceAboveLow / 2;
@@ -101,7 +107,7 @@ namespace MyTradingApp.Services
             var result = lowerBand;
             for (var i = 0; i < _bars.Count; i++)
             {
-                var low = _bars.ElementAt(i).Low;
+                var low = _bars[symbol].ElementAt(i).Low;
                 if (lowerBand >= low && lowerBand <= low + maxDistanceAboveLow)
                 {
                     result = low - buffer;
