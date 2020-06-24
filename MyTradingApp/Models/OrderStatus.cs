@@ -3,9 +3,10 @@
     internal enum OrderStatus
     {
         Pending,
+        PreSubmitted,
         Submitted,
         Filled,
         Error,
-        Cancelled
+        Cancelled        
     }
 }

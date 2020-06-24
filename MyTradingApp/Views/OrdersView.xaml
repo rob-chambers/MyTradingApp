@@ -33,6 +33,9 @@
                             <Setter Property="BorderBrush" Value="{x:Null}" />
                         </Trigger>
 
+                        <DataTrigger Binding="{Binding Status}" Value="PreSubmitted">
+                            <Setter Property="Background" Value="LightYellow" />
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Submitted">
                             <Setter Property="Background" Value="LightGreen" />
                         </DataTrigger>

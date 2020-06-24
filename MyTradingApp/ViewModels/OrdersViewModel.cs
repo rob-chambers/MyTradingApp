@@ -277,6 +277,31 @@ namespace MyTradingApp.ViewModels
             return order;
         }
 
+        private Order GetInitialStopOrder(OrderItem orderItem)
+        {
+            var order = new Order();
+            if (orderItem.Id != 0)
+            {
+                order.ParentId = orderItem.Id;
+            }
+
+            // Action for a Stop order will be the opposite
+            order.Action = orderItem.Direction == Direction.Buy
+                ? "SELL"
+                : "BUY";
+
+            order.OrderType = "STP";
+
+            var stopPrice = orderItem.InitialStopLossPrice;
+            order.AuxPrice = stopPrice;
+            order.TotalQuantity = orderItem.Quantity;
+            order.Account = _accountId;
+            order.ModelCode = string.Empty;
+            order.Tif = "GTC";
+
+            return order;
+        }
+
         private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
         {
             _accountId = message.AccountId;
@@ -416,7 +441,8 @@ namespace MyTradingApp.ViewModels
             contract.PrimaryExch = orderItem.Symbol.Exchange.ToString();
             contract.Exchange = "IDEALPRO";
 
-            var order = GetOrder(orderItem);
+            var order = GetOrder(orderItem);            
+
             var id = _orderManager.PlaceNewOrder(contract, order);
 
             // Find this order in the collection and update its id
@@ -425,6 +451,10 @@ namespace MyTradingApp.ViewModels
             {
                 Orders[index].Id = id;
             }
+
+            // Attach stop order
+            var stopOrder = GetInitialStopOrder(orderItem);
+            _orderManager.PlaceNewOrder(contract, stopOrder);
         }
 
         private void UpdateOrderStatus(OrderItem order, string status)
@@ -432,6 +462,10 @@ namespace MyTradingApp.ViewModels
             switch (status)
             {
                 case "PreSubmitted":
+                    order.Status = OrderStatus.PreSubmitted;
+                    break;
+
+                case "Submitted":
                     order.Status = OrderStatus.Submitted;
                     break;
 
