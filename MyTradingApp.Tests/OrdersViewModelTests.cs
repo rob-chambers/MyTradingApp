@@ -63,16 +63,18 @@ namespace MyTradingApp.Tests
             Assert.True(vm.FindCommand.CanExecute(commandParameter));
         }
 
-        [Fact]
-        public void CanDeleteOrderIfPending()
+        [Theory]
+        [InlineData(OrderStatus.Pending)]
+        [InlineData(OrderStatus.Cancelled)]
+        public void CanDeleteOrderIfPendingOrCancelled(OrderStatus status)
         {
             var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.Order;
+            order.Status = status;
             vm.Orders.Add(order);
 
             var commandParameter = order;
-            Assert.Equal(OrderStatus.Pending, order.Status);
             Assert.True(vm.DeleteCommand.CanExecute(commandParameter));
         }
 

@@ -1,6 +1,6 @@
 ﻿namespace MyTradingApp.Models
 {
-    internal enum OrderStatus
+    public enum OrderStatus
     {
         Pending,
         PreSubmitted,

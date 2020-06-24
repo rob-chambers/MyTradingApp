@@ -91,7 +91,7 @@ namespace MyTradingApp.ViewModels
                             Orders.Remove(order);
                         }
                     },
-                    order => order?.Status == OrderStatus.Pending));
+                    order => order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled));
             }
         }
 
