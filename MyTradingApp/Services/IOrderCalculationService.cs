@@ -13,11 +13,11 @@ namespace MyTradingApp.Services
 
         double CalculateStandardDeviation(string symbol);
 
-        double CalculateInitialStopLoss(string symbol);
+        double CalculateInitialStopLoss(string symbol, Direction direction);
 
-        double GetCalculatedQuantity(string symbol);
+        double GetCalculatedQuantity(string symbol, Direction direction);
 
-        double GetEntryPrice(string symbol);
+        double GetEntryPrice(string symbol, Direction direction);
 
         void SetRiskPerTrade(double value);
     }

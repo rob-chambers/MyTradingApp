@@ -13,24 +13,34 @@ namespace MyTradingApp.Services
         private const double MinBuffer = 0.05;
 
         private readonly Dictionary<string, ICollection<Bar>> _bars = new Dictionary<string, ICollection<Bar>>();
-        private double _latestPrice;
-        private double _riskPerTrade;
+        private readonly Dictionary<string, double> _latestPrice = new Dictionary<string, double>();
+        private double _riskPerTrade;        
 
-        public bool CanCalculate(string symbol)  => !double.IsNaN(_latestPrice) &&
-            _latestPrice != 0 &&
+        public bool CanCalculate(string symbol)  => _latestPrice.ContainsKey(symbol) &&
+            !double.IsNaN(_latestPrice[symbol]) &&
+            _latestPrice[symbol] != 0 &&
             _bars != null &&
             _bars.ContainsKey(symbol);
 
-        public double CalculateInitialStopLoss(string symbol)
+        public double CalculateInitialStopLoss(string symbol, Direction direction)
         {
             //var ma = CalculateMovingAverage();
             var sd = CalculateStandardDeviation(symbol);
 
-            var lowerBand = _latestPrice - sd;
+            double band = 0;
+            if (direction == Direction.Buy)
+            {
+                band = _latestPrice[symbol] - sd;
+                band = CheckToAdjustBelowRecentLow(symbol, band);
+            }
+            else if (direction == Direction.Sell)
+            {
+                band = _latestPrice[symbol] + sd;
 
-            lowerBand = CheckToAdjustBelowRecentLow(symbol, lowerBand);
+                // TODO: Check for price near a recent high
+            }
 
-            return Math.Round(lowerBand, 2);
+            return Math.Round(band, 2);
         }
 
         public double CalculateStandardDeviation(string symbol)
@@ -48,24 +58,26 @@ namespace MyTradingApp.Services
             return Math.Sqrt(avg);
         }
 
-        public double GetCalculatedQuantity(string symbol)
+        public double GetCalculatedQuantity(string symbol, Direction direction)
         {
-            var diff = Math.Abs(GetEntryPrice(symbol) - CalculateInitialStopLoss(symbol));
+            var diff = Math.Abs(GetEntryPrice(symbol, direction) - CalculateInitialStopLoss(symbol, direction));
             var size = _riskPerTrade / diff;
 
             return Math.Round(size, 0);
         }
 
-        public double GetEntryPrice(string symbol)
+        public double GetEntryPrice(string symbol, Direction direction)
         {
             // TODO: Calculate buffer based on volatility
             var buffer = 0.05D;
-            if (_latestPrice >= 20)
+            if (_latestPrice[symbol] >= 20)
             {
                 buffer = 0.12;
             }
 
-            return _latestPrice + buffer;
+            return direction == Direction.Buy
+                ? _latestPrice[symbol] + buffer
+                : _latestPrice[symbol] - buffer;
         }
 
         public void SetHistoricalData(string symbol, ICollection<Bar> bars)
@@ -80,7 +92,12 @@ namespace MyTradingApp.Services
 
         public void SetLatestPrice(string symbol, double price)
         {
-            _latestPrice = price;
+            if (_latestPrice.ContainsKey(symbol))
+            {
+                _latestPrice.Remove(symbol);
+            }
+
+            _latestPrice.Add(symbol, price);
         }
 
         public void SetRiskPerTrade(double value)

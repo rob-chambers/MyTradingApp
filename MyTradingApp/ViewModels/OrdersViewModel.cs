@@ -70,6 +70,7 @@ namespace MyTradingApp.ViewModels
                 return _addCommand ?? (_addCommand = new RelayCommand(() =>
                 {
                     var order = new OrderItem();
+                    order.PropertyChanged += OnItemPropertyChanged;
                     order.Symbol.PropertyChanged += OnSymbolPropertyChanged;
                     Orders.Add(order);
                 }));
@@ -85,6 +86,8 @@ namespace MyTradingApp.ViewModels
                     {
                         if (Orders.Contains(order))
                         {
+                            order.Symbol.PropertyChanged -= OnSymbolPropertyChanged;
+                            order.PropertyChanged -= OnItemPropertyChanged;
                             Orders.Remove(order);
                         }
                     },
@@ -175,11 +178,17 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
-            var sl = _orderCalculationService.CalculateInitialStopLoss(symbol);
+            var order = Orders.SingleOrDefault(o => o.Symbol.Code == symbol);
+            if (order == null)
+            {
+                return;
+            }
 
-            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice(symbol);
-            _requestedOrder.InitialStopLossPrice = sl;
-            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity(symbol);
+            var sl = _orderCalculationService.CalculateInitialStopLoss(symbol, order.Direction);
+
+            order.EntryPrice = _orderCalculationService.GetEntryPrice(symbol, order.Direction);
+            order.InitialStopLossPrice = sl;
+            order.Quantity = _orderCalculationService.GetCalculatedQuantity(symbol, order.Direction);
         }
 
         private void CancelStreaming()
@@ -391,6 +400,17 @@ namespace MyTradingApp.ViewModels
             {
                 FindCommand.RaiseCanExecuteChanged();
             }
+        }
+
+        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(OrderItem.Direction))
+            {
+                return;
+            }
+
+            var order = (OrderItem)sender;
+            CalculateRisk(order.Symbol.Code);
         }
 
         private void PopulateDirectionList()
