@@ -5,6 +5,8 @@ namespace MyTradingApp.Services
 {
     public interface IOrderCalculationService
     {
+        bool CanCalculate { get; }
+
         void SetLatestPrice(double price);
 
         void SetHistoricalData(ICollection<Bar> bars);

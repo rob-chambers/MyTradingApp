@@ -16,9 +16,20 @@ namespace MyTradingApp.Services
         private double _latestPrice;
         private double _riskPerTrade;
 
-        public void SetHistoricalData(ICollection<Bar> bars)
+        public bool CanCalculate => !double.IsNaN(_latestPrice) &&
+            _latestPrice != 0 &&
+            _bars != null;
+
+        public double CalculateInitialStopLoss()
         {
-            _bars = bars;
+            //var ma = CalculateMovingAverage();
+            var sd = CalculateStandardDeviation();
+
+            var lowerBand = _latestPrice - sd;
+
+            lowerBand = CheckToAdjustBelowRecentLow(lowerBand);
+
+            return Math.Round(lowerBand, 2);
         }
 
         public double CalculateStandardDeviation()
@@ -36,21 +47,44 @@ namespace MyTradingApp.Services
             return Math.Sqrt(avg);
         }
 
+        public double GetCalculatedQuantity()
+        {
+            var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
+            var size = _riskPerTrade / diff;
+
+            return Math.Round(size, 0);
+        }
+
+        public double GetEntryPrice()
+        {
+            // TODO: Calculate buffer based on volatility
+            var buffer = 0.05D;
+            if (_latestPrice >= 20)
+            {
+                buffer = 0.12;
+            }
+
+            return _latestPrice + buffer;
+        }
+
+        public void SetHistoricalData(ICollection<Bar> bars)
+        {
+            _bars = bars;
+        }
+
+        public void SetLatestPrice(double price)
+        {
+            _latestPrice = price;
+        }
+
+        public void SetRiskPerTrade(double value)
+        {
+            _riskPerTrade = value;
+        }
+
         private double CalculateMovingAverage()
         {
             return _bars.Average(x => x.Close);
-        }
-
-        public double CalculateInitialStopLoss()
-        {
-            //var ma = CalculateMovingAverage();
-            var sd = CalculateStandardDeviation();
-
-            var lowerBand = _latestPrice - sd;
-
-            lowerBand = CheckToAdjustBelowRecentLow(lowerBand);
-
-            return Math.Round(lowerBand, 2);
         }
 
         private double CheckToAdjustBelowRecentLow(double lowerBand)
@@ -76,36 +110,6 @@ namespace MyTradingApp.Services
             }
 
             return result;
-        }
-
-        public double GetCalculatedQuantity()
-        {
-            var diff = Math.Abs(GetEntryPrice() - CalculateInitialStopLoss());
-            var size = _riskPerTrade / diff;
-
-            return Math.Round(size, 0);
-        }
-
-        public void SetLatestPrice(double price)
-        {
-            _latestPrice = price;
-        }
-
-        public double GetEntryPrice()
-        {
-            // TODO: Calculate buffer based on volatility
-            var buffer = 0.05D;
-            if (_latestPrice >= 20)
-            {
-                buffer = 0.12;
-            }
-
-            return _latestPrice + buffer;
-        }
-
-        public void SetRiskPerTrade(double value)
-        {
-            _riskPerTrade = value;
         }
     }
 }

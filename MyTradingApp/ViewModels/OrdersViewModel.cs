@@ -14,24 +14,29 @@ using System.Linq;
 namespace MyTradingApp.ViewModels
 {
     internal class OrdersViewModel : ObservableObject
-    {        
+    {
+        #region Fields
+
         private readonly IContractManager _contractManager;
-        private readonly IMarketDataManager _marketDataManager;
         private readonly IHistoricalDataManager _historicalDataManager;
+        private readonly IMarketDataManager _marketDataManager;
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IOrderManager _orderManager;
+
+        private string _accountId;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
-        private RelayCommand<OrderItem> _submitCommand;
-        private RelayCommand _startStopStreamingCommand;
-        private OrderItem _requestedOrder;
         private bool _isStreaming;
-        private string _streamingButtonCaption;
         private int _orderId;
         private int _parentOrderId;
-        private string _accountId;
+        private OrderItem _requestedOrder;
+        private RelayCommand _startStopStreamingCommand;
+        private string _streamingButtonCaption;
+        private RelayCommand<OrderItem> _submitCommand;
+        #endregion
 
+        #region Constructors
 
         public OrdersViewModel(
             IContractManager contractManager, 
@@ -56,112 +61,9 @@ namespace MyTradingApp.ViewModels
             SetStreamingButtonCaption();
         }
 
-        private void HandleTickPriceMessage(TickPrice tickPrice)
-        {
-            var order = Orders.SingleOrDefault(o => o.Symbol.Code == tickPrice.Symbol);
-            if (order == null)
-            {
-                return;
-            }
+        #endregion
 
-            order.Symbol.LatestPrice = tickPrice.Price;
-        }
-
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
-        {
-            _accountId = message.AccountId;
-        }
-
-        private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
-        {
-            // TODO: Get latest price from market
-            var latestPrice = message.Bars.First().Close;
-           
-            _orderCalculationService.SetLatestPrice(latestPrice);
-            _orderCalculationService.SetHistoricalData(message.Bars);
-            var sl = _orderCalculationService.CalculateInitialStopLoss();
-
-            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice();
-            _requestedOrder.InitialStopLossPrice = sl;
-            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
-        }
-
-        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
-        {
-            // Find corresponding order
-            var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
-            if (order == null)
-            {
-                // Most likely an existing pending order (i.e. one that wasn't submitted via this app while it is currently open)
-                return;
-            }
-
-            Debug.WriteLine("Order status: {0}", message.Message.Status);
-
-            UpdateOrderStatus(order, message.Message.Status);
-        }
-
-        private void UpdateOrderStatus(OrderItem order, string status)
-        {
-            switch (status)
-            {
-                case "PreSubmitted":
-                    order.Status = OrderStatus.Submitted;
-                    break;
-
-                case "Cancelled":
-                    order.Status = OrderStatus.Cancelled;
-                    break;
-
-                case "Filled":
-                    order.Status = OrderStatus.Filled;
-                    break;
-            }
-        }
-
-        private void OnContractManagerFundamentalData(FundamentalDataMessage message)
-        {
-            if (_requestedOrder == null)
-            {
-                return;
-            }
-
-            _requestedOrder.Symbol.IsFound = true;
-            _requestedOrder.Symbol.Name = message.Data.CompanyName;
-            IssueHistoricalDataRequest(_requestedOrder);
-            StartStopStreamingCommand.RaiseCanExecuteChanged();
-            SubmitCommand.RaiseCanExecuteChanged();
-        }
-
-        private void PopulateDirectionList()
-        {
-            DirectionList = new ObservableCollection<Direction>();
-            var values = Enum.GetValues(typeof(Direction));
-            foreach (var value in values)
-            {
-                DirectionList.Add((Direction)value);
-            }
-        }
-
-        private void PopulateExchangeList()
-        {
-            ExchangeList = new ObservableCollection<Exchange>();
-            var values = Enum.GetValues(typeof(Exchange));
-            foreach (var value in values)
-            {
-                ExchangeList.Add((Exchange)value);
-            }
-        }
-
-        public ObservableCollection<OrderItem> Orders
-        {
-            get;
-            private set;
-        }
-
-        public ObservableCollection<Direction> DirectionList { get; private set; }
-
-        public ObservableCollection<Exchange> ExchangeList { get; private set; }
+        #region Properties
 
         public RelayCommand AddCommand
         {
@@ -174,105 +76,6 @@ namespace MyTradingApp.ViewModels
                     Orders.Add(order);
                 }));
             }
-        }
-
-        private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(Symbol.Code))
-            {
-                FindCommand.RaiseCanExecuteChanged();
-            }
-            else if (e.PropertyName == nameof(Symbol.Exchange))
-            {
-                FindCommand.RaiseCanExecuteChanged();
-            }
-        }
-
-        public RelayCommand<OrderItem> FindCommand
-        {
-            get
-            {
-                return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order => 
-                    IssueFindSymbolRequest(order), order => CanFindOrder(order)));
-            }
-        }
-
-        public RelayCommand StartStopStreamingCommand
-        {
-            get
-            {
-                return _startStopStreamingCommand ?? 
-                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming, CanStartStopStreaming));
-            }
-        }
-
-        private void StartStopStreaming()
-        {
-            IsStreaming = !IsStreaming;
-            if (IsStreaming)
-            {
-                GetMarketData();
-            }
-            else
-            {
-                CancelStreaming();
-            }
-        }
-
-        private void GetMarketData()
-        {
-            if (_requestedOrder == null) return;
-
-            var contract = MapOrderToContract(_requestedOrder);
-            _marketDataManager.RequestStreamingPrice(contract);
-        }
-
-        private void CancelStreaming()
-        {
-            _marketDataManager.StopActivePriceStreaming();
-        }
-
-        private bool CanStartStopStreaming()
-        {
-            return IsStreaming || Orders.Any(o => o.Symbol.IsFound);
-        }
-
-        private void IssueFindSymbolRequest(OrderItem order)
-        {
-            _requestedOrder = order;
-            order.Symbol.IsFound = false;
-            order.Symbol.Name = string.Empty;
-            _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
-        }
-
-        private void IssueHistoricalDataRequest(OrderItem order)
-        {
-            _requestedOrder = order;
-            //historicalDataManager.AddRequest(contract, endTime, duration, barSize, whatToShow, outsideRTH, 1, cbKeepUpToDate.Checked);
-
-            var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
-            _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
-        }
-
-        public RelayCommand<OrderItem> SubmitCommand
-        {
-            get
-            {
-                return _submitCommand ?? (_submitCommand = new RelayCommand<OrderItem>(order =>
-                {
-                    SubmitOrder(order);
-                }, order => CanSubmitOrder(order)));
-            }
-        }
-
-        private bool CanSubmitOrder(OrderItem order)
-        {
-            return order.Symbol.IsFound && order.Status == OrderStatus.Pending;
-        }
-
-        private bool CanFindOrder(OrderItem order)
-        {
-            return !string.IsNullOrEmpty(order.Symbol.Code);
         }
 
         public RelayCommand<OrderItem> DeleteCommand
@@ -291,6 +94,65 @@ namespace MyTradingApp.ViewModels
             }
         }
 
+        public ObservableCollection<Direction> DirectionList { get; private set; }
+
+        public ObservableCollection<Exchange> ExchangeList { get; private set; }
+
+        public RelayCommand<OrderItem> FindCommand
+        {
+            get
+            {
+                return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order =>
+                    IssueFindSymbolRequest(order), order => CanFindOrder(order)));
+            }
+        }
+
+        public bool IsStreaming
+        {
+            get => _isStreaming;
+            set
+            {
+                Set(ref _isStreaming, value);
+                SetStreamingButtonCaption();
+            }
+        }
+
+        public ObservableCollection<OrderItem> Orders
+        {
+            get;
+            private set;
+        }
+
+        public RelayCommand StartStopStreamingCommand
+        {
+            get
+            {
+                return _startStopStreamingCommand ??
+                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming, CanStartStopStreaming));
+            }
+        }
+
+        public string StreamingButtonCaption
+        {
+            get => _streamingButtonCaption;
+            set => Set(ref _streamingButtonCaption, value);
+        }
+
+        public RelayCommand<OrderItem> SubmitCommand
+        {
+            get
+            {
+                return _submitCommand ?? (_submitCommand = new RelayCommand<OrderItem>(order =>
+                {
+                    SubmitOrder(order);
+                }, order => CanSubmitOrder(order)));
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
         private static Contract MapOrderToContract(OrderItem order)
         {
             var contract = new Contract
@@ -308,45 +170,46 @@ namespace MyTradingApp.ViewModels
             return contract;
         }
 
-        public bool IsStreaming
+        private void CalculateRisk()
         {
-            get => _isStreaming;
-            set 
+            if (!_orderCalculationService.CanCalculate)
             {
-                Set(ref _isStreaming, value);
-                SetStreamingButtonCaption();
+                return;
             }
+
+            var sl = _orderCalculationService.CalculateInitialStopLoss();
+
+            _requestedOrder.EntryPrice = _orderCalculationService.GetEntryPrice();
+            _requestedOrder.InitialStopLossPrice = sl;
+            _requestedOrder.Quantity = _orderCalculationService.GetCalculatedQuantity();
         }
 
-        public string StreamingButtonCaption
+        private void CancelStreaming()
         {
-            get => _streamingButtonCaption;
-            set => Set(ref _streamingButtonCaption, value);
+            _marketDataManager.StopActivePriceStreaming();
         }
 
-        private void SetStreamingButtonCaption()
+        private bool CanFindOrder(OrderItem order)
         {
-            StreamingButtonCaption = IsStreaming
-                ? "Stop Streaming"
-                : "Start Streaming";
+            return !string.IsNullOrEmpty(order.Symbol.Code);
         }
 
-        private void SubmitOrder(OrderItem orderItem)
+        private bool CanStartStopStreaming()
         {
-            var contract = MapOrderToContract(orderItem);
-            contract.LocalSymbol = orderItem.Symbol.Code;
-            contract.PrimaryExch = orderItem.Symbol.Exchange.ToString();
-            contract.Exchange = "IDEALPRO";
+            return IsStreaming || Orders.Any(o => o.Symbol.IsFound);
+        }
 
-            var order = GetOrder(orderItem);
-            var id = _orderManager.PlaceNewOrder(contract, order);
+        private bool CanSubmitOrder(OrderItem order)
+        {
+            return order.Symbol.IsFound && order.Status == OrderStatus.Pending;
+        }
 
-            // Find this order in the collection and update its id
-            var index = Orders.IndexOf(orderItem);
-            if (index >= 0)
-            {
-                Orders[index].Id = id;
-            }
+        private void GetMarketData()
+        {
+            if (_requestedOrder == null) return;
+
+            var contract = MapOrderToContract(_requestedOrder);
+            _marketDataManager.RequestStreamingPrice(contract);
         }
 
         private Order GetOrder(OrderItem orderItem)
@@ -413,5 +276,175 @@ namespace MyTradingApp.ViewModels
 
             return order;
         }
+
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
+        {
+            _accountId = message.AccountId;
+        }
+
+        private void HandleTickPriceMessage(TickPrice tickPrice)
+        {
+            var order = Orders.SingleOrDefault(o => o.Symbol.Code == tickPrice.Symbol);
+            if (order == null)
+            {
+                return;
+            }
+
+            order.Symbol.LatestPrice = tickPrice.Price;
+            _orderCalculationService.SetLatestPrice(tickPrice.Price);
+            CalculateRisk();
+        }
+
+        private void IssueFindSymbolRequest(OrderItem order)
+        {
+            _requestedOrder = order;
+            order.Symbol.IsFound = false;
+            order.Symbol.Name = string.Empty;
+            _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
+        }
+
+        private void IssueHistoricalDataRequest(OrderItem order)
+        {
+            _requestedOrder = order;
+            //historicalDataManager.AddRequest(contract, endTime, duration, barSize, whatToShow, outsideRTH, 1, cbKeepUpToDate.Checked);
+
+            var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
+            _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
+        }
+
+        private void OnContractManagerFundamentalData(FundamentalDataMessage message)
+        {
+            if (_requestedOrder == null)
+            {
+                return;
+            }
+
+            _requestedOrder.Symbol.IsFound = true;
+            _requestedOrder.Symbol.Name = message.Data.CompanyName;
+            IssueHistoricalDataRequest(_requestedOrder);
+            StartStopStreamingCommand.RaiseCanExecuteChanged();
+            SubmitCommand.RaiseCanExecuteChanged();
+
+            RequestLatestPrice();
+        }
+
+        private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
+        {                       
+            _orderCalculationService.SetHistoricalData(message.Bars);
+            CalculateRisk();
+        }
+
+        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        {
+            // Find corresponding order
+            var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
+            if (order == null)
+            {
+                // Most likely an existing pending order (i.e. one that wasn't submitted via this app while it is currently open)
+                return;
+            }
+
+            Debug.WriteLine("Order status: {0}", message.Message.Status);
+
+            UpdateOrderStatus(order, message.Message.Status);
+        }
+
+        private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Symbol.Code))
+            {
+                FindCommand.RaiseCanExecuteChanged();
+            }
+            else if (e.PropertyName == nameof(Symbol.Exchange))
+            {
+                FindCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private void PopulateDirectionList()
+        {
+            DirectionList = new ObservableCollection<Direction>();
+            var values = Enum.GetValues(typeof(Direction));
+            foreach (var value in values)
+            {
+                DirectionList.Add((Direction)value);
+            }
+        }
+
+        private void PopulateExchangeList()
+        {
+            ExchangeList = new ObservableCollection<Exchange>();
+            var values = Enum.GetValues(typeof(Exchange));
+            foreach (var value in values)
+            {
+                ExchangeList.Add((Exchange)value);
+            }
+        }
+
+        private void RequestLatestPrice()
+        {
+            if (_requestedOrder == null) return;
+
+            var contract = MapOrderToContract(_requestedOrder);
+            _marketDataManager.RequestLatestPrice(contract);
+        }
+
+        private void SetStreamingButtonCaption()
+        {
+            StreamingButtonCaption = IsStreaming
+                ? "Stop Streaming"
+                : "Start Streaming";
+        }
+
+        private void StartStopStreaming()
+        {
+            IsStreaming = !IsStreaming;
+            if (IsStreaming)
+            {
+                GetMarketData();
+            }
+            else
+            {
+                CancelStreaming();
+            }
+        }
+
+        private void SubmitOrder(OrderItem orderItem)
+        {
+            var contract = MapOrderToContract(orderItem);
+            contract.LocalSymbol = orderItem.Symbol.Code;
+            contract.PrimaryExch = orderItem.Symbol.Exchange.ToString();
+            contract.Exchange = "IDEALPRO";
+
+            var order = GetOrder(orderItem);
+            var id = _orderManager.PlaceNewOrder(contract, order);
+
+            // Find this order in the collection and update its id
+            var index = Orders.IndexOf(orderItem);
+            if (index >= 0)
+            {
+                Orders[index].Id = id;
+            }
+        }
+
+        private void UpdateOrderStatus(OrderItem order, string status)
+        {
+            switch (status)
+            {
+                case "PreSubmitted":
+                    order.Status = OrderStatus.Submitted;
+                    break;
+
+                case "Cancelled":
+                    order.Status = OrderStatus.Cancelled;
+                    break;
+
+                case "Filled":
+                    order.Status = OrderStatus.Filled;
+                    break;
+            }
+        }
+
+        #endregion
     }
 }

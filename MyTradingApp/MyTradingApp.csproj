@@ -160,7 +160,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MarketDataManager.cs" />
     <Compile Include="Messages\AccountDownloadEndMessage.cs" />
     <Compile Include="Messages\AccountSummaryEndMessage.cs" />
     <Compile Include="Messages\AccountSummaryMessage.cs" />

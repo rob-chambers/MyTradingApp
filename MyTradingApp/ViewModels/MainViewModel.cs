@@ -13,29 +13,39 @@ namespace MyTradingApp.ViewModels
 {
     internal class MainViewModel : ViewModelBase
     {
+        #region Fields
         private const int MAX_LINES_IN_MESSAGE_BOX = 200;
+
         private const int REDUCED_LINES_IN_MESSAGE_BOX = 100;
-        private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
-        private readonly IBClient _iBClient;
-        private readonly IConnectionService _connectionService;
-        private readonly IOrderManager _orderManager;
+
+        // TODO: Expose RiskPercentageOfAccountto UI
+        private const double RiskPercentageOfAccount = 0.01;
         private readonly IAccountManager _accountManager;
-        private readonly StatusBarViewModel _statusBarViewModel;
-        private readonly IHistoricalDataManager _historicalDataManager;
+        private readonly IConnectionService _connectionService;
         private readonly IExchangeRateService _exchangeRateService;
+        private readonly IHistoricalDataManager _historicalDataManager;
+        private readonly IBClient _iBClient;
+        private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
         private readonly IOrderCalculationService _orderCalculationService;
-        private ICommand _connectCommand;
+        private readonly IOrderManager _orderManager;
+        private readonly StatusBarViewModel _statusBarViewModel;
         private ICommand _accountSummaryCommand;
         private ICommand _clearCommand;
         private string _connectButtonCaption;
+        private ICommand _connectCommand;
+        private string _errorText;
+        private double _exchangeRate;
+        private bool _isEnabled;
+        private double _netLiquidation;
         private int _numberOfLinesInMessageBox;
         private int _orderId;
         private int _parentOrderId;
-        private string _errorText;
-        private bool _isEnabled;
         private double _riskMultiplier;
-        private double _exchangeRate;
-        private double _netLiquidation;
+        private double _riskPerTrade;
+
+        #endregion
+
+        #region Constructors
 
         public MainViewModel(
             IBClient iBClient,
@@ -62,26 +72,38 @@ namespace MyTradingApp.ViewModels
             _iBClient.HistoricalDataEnd += _historicalDataManager.HandleMessage;
             _iBClient.OrderStatus += _orderManager.HandleOrderStatus;
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
-            _iBClient.AccountSummaryEnd += UpdateUI;
+            _iBClient.AccountSummaryEnd += HandleAccountSummaryEndMessage;
 
-            Messenger.Default.Register<ExchangeRateMessage>(this, OnExchangeRateMessage);
+            Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
 
-            _connectionService.ClientError += OnClientError;
+            _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
-            RiskMultiplier = 1.0;
+
+            // TODO: Allow persistence of preferences.  Change back to 1.0 for live account
+            RiskMultiplier = 0.1;
         }
 
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
+        #endregion
+
+        #region Properties
+
+        public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
+
+        public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
+
+        public string ConnectButtonCaption
         {
-            _netLiquidation = message.NetLiquidation;
-            RaisePropertyChanged(nameof(RiskPerTrade));
+            get => _connectButtonCaption;
+            set => Set(ref _connectButtonCaption, value);
         }
 
-        private void OnExchangeRateMessage(ExchangeRateMessage message)
+        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
+
+        public string ErrorText
         {
-            _exchangeRate = message.Price;
-            RaisePropertyChanged(nameof(RiskPerTrade));
+            get => _errorText;
+            private set => Set(ref _errorText, value);
         }
 
         public bool IsEnabled
@@ -90,37 +112,94 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _isEnabled, value);
         }
 
+        public OrdersViewModel OrdersViewModel { get; private set; }
+
         public double RiskMultiplier
         {
             get => _riskMultiplier;
             set
             {
                 Set(ref _riskMultiplier, value);
-                _orderCalculationService.SetRiskPerTrade(value);
-                RaisePropertyChanged(nameof(RiskPerTrade));
+                CalculateRiskPerTrade();
             }
         }
 
-        public double RiskPerTrade 
+        public double RiskPerTrade
         {
-            get => _netLiquidation * 0.01 * _exchangeRate * RiskMultiplier;
+            get => _riskPerTrade;
             set
             {
+                Set(ref _riskPerTrade, value);
                 _orderCalculationService.SetRiskPerTrade(value);
             }
         }
 
-        private void OnClientError(object sender, ClientError e)
+        #endregion
+
+        #region Methods
+
+        public void AppIsClosing()
+        {
+            if (_connectionService.IsConnected)
+            {
+                _connectionService.Disconnect();
+            }
+        }
+
+        private void AddTextToMessagePanel(string text)
+        {
+            HandleErrorMessage(new ErrorMessage(-1, -1, text));
+        }
+
+        private void CalculateRiskPerTrade()
+        {
+            RiskPerTrade = _netLiquidation * RiskPercentageOfAccount * _exchangeRate * RiskMultiplier;
+        }
+
+        private void ClearLog()
+        {
+            ErrorText = string.Empty;
+        }
+
+        private string EnsureMessageHasNewline(string message)
+        {
+            return message.Substring(message.Length - 1) != "\n"
+                ? message + "\n"
+                : message;
+        }
+
+        private void GetAccountSummary()
+        {
+            _accountManager.RequestAccountSummary();
+        }
+
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
+        {
+            _netLiquidation = message.NetLiquidation;
+            CalculateRiskPerTrade();
+        }
+
+        private void HandleAccountSummaryEndMessage(AccountSummaryEndMessage message)
+        {
+            _accountManager.HandleAccountSummaryEnd();
+        }
+
+        private void HandleErrorMessage(ErrorMessage message)
+        {
+            ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
+        }
+
+        private void HandleClientError(object sender, ClientError e)
         {
             if (e.Exception != null)
             {
-                AddTextToBox("Error: " + e.Exception);
+                AddTextToMessagePanel("Error: " + e.Exception);
                 return;
             }
 
             if (e.Id == 0 || e.ErrorCode == 0)
             {
-                AddTextToBox("Error: " + e.ErrorMessage + "\n");
+                AddTextToMessagePanel("Error: " + e.ErrorMessage + "\n");
                 return;
             }
 
@@ -128,39 +207,39 @@ namespace MyTradingApp.ViewModels
             HandleErrorMessage(error);
         }
 
-        private void AddTextToBox(string text)
+        private void HandleExchangeRateMessage(ExchangeRateMessage message)
         {
-            HandleErrorMessage(new ErrorMessage(-1, -1, text));
+            _exchangeRate = message.Price;
+            CalculateRiskPerTrade();
         }
 
-        private void UpdateUI(AccountSummaryEndMessage message)
+        private void SetConnectionStatus()
         {
-            _accountManager.HandleAccountSummaryEnd();
+            var isConnected = _connectionService.IsConnected;
+            ConnectButtonCaption = isConnected
+                ? "Disconnect"
+                : "Connect";
+
+            _statusBarViewModel.ConnectionStatusText = isConnected
+                ? "Connected to TWS"
+                : "Disconnected...";
+
+            IsEnabled = isConnected;
         }
 
-        public string ErrorText
+        private void ShowMessageOnPanel(string message)
         {
-            get => _errorText;
-            private set => Set(ref _errorText, value);
-        }
+            message = EnsureMessageHasNewline(message);
 
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
+            if (_numberOfLinesInMessageBox >= MAX_LINES_IN_MESSAGE_BOX)
+            {
+                _linesInMessageBox.RemoveRange(0, MAX_LINES_IN_MESSAGE_BOX - REDUCED_LINES_IN_MESSAGE_BOX);
+                _numberOfLinesInMessageBox = REDUCED_LINES_IN_MESSAGE_BOX;
+            }
 
-        public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
-
-        public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
-
-        private void ClearLog()
-        {
-            ErrorText = string.Empty;
-        }
-
-        public OrdersViewModel OrdersViewModel { get; private set; }
-
-        public string ConnectButtonCaption
-        {
-            get => _connectButtonCaption;
-            set => Set(ref _connectButtonCaption, value);
+            _linesInMessageBox.Add(message);
+            _numberOfLinesInMessageBox++;
+            ErrorText = string.Join(string.Empty, _linesInMessageBox);
         }
 
         private void ToggleConnection()
@@ -192,58 +271,6 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void GetAccountSummary()
-        {
-            _accountManager.RequestAccountSummary();
-        }
-
-        public void AppIsClosing()
-        {
-            if (_connectionService.IsConnected)
-            {
-                _connectionService.Disconnect();
-            }
-        }
-
-        private void SetConnectionStatus()
-        {
-            var isConnected = _connectionService.IsConnected;
-            ConnectButtonCaption = isConnected
-                ? "Disconnect"
-                : "Connect";
-
-            _statusBarViewModel.ConnectionStatusText = isConnected
-                ? "Connected to TWS"
-                : "Disconnected...";
-            
-            IsEnabled = isConnected;
-        }
-
-        private void HandleErrorMessage(ErrorMessage message)
-        {
-            ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
-        }
-
-        private void ShowMessageOnPanel(string message)
-        {
-            message = EnsureMessageHasNewline(message);
-           
-            if (_numberOfLinesInMessageBox >= MAX_LINES_IN_MESSAGE_BOX)
-            {
-                _linesInMessageBox.RemoveRange(0, MAX_LINES_IN_MESSAGE_BOX - REDUCED_LINES_IN_MESSAGE_BOX);
-                _numberOfLinesInMessageBox = REDUCED_LINES_IN_MESSAGE_BOX;
-            }
-
-            _linesInMessageBox.Add(message);
-            _numberOfLinesInMessageBox++;
-            ErrorText = string.Join(string.Empty, _linesInMessageBox);
-        }
-
-        private string EnsureMessageHasNewline(string message)
-        {
-            return message.Substring(message.Length - 1) != "\n"
-                ? message + "\n"
-                : message;
-        }
+        #endregion
     }
 }

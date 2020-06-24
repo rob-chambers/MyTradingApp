@@ -23,6 +23,8 @@ namespace MyTradingApp.Services
 
         private void OnTickPrice(TickPriceMessage msg)
         {
+            if (msg.Price == -1) return;  // Market is probably closed
+
             string symbol;
             switch (msg.Field)
             {
@@ -31,13 +33,13 @@ namespace MyTradingApp.Services
                     Messenger.Default.Send(new TickPrice(symbol, msg.Price));
                     break;
 
-                case TickType.BID:
+                case TickType.ASK:
                     symbol = _activeRequests[msg.RequestId].Symbol;
                     if (msg.RequestId >= TICK_ID_BASE_ONE_OFF)
                     {
                         // This is a one-off request - cancel further requests
-                        Debug.WriteLine("cancelling one-off request {0}", msg.RequestId);
-                        ibClient.ClientSocket.cancelMktData(msg.RequestId);
+                        Debug.WriteLine("Received one-off request {0}", msg.RequestId);
+                        //ibClient.ClientSocket.cancelMktData(msg.RequestId);
                     }
 
                     Messenger.Default.Send(new TickPrice(symbol, msg.Price));
@@ -58,9 +60,6 @@ namespace MyTradingApp.Services
             {
                 ibClient.ClientSocket.cancelMktData(i + TICK_ID_BASE);
             }
-
-            //if (clearTable)
-            //    Clear();
         }
 
         public override void NotifyError(int requestId)
@@ -76,19 +75,8 @@ namespace MyTradingApp.Services
         public void RequestLatestPrice(Contract contract)
         {
             var nextRequestId = TICK_ID_BASE_ONE_OFF + _latestPriceTicker++;
-            ibClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, false, false, new List<TagValue>());
+            ibClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, true, false, new List<TagValue>());
             _activeRequests.Add(nextRequestId, contract);
         }
-
-        //private void checkToAddRow(int requestId)
-        //{
-        //    DataGridView grid = (DataGridView)uiControl;
-        //    if (grid.Rows.Count < (requestId - TICK_ID_BASE))
-        //    {
-        //        grid.Rows.Add(GetIndex(requestId), 0);
-        //        grid[DESCRIPTION_INDEX, GetIndex(requestId)].Value = Utils.ContractToString(activeRequests[GetIndex(requestId)]);
-        //        grid[MARKET_DATA_TYPE_INDEX, GetIndex(requestId)].Value = MarketDataType.Real_Time.Name; // default
-        //    }
-        //}
     }
 }
