@@ -11,13 +11,13 @@ namespace MyTradingApp.Services
 {
     internal class HistoricalDataManager : DataManager, IHistoricalDataManager
     {
-        private const int HISTORICAL_ID_BASE = 30000000;
         public const string FullDatePattern = "yyyyMMdd  HH:mm:ss";
+        private const int HISTORICAL_ID_BASE = 30000000;        
         private const string YearMonthDayPattern = "yyyyMMdd";
+        
         private readonly IBClient _ibClient;
-
-        private List<HistoricalDataMessage> _historicalData = new List<HistoricalDataMessage>();
-        private string _symbol;
+        private readonly Dictionary<string, List<HistoricalDataMessage>> _historicalData = new Dictionary<string, List<HistoricalDataMessage>>();
+        private readonly Dictionary<int, string> _tickers = new Dictionary<int, string>();
 
         public HistoricalDataManager(IBClient ibClient) : base(ibClient)
         {
@@ -25,31 +25,60 @@ namespace MyTradingApp.Services
         }
 
         public void AddRequest(Contract contract, string endDateTime, string durationString, string barSizeSetting, string whatToShow, int useRTH, int dateFormat, bool keepUpToDate)
-        {
-            Clear();
-            _symbol = contract.Symbol;
-            _ibClient.ClientSocket.reqHistoricalData(currentTicker + HISTORICAL_ID_BASE, contract, endDateTime, durationString, barSizeSetting, whatToShow, useRTH, 1, keepUpToDate, new List<TagValue>());
+        {            
+            var symbol = contract.Symbol;
+            if (_historicalData.ContainsKey(symbol))
+            {
+                _historicalData.Remove(symbol);
+            }
+
+            var tickerId = currentTicker + HISTORICAL_ID_BASE;
+            _tickers.Add(tickerId, symbol);
+
+            _ibClient.ClientSocket.reqHistoricalData(tickerId, contract, endDateTime, durationString, barSizeSetting, whatToShow, useRTH, 1, keepUpToDate, new List<TagValue>());
+
+            currentTicker++;
         }
 
         public override void Clear()
         {
-            _historicalData = new List<HistoricalDataMessage>();
+            _historicalData.Clear();
         }
 
         public void HandleMessage(HistoricalDataMessage message)
         {
-            _historicalData.Add(message);
+            if (!_tickers.ContainsKey(message.RequestId))
+            {
+                return;
+            }
+
+            var symbol = _tickers[message.RequestId];
+            if (!_historicalData.ContainsKey(symbol))
+            {
+                _historicalData.Add(symbol, new List<HistoricalDataMessage>());
+            }
+
+            var list = _historicalData[symbol];
+            list.Add(message);
         }
 
         public void HandleMessage(HistoricalDataEndMessage message)
         {
-            Messenger.Default.Send(new HistoricalDataCompletedMessage(_symbol, PrepareEventData()));
+            if (!_tickers.ContainsKey(message.RequestId))
+            {
+                return;
+            }
+
+            var symbol = _tickers[message.RequestId];
+            Messenger.Default.Send(new HistoricalDataCompletedMessage(symbol, PrepareEventData(symbol)));
         }
 
-        private ICollection<Models.Bar> PrepareEventData()
+        private ICollection<Models.Bar> PrepareEventData(string symbol)
         {
             var list = new List<Models.Bar>();
-            list.AddRange(_historicalData.Select(x => new Models.Bar
+            var data = _historicalData[symbol];
+
+            list.AddRange(data.Select(x => new Models.Bar
             {
                 Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
                 Open = x.Open,

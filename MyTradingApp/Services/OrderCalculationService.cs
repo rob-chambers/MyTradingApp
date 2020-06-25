@@ -70,7 +70,7 @@ namespace MyTradingApp.Services
         {
             // TODO: Calculate buffer based on volatility
             var buffer = 0.05D;
-            if (_latestPrice[symbol] >= 20)
+            if (_latestPrice[symbol] >= 5)
             {
                 buffer = 0.12;
             }

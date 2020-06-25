@@ -28,7 +28,6 @@ namespace MyTradingApp.ViewModels
         private RelayCommand<OrderItem> _deleteCommand;
         private RelayCommand<OrderItem> _findCommand;
         private bool _isStreaming;
-        private OrderItem _requestedOrder;
         private RelayCommand _startStopStreamingCommand;
         private string _streamingButtonCaption;
         private RelayCommand<OrderItem> _submitCommand;
@@ -213,10 +212,11 @@ namespace MyTradingApp.ViewModels
 
         private void GetMarketData()
         {
-            if (_requestedOrder == null) return;
-
-            var contract = MapOrderToContract(_requestedOrder);
-            _marketDataManager.RequestStreamingPrice(contract);
+            foreach (var item in Orders)
+            {
+                var contract = MapOrderToContract(item);
+                _marketDataManager.RequestStreamingPrice(contract);
+            }
         }
 
         private Order GetOrder(OrderItem orderItem)
@@ -331,7 +331,6 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
-            _requestedOrder = order;
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
@@ -339,9 +338,6 @@ namespace MyTradingApp.ViewModels
 
         private void IssueHistoricalDataRequest(OrderItem order)
         {
-            _requestedOrder = order;
-            //historicalDataManager.AddRequest(contract, endTime, duration, barSize, whatToShow, outsideRTH, 1, cbKeepUpToDate.Checked);
-
             var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
             _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
         }
@@ -360,7 +356,7 @@ namespace MyTradingApp.ViewModels
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();
 
-            RequestLatestPrice();
+            RequestLatestPrice(order);
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
@@ -433,11 +429,9 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void RequestLatestPrice()
+        private void RequestLatestPrice(OrderItem order)
         {
-            if (_requestedOrder == null) return;
-
-            var contract = MapOrderToContract(_requestedOrder);
+            var contract = MapOrderToContract(order);
             _marketDataManager.RequestLatestPrice(contract);
         }
 
