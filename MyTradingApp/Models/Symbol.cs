@@ -9,6 +9,7 @@ namespace MyTradingApp.Models
         private string _name;
         private double _latestPrice;
         private bool _isFound;
+        private string _companyDescription;
 
         public string Code
         {
@@ -27,6 +28,18 @@ namespace MyTradingApp.Models
             get => _name;
             set => Set(ref _name, value);
         }
+
+        public string CompanyDescription
+        {
+            get => _companyDescription;
+            set
+            {
+                Set(ref _companyDescription, value);
+                RaisePropertyChanged(nameof(HasCompanyDescription));
+            }            
+        }
+
+        public bool HasCompanyDescription => !string.IsNullOrEmpty(CompanyDescription);
 
         public double LatestPrice
         {

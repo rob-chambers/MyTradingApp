@@ -263,6 +263,9 @@
   <ItemGroup>
     <Resource Include="iconfinder_17_3319627.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\icons8-info-16.png" />
+  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

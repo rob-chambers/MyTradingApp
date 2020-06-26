@@ -383,6 +383,7 @@ namespace MyTradingApp.ViewModels
 
             order.Symbol.IsFound = true;
             order.Symbol.Name = message.Data.CompanyName;
+            order.Symbol.CompanyDescription = message.Data.CompanyDescription;
             IssueHistoricalDataRequest(order);
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();

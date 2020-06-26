@@ -91,18 +91,58 @@
                     <GridViewColumn Width="200" Header=" Name">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Symbol.Name}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextDecorations" Value="" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
-                                                    <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <StackPanel Orientation="Horizontal">
+                                    <Popup
+                                        Width="auto"
+                                        Height="auto"
+                                        MaxWidth="500"
+                                        Placement="Mouse">
+
+                                        <Border
+                                            Background="{StaticResource MahApps.Brushes.Window.Background}"
+                                            BorderBrush="{StaticResource MahApps.Brushes.Button.Border}"
+                                            BorderThickness="4">
+                                            <TextBlock
+                                                Padding="8"
+                                                Text="{Binding Symbol.CompanyDescription}"
+                                                TextWrapping="Wrap" />
+                                        </Border>
+
+                                        <Popup.Style>
+                                            <Style TargetType="Popup">
+                                                <Style.Triggers>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding ElementName=infoImage, Path=IsMouseOver, Mode=OneWay}" Value="true" />
+                                                            <Condition Binding="{Binding Symbol.HasCompanyDescription}" Value="true" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="IsOpen" Value="True" />
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Popup.Style>
+                                    </Popup>
+
+                                    <Image
+                                        x:Name="infoImage"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,3,0"
+                                        Source="/Resources/Images/icons8-info-16.png"
+                                        Visibility="{Binding Symbol.HasCompanyDescription, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                                        />
+                                    <TextBlock Text="{Binding Symbol.Name}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
