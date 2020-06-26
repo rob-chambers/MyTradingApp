@@ -68,7 +68,7 @@ namespace MyTradingApp.Services
                     IsBackground = true
                 }.Start();
 
-                IsConnected = true;
+                IsConnected = _ibClient.ClientSocket.IsConnected();
             }
             catch (Exception ex)
             {

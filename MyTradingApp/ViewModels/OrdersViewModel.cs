@@ -7,6 +7,7 @@ using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -43,6 +44,7 @@ namespace MyTradingApp.ViewModels
             IOrderManager orderManager)
         {
             Orders = new ObservableCollection<OrderItem>();
+            Orders.CollectionChanged += OnOrdersCollectionChanged;
             PopulateDirectionList();
             PopulateExchangeList();
             _contractManager = contractManager;
@@ -58,6 +60,23 @@ namespace MyTradingApp.ViewModels
             SetStreamingButtonCaption();
         }
 
+        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (!IsStreaming)
+            {
+                return;
+            }
+
+            if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (OrderItem item in e.OldItems)
+                {
+                    Messenger.Default.Send(new OrderRemovedMessage(item));
+                    _marketDataManager.StopPriceStreaming(item.Symbol.Code);
+                }
+            }
+        }
+
         #endregion
 
         #region Properties
@@ -71,7 +90,7 @@ namespace MyTradingApp.ViewModels
                     var order = new OrderItem();
                     order.PropertyChanged += OnItemPropertyChanged;
                     order.Symbol.PropertyChanged += OnSymbolPropertyChanged;
-                    Orders.Add(order);
+                    Orders.Add(order);              
                 }));
             }
         }
@@ -113,6 +132,7 @@ namespace MyTradingApp.ViewModels
             set
             {
                 Set(ref _isStreaming, value);
+                Messenger.Default.Send(new StreamingChangedMessage(value));
                 SetStreamingButtonCaption();
             }
         }
@@ -159,7 +179,8 @@ namespace MyTradingApp.ViewModels
             {
                 Symbol = order.Symbol.Code,
                 SecType = "STK",
-                Exchange = order.Symbol.Exchange.ToString(),
+                Exchange = "SMART",
+                PrimaryExch = MapExchange(order.Symbol.Exchange),
                 Currency = "USD",
                 LastTradeDateOrContractMonth = string.Empty,
                 Strike = 0,
@@ -168,6 +189,11 @@ namespace MyTradingApp.ViewModels
             };
 
             return contract;
+        }
+
+        private static string MapExchange(Exchange exchange)
+        {
+            return exchange.ToString();
         }
 
         private void CalculateRisk(string symbol)
@@ -214,9 +240,14 @@ namespace MyTradingApp.ViewModels
         {
             foreach (var item in Orders)
             {
-                var contract = MapOrderToContract(item);
-                _marketDataManager.RequestStreamingPrice(contract);
+                StreamSymbol(item);
             }
+        }
+
+        private void StreamSymbol(OrderItem item)
+        {
+            var contract = MapOrderToContract(item);
+            _marketDataManager.RequestStreamingPrice(contract);
         }
 
         private Order GetOrder(OrderItem orderItem)
@@ -357,6 +388,11 @@ namespace MyTradingApp.ViewModels
             SubmitCommand.RaiseCanExecuteChanged();
 
             RequestLatestPrice(order);
+
+            if (IsStreaming)
+            {
+                StreamSymbol(order);
+            }
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)

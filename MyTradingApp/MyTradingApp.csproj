@@ -102,6 +102,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
+    <Compile Include="EventMessages\OrderRemovedMessage.cs" />
+    <Compile Include="EventMessages\StreamingChangedMessage.cs" />
     <Compile Include="EventMessages\SymbolMessage.cs" />
     <Compile Include="Models\ClientError.cs" />
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />

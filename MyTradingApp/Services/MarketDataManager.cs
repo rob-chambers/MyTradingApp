@@ -3,6 +3,7 @@ using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MyTradingApp.Services
 {
@@ -53,6 +54,19 @@ namespace MyTradingApp.Services
             for (var i = 1; i < _currentTicker; i++)
             {
                 _iBClient.ClientSocket.cancelMktData(i + TICK_ID_BASE);
+            }
+        }
+
+        public void StopPriceStreaming(string symbol)
+        {
+            var request = _activeRequests
+                .Where(x => x.Value.Symbol == symbol)
+                .Select(x => new { x.Key, x.Value })
+                .FirstOrDefault();
+
+            if (request != null)
+            {
+                _iBClient.ClientSocket.cancelMktData(request.Key);
             }
         }
 

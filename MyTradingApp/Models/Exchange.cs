@@ -3,6 +3,7 @@
     internal enum Exchange
     {
         NYSE,
-        Nasdaq
+        Nasdaq,
+        Amex
     }
 }

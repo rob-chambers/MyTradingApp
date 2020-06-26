@@ -9,5 +9,7 @@ namespace MyTradingApp.Services
         void StopActivePriceStreaming();
 
         void RequestLatestPrice(Contract contract);
+
+        void StopPriceStreaming(string symbol);
     }
 }

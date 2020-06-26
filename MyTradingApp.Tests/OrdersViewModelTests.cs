@@ -122,9 +122,10 @@ namespace MyTradingApp.Tests
             // Assert
             _contractManager.Received()
                 .RequestFundamentals(Arg.Is<IBApi.Contract>(x => x.Symbol == order.Symbol.Code &&
-                x.Exchange == order.Symbol.Exchange.ToString() &&
+                x.Exchange == "SMART" &&
                 x.Currency == "USD" &&
-                x.SecType == "STK"), Arg.Is("ReportSnapshot"));
+                x.SecType == "STK" &&
+                x.PrimaryExch == order.Symbol.Exchange.ToString()), Arg.Is("ReportSnapshot"));
         }
 
         [Fact]
