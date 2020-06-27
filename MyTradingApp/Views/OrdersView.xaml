@@ -59,11 +59,10 @@
                                 <TextBox
                                     Width="60"
                                     Padding="6,2"
+                                    IsReadOnly="{Binding IsLocked}"
                                     KeyUp="OnSymbolTextBoxKeyUp"
                                     MaxLength="6"
-                                    Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}"
-                                    IsReadOnly="{Binding IsLocked}"
-                                    />
+                                    Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -74,10 +73,9 @@
                                 <ComboBox
                                     Width="80"
                                     Padding="6,2"
-                                    ItemsSource="{Binding DataContext.ExchangeList, RelativeSource={RelativeSource AncestorType=UserControl, Mode=FindAncestor}}"
-                                    SelectedItem="{Binding Symbol.Exchange}"
                                     IsReadOnly="{Binding IsLocked}"
-                                    />
+                                    ItemsSource="{Binding DataContext.ExchangeList, RelativeSource={RelativeSource AncestorType=UserControl, Mode=FindAncestor}}"
+                                    SelectedItem="{Binding Symbol.Exchange}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
