@@ -105,6 +105,7 @@
     <Compile Include="EventMessages\OrderRemovedMessage.cs" />
     <Compile Include="EventMessages\StreamingChangedMessage.cs" />
     <Compile Include="EventMessages\SymbolMessage.cs" />
+    <Compile Include="Models\BrokerConstants.cs" />
     <Compile Include="Models\ClientError.cs" />
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
     <Compile Include="Models\Bar.cs" />

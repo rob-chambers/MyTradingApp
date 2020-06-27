@@ -29,17 +29,16 @@ namespace MyTradingApp.ViewModels
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IOrderManager _orderManager;
         private readonly StatusBarViewModel _statusBarViewModel;
-        private ICommand _accountSummaryCommand;
-        private ICommand _clearCommand;
-        private string _connectButtonCaption;
+        
+        private ICommand _clearCommand;        
         private ICommand _connectCommand;
+        
+        private string _connectButtonCaption;
         private string _errorText;
         private double _exchangeRate;
         private bool _isEnabled;
         private double _netLiquidation;
         private int _numberOfLinesInMessageBox;
-        private int _orderId;
-        private int _parentOrderId;
         private double _riskMultiplier;
         private double _riskPerTrade;
 
@@ -88,17 +87,19 @@ namespace MyTradingApp.ViewModels
 
         #region Properties
 
-        public ICommand AccountSummaryCommand => _accountSummaryCommand ?? (_accountSummaryCommand = new RelayCommand(new Action(GetAccountSummary)));
+        #region Commands
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
+
+        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
+
+        #endregion
 
         public string ConnectButtonCaption
         {
             get => _connectButtonCaption;
             set => Set(ref _connectButtonCaption, value);
         }
-
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
 
         public string ErrorText
         {
@@ -255,8 +256,7 @@ namespace MyTradingApp.ViewModels
                     _connectionService.Connect();
                     if (_connectionService.IsConnected)
                     {
-                        // Fire off account summary command
-                        AccountSummaryCommand.Execute(null);
+                        GetAccountSummary();
 
                         // Send a request to get the exchange rate
                         _exchangeRateService.RequestExchangeRate();

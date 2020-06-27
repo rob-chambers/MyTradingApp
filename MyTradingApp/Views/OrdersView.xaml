@@ -61,7 +61,7 @@
                                     Padding="6,2"
                                     KeyUp="OnSymbolTextBoxKeyUp"
                                     MaxLength="6"
-                                    Text="{Binding Symbol.Code}" />
+                                    Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -129,8 +129,7 @@
                                         Height="16"
                                         Margin="0,0,3,0"
                                         Source="/Resources/Images/icons8-info-16.png"
-                                        Visibility="{Binding Symbol.HasCompanyDescription, Converter={StaticResource BooleanToVisibilityConverter}}" 
-                                        />
+                                        Visibility="{Binding Symbol.HasCompanyDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                     <TextBlock Text="{Binding Symbol.Name}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">

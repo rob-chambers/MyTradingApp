@@ -19,7 +19,6 @@ namespace MyTradingApp.Services
             _signal = signal;
             _ibClient.ConnectionClosed += OnClientConnectionClosed;
             _ibClient.Error += OnClientError;
-            //_ibClient.ManagedAccounts += message => Messenger.Default.Send(new ManagedAccountsEventArgs(message));
         }
 
         private void OnClientError(int id, int errorCode, string message, Exception ex)

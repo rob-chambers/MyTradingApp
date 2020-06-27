@@ -178,10 +178,10 @@ namespace MyTradingApp.ViewModels
             var contract = new Contract
             {
                 Symbol = order.Symbol.Code,
-                SecType = "STK",
-                Exchange = "SMART",
+                SecType = BrokerConstants.Stock,
+                Exchange = BrokerConstants.Routers.Smart,
                 PrimaryExch = MapExchange(order.Symbol.Exchange),
-                Currency = "USD",
+                Currency = BrokerConstants.UsCurrency,
                 LastTradeDateOrContractMonth = string.Empty,
                 Strike = 0,
                 Multiplier = string.Empty,
@@ -193,6 +193,13 @@ namespace MyTradingApp.ViewModels
 
         private static string MapExchange(Exchange exchange)
         {
+            switch (exchange)
+            {
+                // On https://interactivebrokers.github.io/tws-api/basic_contracts.html, it mentions that stocks on the Nasdaq should be routed through ISLAND
+                case Exchange.Nasdaq:
+                    return BrokerConstants.Routers.Island;
+            }
+
             return exchange.ToString();
         }
 
@@ -258,55 +265,18 @@ namespace MyTradingApp.ViewModels
                 order.OrderId = orderItem.Id;
             }
 
-            /* actions:
-             * "BUY",
-            "SELL",
-            "SSHORT"});
-            */
-
             order.Action = orderItem.Direction == Direction.Buy
-                ? "BUY"
-                : "SELL";
+                ? BrokerConstants.Actions.Buy
+                : BrokerConstants.Actions.Sell;
 
-            /* Order types
-            "MKT",
-            "LMT",
-            "STP",
-            "STP LMT",
-            "REL",
-            "TRAIL",
-            */
-
-            order.OrderType = "STP";
+            order.OrderType = BrokerConstants.OrderTypes.Stop;
 
             var stopPrice = orderItem.EntryPrice;
             order.AuxPrice = stopPrice;
             order.TotalQuantity = orderItem.Quantity;
             order.Account = _accountId;
             order.ModelCode = string.Empty;
-
-            /* Time in force values              
-            "DAY",
-            "GTC",
-            "OPG",
-            "IOC",
-            "GTD",
-            "GTT",
-            "AUC",
-            "FOK",
-            "GTX",
-            "DTC" */
-
-            order.Tif = "DAY";
-            //FillExtendedOrderAttributes(order);
-            //FillAdvisorAttributes(order);
-            //FillVolatilityAttributes(order);
-            //FillScaleAttributes(order);
-            //FillAlgoAttributes(order);
-            //FillPegToBench(order);
-            //FillAdjustedStops(order);
-            //FillConditions(order);
-
+            order.Tif = BrokerConstants.TimeInForce.Day;
             return order;
         }
 
@@ -320,17 +290,20 @@ namespace MyTradingApp.ViewModels
 
             // Action for a Stop order will be the opposite
             order.Action = orderItem.Direction == Direction.Buy
-                ? "SELL"
-                : "BUY";
+                ? BrokerConstants.Actions.Sell
+                : BrokerConstants.Actions.Buy;
 
-            order.OrderType = "STP";
+            order.OrderType = BrokerConstants.OrderTypes.Stop;
 
             var stopPrice = orderItem.InitialStopLossPrice;
             order.AuxPrice = stopPrice;
             order.TotalQuantity = orderItem.Quantity;
             order.Account = _accountId;
             order.ModelCode = string.Empty;
-            order.Tif = "GTC";
+            order.Tif = BrokerConstants.TimeInForce.GoodTilCancelled;
+
+            // TODO: Test this will work
+            order.Transmit = true;
 
             return order;
         }
@@ -496,10 +469,8 @@ namespace MyTradingApp.ViewModels
         {
             var contract = MapOrderToContract(orderItem);
             contract.LocalSymbol = orderItem.Symbol.Code;
-            contract.PrimaryExch = orderItem.Symbol.Exchange.ToString();
-            contract.Exchange = "IDEALPRO";
 
-            var order = GetOrder(orderItem);            
+            var order = GetOrder(orderItem);
 
             var id = _orderManager.PlaceNewOrder(contract, order);
 
@@ -519,19 +490,19 @@ namespace MyTradingApp.ViewModels
         {
             switch (status)
             {
-                case "PreSubmitted":
+                case BrokerConstants.OrderStatus.PreSubmitted:
                     order.Status = OrderStatus.PreSubmitted;
                     break;
 
-                case "Submitted":
+                case BrokerConstants.OrderStatus.Submitted:
                     order.Status = OrderStatus.Submitted;
                     break;
 
-                case "Cancelled":
+                case BrokerConstants.OrderStatus.Cancelled:
                     order.Status = OrderStatus.Cancelled;
                     break;
 
-                case "Filled":
+                case BrokerConstants.OrderStatus.Filled:
                     order.Status = OrderStatus.Filled;
                     break;
 

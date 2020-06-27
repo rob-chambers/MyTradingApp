@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
+using MyTradingApp.Models;
 
 namespace MyTradingApp.Services
 {
@@ -26,9 +27,9 @@ namespace MyTradingApp.Services
             var contract = new Contract
             {
                 Symbol = ExchangeRatePair,
-                SecType = "CASH",
-                Exchange = "IDEALPRO",
-                Currency = "USD",
+                SecType = BrokerConstants.Cash,
+                Exchange = BrokerConstants.Routers.IdealPro,
+                Currency = BrokerConstants.UsCurrency,
                 LastTradeDateOrContractMonth = string.Empty,
                 Multiplier = string.Empty,
                 LocalSymbol = string.Empty

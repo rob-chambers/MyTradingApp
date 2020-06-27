@@ -1,7 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
@@ -49,6 +48,7 @@ namespace MyTradingApp.Tests
             var vm = GetVm();
             Assert.Equal("Connect", vm.ConnectButtonCaption);
             Assert.False(vm.IsEnabled);
+            Assert.Equal("Disconnected...", _statusBarViewModel.ConnectionStatusText);
         }
 
         [Fact]
@@ -110,6 +110,7 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.Equal("Disconnect", vm.ConnectButtonCaption);
             Assert.True(vm.IsEnabled);
+            Assert.Equal("Connected to TWS", _statusBarViewModel.ConnectionStatusText);
         }
 
         private void ConnectionTest(double netLiquidationValue, double exchangeRate)
@@ -131,6 +132,21 @@ namespace MyTradingApp.Tests
             _exchangeRateService
                 .When(x => x.RequestExchangeRate())
                 .Do(x => Messenger.Default.Send(new ExchangeRateMessage(exchangeRate)));
+        }
+
+        [Fact]
+        public void WhenAppClosingThenConnectionClosed()
+        {
+            // Act
+            var vm = GetVm();
+            ConnectionTest(0, 0);
+            vm.ConnectCommand.Execute(null);
+
+            // Act
+            vm.AppIsClosing();
+
+            // Assert
+            _connectionService.Received().Disconnect();
         }
     }
 }
