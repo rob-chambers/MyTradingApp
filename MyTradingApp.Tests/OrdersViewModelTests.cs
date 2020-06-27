@@ -1,10 +1,12 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
+using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Tests.Orders;
 using MyTradingApp.ViewModels;
 using NSubstitute;
+using NSubstitute.ReceivedExtensions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -60,6 +62,41 @@ namespace MyTradingApp.Tests
         }
 
         [Theory]
+        [InlineData(OrderStatus.PreSubmitted)]
+        [InlineData(OrderStatus.Submitted)]
+        [InlineData(OrderStatus.Filled)]
+        [InlineData(OrderStatus.Cancelled)]
+        public void OrderLockedOnceSubmitted(OrderStatus status)
+        {
+            // Arrange
+            const int OrderId = 9876;
+
+            var findCommandCanExecuteChangedFired = false;
+            var submitCommandCanExecuteChangedFired = false;
+            var deleteCommandCanExecuteChangedFired = false;
+
+            var vm = GetVm();
+            var builder = new OrderBuilder();
+            var order = builder.Default.SetSymbol(DefaultSymbol).Order;
+            vm.FindCommand.CanExecuteChanged += (s, e) => findCommandCanExecuteChangedFired = true; ;
+            vm.SubmitCommand.CanExecuteChanged += (s, e) => submitCommandCanExecuteChangedFired = true;
+            vm.DeleteCommand.CanExecuteChanged += (s, e) => deleteCommandCanExecuteChangedFired = true;
+            vm.Orders.Add(order);
+            order.Id = OrderId;
+
+            // Act
+            var message = new OrderStatusMessage(OrderId, status.ToString(), 0, 0, 0, 0, 0, 0, 0, null, 0);
+            Messenger.Default.Send(new OrderStatusChangedMessage(order.Symbol.Code, message));
+
+            // Assert
+            Assert.True(findCommandCanExecuteChangedFired);
+            Assert.True(order.IsLocked);
+            Assert.False(vm.SubmitCommand.CanExecute(order));
+            Assert.True(submitCommandCanExecuteChangedFired);
+            Assert.True(deleteCommandCanExecuteChangedFired);
+        }
+
+        [Theory]
         [InlineData(OrderStatus.Pending)]
         [InlineData(OrderStatus.Cancelled)]
         public void CanDeleteOrderIfPendingOrCancelled(OrderStatus status)
@@ -74,20 +111,18 @@ namespace MyTradingApp.Tests
             Assert.True(vm.DeleteCommand.CanExecute(commandParameter));
         }
 
-        [Fact]
-        public void CannotDeleteOrderIfNotPending()
+        [Theory]
+        [InlineData(OrderStatus.Submitted)]
+        [InlineData(OrderStatus.PreSubmitted)]
+        [InlineData(OrderStatus.Filled)]
+        public void CannotDeleteOrderIfNotPending(OrderStatus status)
         {
             var vm = GetVm();
             var builder = new OrderBuilder();
             var order = builder.Default.Order;
             vm.Orders.Add(order);
-
-            var commandParameter = order;
-            Assert.Equal(OrderStatus.Pending, order.Status);
-            Assert.True(vm.DeleteCommand.CanExecute(commandParameter));
-
-            order.Status = OrderStatus.Submitted;
-            Assert.False(vm.DeleteCommand.CanExecute(commandParameter));
+            order.Status = status;
+            Assert.False(vm.DeleteCommand.CanExecute(order));
         }
 
         [Theory]

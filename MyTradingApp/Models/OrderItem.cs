@@ -14,6 +14,7 @@ namespace MyTradingApp.Models
         private double _priceIncrement;
         private int _quantityInterval = 1;
         private int _id;
+        private bool _isLocked;
 
         public OrderItem()
         {
@@ -86,7 +87,28 @@ namespace MyTradingApp.Models
         public OrderStatus Status
         {
             get => _status;
-            set => Set(ref _status, value);
+            set
+            {
+                Set(ref _status, value); 
+                switch (value)
+                {
+                    case OrderStatus.PreSubmitted:
+                        // fall-through
+                    case OrderStatus.Submitted:
+                        // fall-through
+                    case OrderStatus.Filled:
+                        // fall-through
+                    case OrderStatus.Cancelled:
+                        IsLocked = true;
+                        break;
+                }
+            }
+        }
+
+        public bool IsLocked
+        {
+            get => _isLocked;
+            set => Set(ref _isLocked, value);
         }
     }
 }

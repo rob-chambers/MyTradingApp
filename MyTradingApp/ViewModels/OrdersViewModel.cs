@@ -230,7 +230,7 @@ namespace MyTradingApp.ViewModels
 
         private bool CanFindOrder(OrderItem order)
         {
-            return !string.IsNullOrEmpty(order.Symbol.Code);
+            return !string.IsNullOrEmpty(order.Symbol.Code) && !order.IsLocked;
         }
 
         private bool CanStartStopStreaming()
@@ -240,7 +240,7 @@ namespace MyTradingApp.ViewModels
 
         private bool CanSubmitOrder(OrderItem order)
         {
-            return order.Symbol.IsFound && order.Status == OrderStatus.Pending;
+            return order.Symbol.IsFound && !order.IsLocked;
         }
 
         private void GetMarketData()
@@ -514,6 +514,10 @@ namespace MyTradingApp.ViewModels
                     }
                     break;
             }
+
+            FindCommand.RaiseCanExecuteChanged();
+            SubmitCommand.RaiseCanExecuteChanged();
+            DeleteCommand.RaiseCanExecuteChanged();
         }
 
         #endregion
