@@ -1,24 +1,62 @@
-﻿<UserControl x:Class="MyTradingApp.Views.SettingsView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             DataContext="{Binding Settings, Source={StaticResource Locator}}"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+﻿<UserControl
+    x:Class="MyTradingApp.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    DataContext="{Binding Settings, Source={StaticResource Locator}}"
+    mc:Ignorable="d">
     <StackPanel Margin="8">
-        <TextBlock Text="Accent 1" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Accent}" />
-        <TextBlock Text="Accent 2" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Accent2}" />
-        <TextBlock Text="Accent 3" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Accent3}" />
-        <TextBlock Text="Accent 4" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Accent4}" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Accent}"
+            Text="Accent 1" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Accent2}"
+            Text="Accent 2" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Accent3}"
+            Text="Accent 3" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Accent4}"
+            Text="Accent 4" />
 
-        <TextBlock Text="Control Background" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Control.Background}" />
-        <TextBlock Text="Gray" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Gray}" />
-        <TextBlock Text="Gray2" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Gray2}" />
-        <TextBlock Text="Menu.Background" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Menu.Background}" />
-        <TextBlock Text="SystemControlBackgroundBaseHigh" FontSize="20" Foreground="{StaticResource MahApps.Brushes.SystemControlBackgroundBaseHigh}" />
-        <TextBlock Text="Text" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Text}" />
-        <TextBlock Text="Window.Background" FontSize="20" Foreground="{StaticResource MahApps.Brushes.Window.Background}" />
-        <TextBlock Text="HamburgerMenu.Pane.Background" FontSize="20" Foreground="{StaticResource MahApps.HamburgerMenu.Pane.Background}" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Control.Background}"
+            Text="Control Background" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Gray}"
+            Text="Gray" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Gray2}"
+            Text="Gray2" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Menu.Background}"
+            Text="Menu.Background" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.SystemControlBackgroundBaseHigh}"
+            Text="SystemControlBackgroundBaseHigh" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Text}"
+            Text="Text" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.Brushes.Window.Background}"
+            Text="Window.Background" />
+        <TextBlock
+            FontSize="20"
+            Foreground="{StaticResource MahApps.HamburgerMenu.Pane.Background}"
+            Text="HamburgerMenu.Pane.Background" />
     </StackPanel>
 </UserControl>

@@ -28,6 +28,7 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<EReaderSignal, EReaderMonitorSignal>();
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<OrdersViewModel>();
+            SimpleIoc.Default.Register<PositionsViewModel>();
             SimpleIoc.Default.Register<SettingsViewModel>();
             SimpleIoc.Default.Register<StatusBarViewModel>();
             SimpleIoc.Default.Register<IBClient>();
@@ -48,5 +49,7 @@ namespace MyTradingApp.ViewModels
         public OrdersViewModel Orders => ServiceLocator.Current.GetInstance<OrdersViewModel>();
 
         public StatusBarViewModel StatusBar => ServiceLocator.Current.GetInstance<StatusBarViewModel>();
+
+        public PositionsViewModel Positions => ServiceLocator.Current.GetInstance<PositionsViewModel>();
     }
 }

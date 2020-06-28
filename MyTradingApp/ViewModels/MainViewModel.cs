@@ -59,7 +59,8 @@ namespace MyTradingApp.ViewModels
             StatusBarViewModel statusBarViewModel,
             IHistoricalDataManager historicalDataManager,
             IExchangeRateService exchangeRateService,
-            IOrderCalculationService orderCalculationService)
+            IOrderCalculationService orderCalculationService,
+            PositionsViewModel positionsViewModel)
         {
             CreateMenuItems();
 
@@ -68,6 +69,7 @@ namespace MyTradingApp.ViewModels
             _orderManager = orderManager;
             _accountManager = accountManager;
             OrdersViewModel = ordersViewModel;
+            PositionsViewModel = positionsViewModel;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
             _exchangeRateService = exchangeRateService;
@@ -161,6 +163,8 @@ namespace MyTradingApp.ViewModels
         }
 
         public OrdersViewModel OrdersViewModel { get; private set; }
+
+        public PositionsViewModel PositionsViewModel { get; private set; }
 
         public double RiskMultiplier
         {

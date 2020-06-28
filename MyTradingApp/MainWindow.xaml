@@ -10,7 +10,7 @@
     xmlns:converters="clr-namespace:MyTradingApp.Converters"
     Title="My Trading App"
     Width="1350"
-    Height="587"
+    Height="700"
     DataContext="{Binding Main, Source={StaticResource Locator}}"
     Icon="iconfinder_17_3319627.ico"
     ResizeMode="CanResizeWithGrip"
