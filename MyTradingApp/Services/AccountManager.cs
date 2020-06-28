@@ -1,6 +1,8 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
+using MyTradingApp.Models;
+using MyTradingApp.ViewModels;
 using System.Collections.Generic;
 
 namespace MyTradingApp.Services
@@ -24,10 +26,13 @@ namespace MyTradingApp.Services
         private bool _accountSummaryRequestActive;
         private int _dataCount = 0;
         private Dictionary<string, string> _accountData = new Dictionary<string, string>();
+        private List<PositionItem> _positions;
 
         public AccountManager(IBClient iBClient)
         {
             _iBClient = iBClient;
+            _iBClient.Position += HandlePositionMessage;
+            _iBClient.PositionEnd += OnClientPositionEnd;
         }
 
         public void RequestAccountSummary()
@@ -80,6 +85,35 @@ namespace MyTradingApp.Services
         public void HandleAccountSummaryEnd()
         {
             _accountSummaryRequestActive = false;
+        }
+
+        public void RequestPositions()
+        {
+            _positions = new List<PositionItem>();
+            _iBClient.ClientSocket.reqPositions();
+        }
+
+        private void OnClientPositionEnd()
+        {
+            Messenger.Default.Send(new ExistingPositionsMessage(_positions));
+        }
+
+        public void HandlePositionMessage(PositionMessage positionMessage)
+        {
+            if (positionMessage.Contract.SecType != BrokerConstants.Stock)
+            {
+                return;
+            }
+
+            _positions.Add(new PositionItem
+            {
+                AvgPrice = positionMessage.AverageCost,
+                Quantity = positionMessage.Position,
+                Symbol = new Symbol
+                {
+                    Code = positionMessage.Contract.Symbol
+                }
+            });           
         }
     }
 }

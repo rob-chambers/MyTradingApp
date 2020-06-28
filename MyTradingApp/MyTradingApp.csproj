@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -170,6 +170,7 @@
     <Compile Include="Converters\ColourConverter.cs" />
     <Compile Include="Converters\SelectedItemToContentConverter.cs" />
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
+    <Compile Include="EventMessages\ExistingPositionsMessage.cs" />
     <Compile Include="EventMessages\OrderRemovedMessage.cs" />
     <Compile Include="EventMessages\StreamingChangedMessage.cs" />
     <Compile Include="EventMessages\SymbolMessage.cs" />
@@ -208,6 +209,7 @@
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\OrdersViewModel.cs" />
+    <Compile Include="ViewModels\PositionItem.cs" />
     <Compile Include="ViewModels\PositionsViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="Models\Symbol.cs" />

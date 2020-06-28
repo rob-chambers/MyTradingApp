@@ -22,10 +22,11 @@ namespace MyTradingApp.Tests
         private IOrderCalculationService _orderCalculationService;
         private IExchangeRateService _exchangeRateService;
         private OrdersViewModel _ordersViewModel;
-        private StatusBarViewModel _statusBarViewModel;
+        private StatusBarViewModel _statusBarViewModel;        
 
         private MainViewModel GetVm()
         {
+            MainViewModel.IsUnitTesting = true;
             _ibClient = new IBClient(new EReaderMonitorSignal());
             _connectionService = Substitute.For<IConnectionService>();
             _orderManager = Substitute.For<IOrderManager>();
@@ -39,7 +40,9 @@ namespace MyTradingApp.Tests
             _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
-            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService);
+            var positionsViewModel = new PositionsViewModel();
+
+            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel);
         }
 
         [Fact]
@@ -147,6 +150,25 @@ namespace MyTradingApp.Tests
 
             // Assert
             _connectionService.Received().Disconnect();
+        }
+
+        [Fact]
+        public void WhenConnectionMadePositionsRequested()
+        {
+            // Arrange
+            var vm = GetVm();
+            _connectionService
+                .When(x => x.Connect())
+                .Do(x =>
+                {
+                    _connectionService.IsConnected.Returns(true);
+                });
+
+            // Act
+            vm.ConnectCommand.Execute(null);
+
+            // Assert
+            _accountManager.Received().RequestPositions();
         }
     }
 }

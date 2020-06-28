@@ -9,5 +9,7 @@ namespace MyTradingApp.Services
         void HandleAccountSummary(AccountSummaryMessage message);
 
         void HandleAccountSummaryEnd();
+
+        void RequestPositions();
     }
 }

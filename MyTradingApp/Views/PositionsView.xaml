@@ -13,13 +13,14 @@
         <Grid.Resources>
             <converters:ColourConverter x:Key="ColourConverter" />
         </Grid.Resources>
-        <ListView ItemsSource="{Binding Positions}">
+        <ListView ItemsSource="{Binding Positions}" >
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Focusable" Value="false" />
-                    <Setter Property="Height" Value="40" />
+                    <Setter Property="Focusable" Value="False" />
+                    <!--<Setter Property="Height" Value="40" />-->
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
                     <Style.Triggers>
-                        <!--  Hide selection  -->
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{x:Null}" />
                             <Setter Property="BorderBrush" Value="{x:Null}" />
@@ -36,15 +37,18 @@
                     <GridViewColumn
                         Width="auto"
                         DisplayMemberBinding="{Binding Symbol.Code}"
-                        Header=" Symbol" />
+                        Header=" Symbol"
+                        />
                     <GridViewColumn
                         Width="200"
                         DisplayMemberBinding="{Binding Symbol.Name}"
-                        Header=" Name" />
+                        Header=" Name"
+                        />
                     <GridViewColumn
                         Width="auto"
                         DisplayMemberBinding="{Binding AvgPrice}"
-                        Header=" Avg Price" />
+                        Header=" Avg Price"
+                        />
                     <GridViewColumn Width="auto" Header=" Qty">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
@@ -58,12 +62,14 @@
                     <GridViewColumn
                         Width="100"
                         DisplayMemberBinding="{Binding Symbol.LatestPrice, StringFormat='0.00'}"
-                        Header=" Latest Price" />
+                        Header=" Latest Price" 
+                        />
 
                     <GridViewColumn
                         Width="auto"
                         DisplayMemberBinding="{Binding ProfitLoss, StringFormat='c'}"
-                        Header=" P/L" />
+                        Header=" P/L" 
+                        />
                 </GridView>
             </ListView.View>
         </ListView>

@@ -16,6 +16,8 @@ namespace MyTradingApp.ViewModels
     internal class MainViewModel : ViewModelBase
     {
         #region Fields
+        public static bool IsUnitTesting = false;
+
         private const int MAX_LINES_IN_MESSAGE_BOX = 200;
 
         private const int REDUCED_LINES_IN_MESSAGE_BOX = 100;
@@ -93,6 +95,11 @@ namespace MyTradingApp.ViewModels
 
         private void CreateMenuItems()
         {
+            if (IsUnitTesting)
+            {
+                return;
+            }
+
             MenuItems = new ObservableCollection<MenuItemViewModel>
             {
                 new HomeViewModel(this)
@@ -120,17 +127,17 @@ namespace MyTradingApp.ViewModels
             };
         }
 
-        #endregion
+#endregion
 
-        #region Properties
+#region Properties
 
-        #region Commands
+#region Commands
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
 
         public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
 
-        #endregion
+#endregion
 
         public ObservableCollection<MenuItemViewModel> MenuItems
         {
@@ -186,9 +193,9 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        #endregion
+#endregion
 
-        #region Methods
+#region Methods
 
         public void AppIsClosing()
         {
@@ -311,6 +318,8 @@ namespace MyTradingApp.ViewModels
 
                         // Send a request to get the exchange rate
                         _exchangeRateService.RequestExchangeRate();
+
+                        _accountManager.RequestPositions();
                     }
                 }
 
@@ -322,6 +331,6 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        #endregion
+#endregion
     }
 }
