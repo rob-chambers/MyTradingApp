@@ -1,12 +1,14 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
+using MahApps.Metro.IconPacks;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
@@ -41,6 +43,8 @@ namespace MyTradingApp.ViewModels
         private int _numberOfLinesInMessageBox;
         private double _riskMultiplier;
         private double _riskPerTrade;
+        private ObservableCollection<MenuItemViewModel> _menuItems;
+        private ObservableCollection<MenuItemViewModel> _menuOptionItems;
 
         #endregion
 
@@ -57,6 +61,8 @@ namespace MyTradingApp.ViewModels
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService)
         {
+            CreateMenuItems();
+
             _iBClient = iBClient;
             _connectionService = connectionService;
             _orderManager = orderManager;
@@ -83,6 +89,35 @@ namespace MyTradingApp.ViewModels
             RiskMultiplier = 0.1;
         }
 
+        private void CreateMenuItems()
+        {
+            MenuItems = new ObservableCollection<MenuItemViewModel>
+            {
+                new HomeViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Home },
+                    Label = "Home",
+                    ToolTip = "Welcome Home"
+                },
+                new AboutViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Help },
+                    Label = "About",
+                    ToolTip = "About this one..."
+                }
+            };
+
+            MenuOptionItems = new ObservableCollection<MenuItemViewModel>
+            {
+                new SettingsViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Cog },
+                    Label = "Settings",
+                    ToolTip = "The App settings"
+                }
+            };
+        }
+
         #endregion
 
         #region Properties
@@ -94,6 +129,18 @@ namespace MyTradingApp.ViewModels
         public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
 
         #endregion
+
+        public ObservableCollection<MenuItemViewModel> MenuItems
+        {
+            get => _menuItems;
+            set => Set(ref _menuItems, value);
+        }
+
+        public ObservableCollection<MenuItemViewModel> MenuOptionItems
+        {
+            get => _menuOptionItems;
+            set => Set(ref _menuOptionItems, value);
+        }
 
         public string ConnectButtonCaption
         {

@@ -1,113 +1,88 @@
-﻿
-<mah:MetroWindow
+﻿<mahapps:MetroWindow
     x:Class="MyTradingApp.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:MyTradingApp.Views"
+    xmlns:vms="clr-namespace:MyTradingApp.ViewModels"
+    xmlns:converters="clr-namespace:MyTradingApp.Converters"
     Title="My Trading App"
-    Width="1261"
+    Width="1350"
     Height="587"
     DataContext="{Binding Main, Source={StaticResource Locator}}"
     Icon="iconfinder_17_3319627.ico"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <Grid Margin="8">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="2*" MinHeight="120" />
-            <RowDefinition Height="4" />
-            <RowDefinition Height="*" MinHeight="50" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.Resources>
+            <converters:SelectedItemToContentConverter x:Key="SelectedItemToContentConverter" />
 
-            <Button
-                Width="80"
-                Margin="0,10"
-                HorizontalAlignment="Left"
-                Command="{Binding ConnectCommand}"
-                Content="{Binding ConnectButtonCaption}" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Label VerticalAlignment="Center">Risk Multiplier:</Label>
-                <mahapps:NumericUpDown
-                    Width="90"
-                    Height="28"
-                    Interval="0.1"
-                    Maximum="5"
-                    Minimum="0.01"
-                    NumericInputMode="Decimal"
-                    ParsingNumberStyle="Float"
-                    StringFormat="0.00"
-                    Value="{Binding RiskMultiplier}" />
+            <!--  this is the template for the items (options too)  -->
+            <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type vms:MenuItemViewModel}">
+                <Grid x:Name="RootGrid"
+                      Height="48"
+                      Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mahapps:HamburgerMenu}}, Path=CompactPaneLength}" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Grid.Column="0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Content="{Binding Icon}"
+                                    Focusable="False"                                    
+                                    />
+                    <TextBlock Grid.Column="1"
+                               VerticalAlignment="Center"
+                               FontSize="16"
+                               Text="{Binding Label}" />
+                </Grid>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mahapps:HamburgerMenu}}, Path=IsPaneOpen}" Value="False">
+                        <Setter TargetName="RootGrid" Property="ToolTip" Value="{Binding ToolTip, Mode=OneWay}" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
 
-                <Label Margin="16,0,0,0" VerticalAlignment="Center">Risk Per Trade:</Label>
-                <TextBox
-                    Height="28"
-                    Margin="6,0"
-                    VerticalContentAlignment="Center"
-                    IsReadOnly="True"
-                    Text="{Binding RiskPerTrade, Mode=OneWay, StringFormat='$0.00'}" />
-            </StackPanel>
-        </Grid>
+            <!--  these are the templates for the view models  -->
+            <DataTemplate DataType="{x:Type vms:HomeViewModel}">
+                <views:MainView DataContext="{Binding}" />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vms:AboutViewModel}">
+                <views:AboutView DataContext="{Binding}" />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vms:SettingsViewModel}">
+                <views:SettingsView DataContext="{Binding}" />
+            </DataTemplate>
+        </Grid.Resources>
 
-        <views:OrdersView
-            Grid.Row="1"
-            DataContext="{Binding OrdersViewModel}"
-            IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mah:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
+        <mahapps:HamburgerMenu x:Name="HamburgerMenuControl"
+                           DisplayMode="CompactInline"
+                           IsPaneOpen="False"
+                           ItemTemplate="{StaticResource MenuItemTemplate}"
+                           ItemsSource="{Binding MenuItems}"
+                           OptionsItemTemplate="{StaticResource MenuItemTemplate}"
+                           OptionsItemsSource="{Binding MenuOptionItems}"
+                           SelectedIndex="0"
+                               >
 
-        <GridSplitter
-            Grid.Row="2"
-            Height="5"
-            HorizontalAlignment="Stretch" />
+            <!--  select the ViewModel of the selected item (options item)  -->
+            <mahapps:HamburgerMenu.Content>
+                <MultiBinding Converter="{StaticResource SelectedItemToContentConverter}">
+                    <Binding FallbackValue="{x:Null}"
+                             Mode="OneWay"
+                             Path="SelectedItem"
+                             RelativeSource="{RelativeSource Self}" />
+                    <Binding FallbackValue="{x:Null}"
+                             Mode="OneWay"
+                             Path="SelectedOptionsItem"
+                             RelativeSource="{RelativeSource Self}" />
+                </MultiBinding>
+            </mahapps:HamburgerMenu.Content>
 
-        <DockPanel Grid.Row="3">
-            <Button
-                Width="60"
-                MinHeight="28"
-                Margin="0,10,0,0"
-                Command="{Binding ClearCommand}"
-                Content="Clear"
-                DockPanel.Dock="Top"
-                FontSize="10" />
-            <TextBox
-                MinHeight="30"
-                Margin="0,2"
-                AcceptsReturn="True"
-                DockPanel.Dock="Bottom"
-                FontSize="11"
-                IsReadOnly="True"
-                IsReadOnlyCaretVisible="True"
-                MinLines="8"
-                ScrollViewer.CanContentScroll="True"
-                Text="{Binding ErrorText, Mode=OneWay}"
-                VerticalScrollBarVisibility="Visible" />
-        </DockPanel>
-
-        <!--  Status Bar  -->
-        <StatusBar
-            Grid.Row="4"
-            MinHeight="30"
-            DataContext="{Binding StatusBar, Source={StaticResource Locator}}">
-            <StatusBarItem Content="{Binding ConnectionStatusText, Mode=OneWay}" />
-            <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Available Funds: " />
-                    <TextBlock Width="100" Text="{Binding NetLiquidation, Mode=OneWay}" />
-
-                    <TextBlock Margin="10,0,0,0" Text="Buying Power: " />
-                    <TextBlock Width="100" Text="{Binding BuyingPower, Mode=OneWay}" />
-                </StackPanel>
-            </StatusBarItem>
-        </StatusBar>
+        </mahapps:HamburgerMenu>
     </Grid>
-</mah:MetroWindow>
+</mahapps:MetroWindow>

@@ -19,6 +19,12 @@ namespace MyTradingApp
             Messenger.Default.Register<NotificationMessage<NotificationType>>(this, HandleNotificationMessage);
         }
 
+        private void HamburgerMenuControl_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            HamburgerMenuControl.Content = e.ClickedItem;
+            HamburgerMenuControl.IsPaneOpen = false;
+        }
+
         private void HandleNotificationMessage(NotificationMessage<NotificationType> message)
         {
             MessageBox.Show(message.Notification, Title, MessageBoxButton.OK, NotificationTypeToImage(message.Content));

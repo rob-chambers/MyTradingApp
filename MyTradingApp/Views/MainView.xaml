@@ -1,0 +1,107 @@
+﻿<UserControl x:Class="MyTradingApp.Views.MainView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:views="clr-namespace:MyTradingApp.Views" 
+             xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"             
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             DataContext="{Binding Main, Source={StaticResource Locator}}"
+             >
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" MinHeight="120" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="*" MinHeight="50" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Button
+                Width="80"
+                Margin="0,10"
+                HorizontalAlignment="Left"
+                Command="{Binding ConnectCommand}"
+                Content="{Binding ConnectButtonCaption}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Label VerticalAlignment="Center">Risk Multiplier:</Label>
+                <mahapps:NumericUpDown
+                    Width="90"
+                    Height="28"
+                    Interval="0.1"
+                    Maximum="5"
+                    Minimum="0.01"
+                    NumericInputMode="Decimal"
+                    ParsingNumberStyle="Float"
+                    StringFormat="0.00"
+                    Value="{Binding RiskMultiplier}" />
+
+                <Label Margin="16,0,0,0" VerticalAlignment="Center">Risk Per Trade:</Label>
+                <TextBox
+                    Height="28"
+                    Margin="6,0"
+                    VerticalContentAlignment="Center"
+                    IsReadOnly="True"
+                    Text="{Binding RiskPerTrade, Mode=OneWay, StringFormat='$0.00'}" />
+            </StackPanel>
+        </Grid>
+
+        <views:OrdersView
+            Grid.Row="1"
+            DataContext="{Binding OrdersViewModel}"
+            IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
+
+        <GridSplitter
+            Grid.Row="2"
+            Height="5"
+            HorizontalAlignment="Stretch" />
+
+        <DockPanel Grid.Row="3">
+            <Button
+                Width="60"
+                MinHeight="28"
+                Margin="0,10,0,0"
+                Command="{Binding ClearCommand}"
+                Content="Clear"
+                DockPanel.Dock="Top"
+                FontSize="10" />
+            <TextBox
+                MinHeight="30"
+                Margin="0,2"
+                AcceptsReturn="True"
+                DockPanel.Dock="Bottom"
+                FontSize="11"
+                IsReadOnly="True"
+                IsReadOnlyCaretVisible="True"
+                MinLines="8"
+                ScrollViewer.CanContentScroll="True"
+                Text="{Binding ErrorText, Mode=OneWay}"
+                VerticalScrollBarVisibility="Visible" />
+        </DockPanel>
+
+        <!--  Status Bar  -->
+        <StatusBar
+            Grid.Row="4"
+            MinHeight="30"
+            DataContext="{Binding StatusBar, Source={StaticResource Locator}}">
+            <StatusBarItem Content="{Binding ConnectionStatusText, Mode=OneWay}" />
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Available Funds: " />
+                    <TextBlock Width="100" Text="{Binding NetLiquidation, Mode=OneWay}" />
+
+                    <TextBlock Margin="10,0,0,0" Text="Buying Power: " />
+                    <TextBlock Width="100" Text="{Binding BuyingPower, Mode=OneWay}" />
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>
