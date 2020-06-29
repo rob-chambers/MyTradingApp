@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
+using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
@@ -169,6 +170,27 @@ namespace MyTradingApp.Tests
 
             // Assert
             _accountManager.Received().RequestPositions();
+        }
+
+        [Fact]
+        public void WhenOrderIsFilledDeleteAndRequestPositions()
+        {
+            // Arrange
+            const int OrderId = 123;
+
+            var vm = GetVm();
+            ConnectionTest(0, 0);
+            vm.ConnectCommand.Execute(null);
+            vm.OrdersViewModel.AddCommand.Execute(null);
+            var order = vm.OrdersViewModel.Orders[0];
+            order.Id = OrderId;
+
+            // Act            
+            Messenger.Default.Send(new OrderStatusChangedMessage(string.Empty, new OrderStatusMessage(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, 0, 0, 0, 0, 0, null, 0)));
+
+            // Assert
+            _accountManager.Received(2).RequestPositions(); // 2 requests - one initially and a second once filled
+            Assert.Empty(vm.OrdersViewModel.Orders);
         }
     }
 }

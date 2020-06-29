@@ -9,6 +9,8 @@ using MyTradingApp.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
@@ -71,6 +73,7 @@ namespace MyTradingApp.ViewModels
             _orderManager = orderManager;
             _accountManager = accountManager;
             OrdersViewModel = ordersViewModel;
+            OrdersViewModel.Orders.CollectionChanged += OnOrdersCollectionChanged;
             PositionsViewModel = positionsViewModel;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
@@ -85,12 +88,51 @@ namespace MyTradingApp.ViewModels
 
             Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
-            
+
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
 
             // TODO: Allow persistence of preferences.  Change back to 1.0 for live account
             RiskMultiplier = 0.1;
+        }
+
+        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (OrderItem item in e.NewItems)
+                {
+                    item.PropertyChanged += OnItemPropertyChanged;
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (OrderItem item in e.OldItems)
+                {
+                    item.PropertyChanged -= OnItemPropertyChanged;
+                }
+            }
+        }
+
+        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(OrderItem.Status))
+            {
+                return;
+            }
+
+            var item = (OrderItem)sender;
+            var status = item.Status;
+            if (status != OrderStatus.Filled)
+            {
+                return;
+            }
+
+            // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
+            OrdersViewModel.Orders.Remove(item);
+
+            _accountManager.RequestPositions();
         }
 
         private void CreateMenuItems()
