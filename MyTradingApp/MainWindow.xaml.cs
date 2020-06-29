@@ -2,7 +2,10 @@
 using MahApps.Metro.Controls;
 using MyTradingApp.Models;
 using MyTradingApp.ViewModels;
+using Serilog;
+using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 
 namespace MyTradingApp
@@ -14,9 +17,46 @@ namespace MyTradingApp
     {
         public MainWindow()
         {
+            InitLogging();
             InitializeComponent();
             Closing += OnMainWindowClosing;
             Messenger.Default.Register<NotificationMessage<NotificationType>>(this, HandleNotificationMessage);
+            InitGlobalExceptionHandler();
+        }
+
+        private void InitLogging()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Debug()
+                .WriteTo.File("logfile.txt", rollingInterval: RollingInterval.Month)
+                .CreateLogger();
+
+            Log.Debug("Starting up");            
+        }
+
+        private void InitGlobalExceptionHandler()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => LogUnhandledException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
+            Application.Current.DispatcherUnhandledException += (s, e) => LogUnhandledException(e.Exception, "Application.Current.DispatcherUnhandledException");
+        }
+
+        private void LogUnhandledException(Exception exception, string source)
+        {
+            var message = $"Unhandled exception ({source})";
+            try
+            {
+                var assemblyName = Assembly.GetExecutingAssembly().GetName();
+                message = string.Format("Unhandled exception in {0} v{1}", assemblyName.Name, assemblyName.Version);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Exception in {nameof(LogUnhandledException)}");
+            }
+            finally
+            {
+                Log.Fatal(exception, message);
+            }
         }
 
         private void HamburgerMenuControl_OnItemClick(object sender, ItemClickEventArgs e)
@@ -52,6 +92,8 @@ namespace MyTradingApp
             if (e.Cancel) return;
 
             ((MainViewModel)DataContext).AppIsClosing();
+
+            Log.Debug("Shutting down");
         }
     }
 }

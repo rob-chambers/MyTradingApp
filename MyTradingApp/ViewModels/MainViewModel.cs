@@ -304,7 +304,7 @@ namespace MyTradingApp.ViewModels
         private void ToggleConnection()
         {
             try
-            {
+            {                
                 if (_connectionService.IsConnected)
                 {
                     _connectionService.Disconnect();

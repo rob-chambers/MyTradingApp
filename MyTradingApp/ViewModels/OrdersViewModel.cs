@@ -6,6 +6,7 @@ using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using ObjectDumper;
+using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -392,22 +393,11 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
-            string value = null;
-            _ = message.DumpToString(value);
-            Debug.WriteLine(value);
+            var value = message.DumpToString("Order Status Message");
+            Log.Debug(value);
 
             UpdateOrderStatus(order, message.Message.Status);
         }
-
-        //private static void DumpToConsole(OrderStatusChangedMessage message)
-        //{
-        //    var sb = new StringBuilder(500);
-        //    using (var writer = new StringWriter(sb))
-        //    {
-        //        Dumper.Dump(message.Message, "Order Status Message", writer);
-        //        Debug.WriteLine(sb);
-        //    }
-        //}
 
         private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
