@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using IBApi;
 using MyTradingApp.Models;
 
 namespace MyTradingApp.ViewModels
@@ -33,5 +34,7 @@ namespace MyTradingApp.ViewModels
             get => _profitLoss;
             set => Set(ref _profitLoss, value);
         }
+
+        public Contract Contract { get; set; }
     }
 }

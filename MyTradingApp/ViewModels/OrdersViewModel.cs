@@ -193,6 +193,14 @@ namespace MyTradingApp.ViewModels
             return contract;
         }
 
+        public void RecalculateRiskForAllOrders()
+        {
+            foreach (var item in Orders)
+            {
+                CalculateRisk(item.Symbol.Code);
+            }
+        }
+
         private static string MapExchange(Exchange exchange)
         {
             switch (exchange)

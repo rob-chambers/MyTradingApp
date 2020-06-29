@@ -107,6 +107,7 @@ namespace MyTradingApp.Services
 
             _positions.Add(new PositionItem
             {
+                Contract = positionMessage.Contract,
                 AvgPrice = positionMessage.AverageCost,
                 Quantity = positionMessage.Position,
                 Symbol = new Symbol

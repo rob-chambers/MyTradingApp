@@ -232,6 +232,7 @@ namespace MyTradingApp.ViewModels
             {
                 Set(ref _riskPerTrade, value);
                 _orderCalculationService.SetRiskPerTrade(value);
+                OrdersViewModel.RecalculateRiskForAllOrders();
             }
         }
 

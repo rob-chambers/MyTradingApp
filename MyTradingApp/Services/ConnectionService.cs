@@ -1,4 +1,6 @@
-﻿using IBApi;
+﻿using GalaSoft.MvvmLight.Messaging;
+using IBApi;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using System;
 using System.Threading;
@@ -43,6 +45,8 @@ namespace MyTradingApp.Services
             if (IsConnected)
                 return;
 
+            Messenger.Default.Send(new ConnectionChangingMessage(true));
+
             int port;
             var host = "127.0.0.1";
             try
@@ -77,6 +81,7 @@ namespace MyTradingApp.Services
 
         public void Disconnect()
         {
+            Messenger.Default.Send(new ConnectionChangingMessage(false));
             IsConnected = false;
             _ibClient.ClientSocket.eDisconnect();
         }

@@ -44,7 +44,7 @@
                         Header=" Name" />
                     <GridViewColumn
                         Width="auto"
-                        DisplayMemberBinding="{Binding AvgPrice}"
+                        DisplayMemberBinding="{Binding AvgPrice, StringFormat='0.0000'}"
                         Header=" Avg Price" />
                     <GridViewColumn Width="auto" Header=" Qty">
                         <GridViewColumn.CellTemplate>
