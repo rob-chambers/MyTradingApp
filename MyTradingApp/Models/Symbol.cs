@@ -10,6 +10,8 @@ namespace MyTradingApp.Models
         private double _latestPrice;
         private bool _isFound;
         private string _companyDescription;
+        private double _latestHigh;
+        private double _latestLow = double.MaxValue;
 
         public string Code
         {
@@ -44,13 +46,52 @@ namespace MyTradingApp.Models
         public double LatestPrice
         {
             get => _latestPrice;
-            set => Set(ref _latestPrice, value);
+            set
+            {
+                Set(ref _latestPrice, value);
+                CalculateLatestHigh();
+                CalculateLatestLow();
+            }
+        }
+
+        public double LatestHigh
+        {
+            get => _latestHigh;
+            set
+            {
+                Set(ref _latestHigh, value);
+            }
+        }
+
+        public double LatestLow
+        {
+            get => _latestLow;
+            set
+            {
+                Set(ref _latestLow, value);
+            }
         }
 
         public bool IsFound
         {
             get => _isFound;
             set => Set(ref _isFound, value);
+        }
+
+        private void CalculateLatestHigh()
+        {
+            if (_latestPrice > _latestHigh)
+            {
+                LatestHigh = _latestPrice;
+            }
+        }
+
+        private void CalculateLatestLow()
+        {
+            if (_latestPrice < _latestLow)
+            {
+                LatestLow = _latestPrice;
+            }
         }
     }
 }

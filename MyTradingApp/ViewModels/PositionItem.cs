@@ -9,7 +9,7 @@ namespace MyTradingApp.ViewModels
         private Symbol _symbol;
         private double _avgPrice;
         private double _quantity;
-        private double _profitLoss;
+        private double _profitLoss;        
 
         public Symbol Symbol
         {
