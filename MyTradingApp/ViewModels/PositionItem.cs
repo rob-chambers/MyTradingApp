@@ -9,7 +9,8 @@ namespace MyTradingApp.ViewModels
         private Symbol _symbol;
         private double _avgPrice;
         private double _quantity;
-        private double _profitLoss;        
+        private double _profitLoss;
+        private double _percentageGainLoss;
 
         public Symbol Symbol
         {
@@ -33,6 +34,12 @@ namespace MyTradingApp.ViewModels
         {
             get => _profitLoss;
             set => Set(ref _profitLoss, value);
+        }
+
+        public double PercentageGainLoss
+        {
+            get => _percentageGainLoss;
+            set => Set(ref _percentageGainLoss, value);
         }
 
         public Contract Contract { get; set; }

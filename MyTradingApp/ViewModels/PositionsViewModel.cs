@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -71,9 +72,11 @@ namespace MyTradingApp.ViewModels
             if (positon == null)
             {
                 return;
-            }
+            }            
 
             positon.Symbol.LatestPrice = tickPrice.Price;
+            positon.ProfitLoss = positon.Quantity * (positon.Symbol.LatestPrice - positon.AvgPrice);
+            positon.PercentageGainLoss = Math.Round((positon.Symbol.LatestPrice - positon.AvgPrice) / positon.AvgPrice * 100, 2);
         }
     }
 }

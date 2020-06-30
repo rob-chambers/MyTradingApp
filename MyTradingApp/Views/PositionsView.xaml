@@ -65,6 +65,11 @@
                         Width="auto"
                         DisplayMemberBinding="{Binding ProfitLoss, StringFormat='c'}"
                         Header=" P/L" />
+
+                    <GridViewColumn
+                        Width="auto"
+                        DisplayMemberBinding="{Binding PercentageGainLoss}"
+                        Header=" G/L%" />
                 </GridView>
             </ListView.View>
         </ListView>

@@ -90,6 +90,50 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
+        public void TickMessageForLongPositionUpdatesProfitLossCorrectly()
+        {
+            const double Price = 11;
+            const double EntryPrice = 10;
+
+            var vm = GetVm();
+            var position = new PositionItem 
+            { 
+                Symbol = new Symbol { Code = Symbol }, 
+                Quantity = 100,
+                AvgPrice = EntryPrice 
+            };
+            vm.Positions.Add(position);
+
+            // Act
+            Messenger.Default.Send(new TickPrice(Symbol, Price));
+
+            // Assert
+            Assert.Equal(100, position.ProfitLoss);
+        }
+
+        [Fact]
+        public void TickMessageForShortPositionUpdatesProfitLossCorrectly()
+        {
+            const double Price = 9;
+            const double EntryPrice = 10;
+
+            var vm = GetVm();
+            var position = new PositionItem
+            {
+                Symbol = new Symbol { Code = Symbol },
+                Quantity = -100,
+                AvgPrice = EntryPrice
+            };
+            vm.Positions.Add(position);
+
+            // Act
+            Messenger.Default.Send(new TickPrice(Symbol, Price));
+
+            // Assert
+            Assert.Equal(100, position.ProfitLoss);
+        }
+
+        [Fact]
         public void AfterRetrievingPositionsStreamLatestPrice()
         {
             // Arrange
