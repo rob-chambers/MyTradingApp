@@ -43,7 +43,7 @@
                         DisplayMemberBinding="{Binding Symbol.Name}"
                         Header=" Name" />
                     <GridViewColumn
-                        Width="auto"
+                        Width="80"
                         DisplayMemberBinding="{Binding AvgPrice, StringFormat='0.0000'}"
                         Header=" Avg Price" />
                     <GridViewColumn Width="auto" Header=" Qty">
@@ -62,12 +62,12 @@
                         Header=" Latest Price" />
 
                     <GridViewColumn
-                        Width="auto"
+                        Width="80"
                         DisplayMemberBinding="{Binding ProfitLoss, StringFormat='c'}"
                         Header=" P/L" />
 
                     <GridViewColumn
-                        Width="auto"
+                        Width="80"
                         DisplayMemberBinding="{Binding PercentageGainLoss}"
                         Header=" G/L%" />
                 </GridView>

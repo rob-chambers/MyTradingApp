@@ -1,7 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
 using MyTradingApp.Services;
 using System;
 using System.Collections.ObjectModel;
@@ -12,27 +11,18 @@ namespace MyTradingApp.ViewModels
     internal class PositionsViewModel : ViewModelBase
     {
         private readonly IMarketDataManager _marketDataManager;
+        private readonly IAccountManager _accountManager;
 
         public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
 
-        public PositionsViewModel(IMarketDataManager marketDataManager)
-        {
-            Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
+        public PositionsViewModel(IMarketDataManager marketDataManager, IAccountManager accountManager)
+        {            
             Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
-            Positions.Add(new PositionItem
-            {
-                AvgPrice = 11.03,
-                ProfitLoss = 231.56,
-                Quantity = 233,
-                Symbol = new Symbol
-                {
-                    Code = "CAT",
-                    Name = "Caterpillar",
-                    LatestPrice = 11.87,
-                }
-            });
+            Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
+            Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
             _marketDataManager = marketDataManager;
+            _accountManager = accountManager;
         }
 
         private void HandleConnectionChangingMessage(ConnectionChangingMessage message)
@@ -43,6 +33,16 @@ namespace MyTradingApp.ViewModels
             }
 
             StopStreaming();
+        }
+
+        private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
+        {
+            if (!message.IsConnected)
+            {
+                return;
+            }
+
+            _accountManager.RequestPositions();
         }
 
         private void StopStreaming()

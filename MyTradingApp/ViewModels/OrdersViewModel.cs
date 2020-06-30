@@ -334,6 +334,19 @@ namespace MyTradingApp.ViewModels
             order.Symbol.LatestPrice = tickPrice.Price;
             _orderCalculationService.SetLatestPrice(tickPrice.Symbol, tickPrice.Price);
             CalculateRisk(tickPrice.Symbol);
+
+            if (!order.Symbol.IsFound)
+            {                
+                order.Symbol.IsFound = true;
+                IssueHistoricalDataRequest(order);
+                StartStopStreamingCommand.RaiseCanExecuteChanged();
+                SubmitCommand.RaiseCanExecuteChanged();                
+
+                if (IsStreaming)
+                {
+                    StreamSymbol(order);
+                }
+            }
         }
 
         private void IssueFindSymbolRequest(OrderItem order)
@@ -347,11 +360,13 @@ namespace MyTradingApp.ViewModels
 
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
+            RequestLatestPrice(order);
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
         }
 
         private void IssueHistoricalDataRequest(OrderItem order)
         {
+            Log.Debug($"Issuing historical data request for {order.Symbol.Code}");
             var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
             _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
         }
@@ -364,19 +379,20 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
+            Log.Debug($"Found fundamental data for {order.Symbol.Code}");
             order.Symbol.IsFound = true;
             order.Symbol.Name = message.Data.CompanyName;
             order.Symbol.CompanyDescription = message.Data.CompanyDescription;
-            IssueHistoricalDataRequest(order);
-            StartStopStreamingCommand.RaiseCanExecuteChanged();
-            SubmitCommand.RaiseCanExecuteChanged();
+            //IssueHistoricalDataRequest(order);
+            //StartStopStreamingCommand.RaiseCanExecuteChanged();
+            //SubmitCommand.RaiseCanExecuteChanged();
 
-            RequestLatestPrice(order);
+            //RequestLatestPrice(order);
 
-            if (IsStreaming)
-            {
-                StreamSymbol(order);
-            }
+            //if (IsStreaming)
+            //{
+            //    StreamSymbol(order);
+            //}
         }
 
         private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
@@ -518,7 +534,7 @@ namespace MyTradingApp.ViewModels
                     break;
 
                 default:
-                    Debug.WriteLine("Status that isn't handled: {0}", status);
+                    Log.Warning("Status that isn't handled: {0}", status);
                     if (Debugger.IsAttached)
                     {
                         break;

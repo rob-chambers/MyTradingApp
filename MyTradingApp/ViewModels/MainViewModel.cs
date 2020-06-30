@@ -88,6 +88,7 @@ namespace MyTradingApp.ViewModels
 
             Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
+            Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
 
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
@@ -96,82 +97,9 @@ namespace MyTradingApp.ViewModels
             RiskMultiplier = 0.1;
         }
 
-        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                foreach (OrderItem item in e.NewItems)
-                {
-                    item.PropertyChanged += OnItemPropertyChanged;
-                }
-            }
-
-            if (e.OldItems != null)
-            {
-                foreach (OrderItem item in e.OldItems)
-                {
-                    item.PropertyChanged -= OnItemPropertyChanged;
-                }
-            }
-        }
-
-        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(OrderItem.Status))
-            {
-                return;
-            }
-
-            var item = (OrderItem)sender;
-            var status = item.Status;
-            if (status != OrderStatus.Filled)
-            {
-                return;
-            }
-
-            // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
-            OrdersViewModel.Orders.Remove(item);
-
-            _accountManager.RequestPositions();
-        }
-
-        private void CreateMenuItems()
-        {
-            if (IsUnitTesting)
-            {
-                return;
-            }
-
-            MenuItems = new ObservableCollection<MenuItemViewModel>
-            {
-                new HomeViewModel(this)
-                {
-                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Home },
-                    Label = "Home",
-                    ToolTip = "Welcome Home"
-                },
-                new AboutViewModel(this)
-                {
-                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Help },
-                    Label = "About",
-                    ToolTip = "About this one..."
-                }
-            };
-
-            MenuOptionItems = new ObservableCollection<MenuItemViewModel>
-            {
-                new SettingsViewModel(this)
-                {
-                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Cog },
-                    Label = "Settings",
-                    ToolTip = "The App settings"
-                }
-            };
-        }
-
 #endregion
 
-#region Properties
+        #region Properties
 
 #region Commands
 
@@ -238,7 +166,7 @@ namespace MyTradingApp.ViewModels
 
 #endregion
 
-#region Methods
+        #region Methods
 
         public void AppIsClosing()
         {
@@ -263,6 +191,40 @@ namespace MyTradingApp.ViewModels
             ErrorText = string.Empty;
         }
 
+        private void CreateMenuItems()
+        {
+            if (IsUnitTesting)
+            {
+                return;
+            }
+
+            MenuItems = new ObservableCollection<MenuItemViewModel>
+            {
+                new HomeViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Home },
+                    Label = "Home",
+                    ToolTip = "Welcome Home"
+                },
+                new AboutViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Help },
+                    Label = "About",
+                    ToolTip = "About this one..."
+                }
+            };
+
+            MenuOptionItems = new ObservableCollection<MenuItemViewModel>
+            {
+                new SettingsViewModel(this)
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Cog },
+                    Label = "Settings",
+                    ToolTip = "The App settings"
+                }
+            };
+        }
+
         private string EnsureMessageHasNewline(string message)
         {
             return message.Substring(message.Length - 1) != "\n"
@@ -284,6 +246,22 @@ namespace MyTradingApp.ViewModels
         private void HandleAccountSummaryEndMessage(AccountSummaryEndMessage message)
         {
             _accountManager.HandleAccountSummaryEnd();
+        }
+
+        private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
+        {
+            var isConnected = message.IsConnected;
+            if (isConnected)
+            {
+                GetAccountSummary();
+
+                // Send a request to get the exchange rate
+                _exchangeRateService.RequestExchangeRate();
+
+                //_accountManager.RequestPositions();
+            }
+
+            SetConnectionStatus();
         }
 
         private void HandleErrorMessage(ErrorMessage message)
@@ -313,6 +291,45 @@ namespace MyTradingApp.ViewModels
         {
             _exchangeRate = message.Price;
             CalculateRiskPerTrade();
+        }
+
+        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (OrderItem item in e.NewItems)
+                {
+                    item.PropertyChanged += OnItemPropertyChanged;
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (OrderItem item in e.OldItems)
+                {
+                    item.PropertyChanged -= OnItemPropertyChanged;
+                }
+            }
+        }
+
+        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(OrderItem.Status))
+            {
+                return;
+            }
+
+            var item = (OrderItem)sender;
+            var status = item.Status;
+            if (status != OrderStatus.Filled)
+            {
+                return;
+            }
+
+            // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
+            OrdersViewModel.Orders.Remove(item);
+
+            _accountManager.RequestPositions();
         }
 
         private void SetConnectionStatus()
@@ -355,25 +372,13 @@ namespace MyTradingApp.ViewModels
                 else
                 {
                     _connectionService.Connect();
-                    if (_connectionService.IsConnected)
-                    {
-                        GetAccountSummary();
-
-                        // Send a request to get the exchange rate
-                        _exchangeRateService.RequestExchangeRate();
-
-                        _accountManager.RequestPositions();
-                    }
-                }
-
-                SetConnectionStatus();
+                }                
             }
             catch (Exception ex)
             {
                 ShowMessageOnPanel(ex.Message);
             }
         }
-
 #endregion
     }
 }

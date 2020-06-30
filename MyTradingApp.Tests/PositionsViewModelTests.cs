@@ -17,7 +17,8 @@ namespace MyTradingApp.Tests
         private PositionsViewModel GetVm(IMarketDataManager marketDataManager = null)
         {
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
-            return new PositionsViewModel(manager);
+            var accountManager = Substitute.For<IAccountManager>();
+            return new PositionsViewModel(manager, accountManager);
         }
 
         [Fact]

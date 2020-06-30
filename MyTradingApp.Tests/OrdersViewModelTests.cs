@@ -227,12 +227,9 @@ namespace MyTradingApp.Tests
             var order = vm.Orders[0];
 
             vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true; ;
-
-            var xml = File.ReadAllText(@"Resources\fundamentaldata.xml");
-            var fundamentalData = FundamentalData.Parse(xml);
-            builder.ContractManager
-                .When(x => x.RequestFundamentals(Arg.Any<Contract>(), Arg.Any<string>()))
-                .Do(x => Messenger.Default.Send(new FundamentalDataMessage(DefaultSymbol, fundamentalData)));
+            builder.MarketDataManager
+                .When(x => x.RequestLatestPrice(Arg.Any<Contract>()))
+                .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, 0)));
 
             // Act
             vm.FindCommand.Execute(order);

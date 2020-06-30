@@ -181,6 +181,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\ColourConverter.cs" />
     <Compile Include="Converters\SelectedItemToContentConverter.cs" />
+    <Compile Include="EventMessages\ConnectionChangedMessage.cs" />
     <Compile Include="EventMessages\ConnectionChangingMessage.cs" />
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
     <Compile Include="EventMessages\ExistingPositionsMessage.cs" />

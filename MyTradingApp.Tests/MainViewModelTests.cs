@@ -42,7 +42,7 @@ namespace MyTradingApp.Tests
             _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
-            var positionsViewModel = new PositionsViewModel(_marketDataManager);
+            var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager);
 
             return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel);
         }
@@ -123,8 +123,9 @@ namespace MyTradingApp.Tests
             _connectionService
                 .When(x => x.Connect())
                 .Do(x =>
-                {
+                {                    
                     _connectionService.IsConnected.Returns(true);
+                    Messenger.Default.Send(new ConnectionChangedMessage(true));
                 });
 
             _accountManager
@@ -159,12 +160,7 @@ namespace MyTradingApp.Tests
         {
             // Arrange
             var vm = GetVm();
-            _connectionService
-                .When(x => x.Connect())
-                .Do(x =>
-                {
-                    _connectionService.IsConnected.Returns(true);
-                });
+            ConnectionTest(0, 0);
 
             // Act
             vm.ConnectCommand.Execute(null);

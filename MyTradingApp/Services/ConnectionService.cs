@@ -28,7 +28,11 @@ namespace MyTradingApp.Services
             ClientError?.Invoke(this, new ClientError(id, errorCode, message, ex));
         }
 
-        private void OnClientConnectionClosed() => IsConnected = false;
+        private void OnClientConnectionClosed()
+        {
+            IsConnected = false;
+            Messenger.Default.Send(new ConnectionChangedMessage(false));
+        }
 
         public bool IsConnected
         {
@@ -72,6 +76,10 @@ namespace MyTradingApp.Services
                 }.Start();
 
                 IsConnected = _ibClient.ClientSocket.IsConnected();
+                if (IsConnected)
+                {
+                    Messenger.Default.Send(new ConnectionChangedMessage(true));
+                }
             }
             catch (Exception ex)
             {
@@ -82,7 +90,6 @@ namespace MyTradingApp.Services
         public void Disconnect()
         {
             Messenger.Default.Send(new ConnectionChangingMessage(false));
-            IsConnected = false;
             _ibClient.ClientSocket.eDisconnect();
         }
     }
