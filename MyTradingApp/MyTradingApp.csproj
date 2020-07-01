@@ -185,6 +185,7 @@
     <Compile Include="EventMessages\ConnectionChangingMessage.cs" />
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
     <Compile Include="EventMessages\ExistingPositionsMessage.cs" />
+    <Compile Include="EventMessages\OpenOrdersMessage.cs" />
     <Compile Include="EventMessages\OrderRemovedMessage.cs" />
     <Compile Include="EventMessages\StreamingChangedMessage.cs" />
     <Compile Include="EventMessages\SymbolMessage.cs" />
@@ -210,12 +211,18 @@
     <Compile Include="Services\IHistoricalDataManager.cs" />
     <Compile Include="Services\IMarketDataManager.cs" />
     <Compile Include="Services\IOrderCalculationService.cs" />
+    <Compile Include="Services\IPositionManager.cs" />
     <Compile Include="Services\MarketDataManager.cs" />
     <Compile Include="Services\OrderCalculationService.cs" />
     <Compile Include="Services\OrderManager.cs" />
     <Compile Include="Services\IOrderManager.cs" />
     <Compile Include="EventMessages\TickPriceMessage.cs" />
     <Compile Include="Services\IExchangeRateService.cs" />
+    <Compile Include="Services\PositionManager.cs" />
+    <Compile Include="TrailingStopStrategies\DayTradingProfitLockerStrategy.cs" />
+    <Compile Include="TrailingStopStrategies\ProfitLockerStrategy.cs" />
+    <Compile Include="TrailingStopStrategies\TrailingStopStrategy.cs" />
+    <Compile Include="Utils\ObservableCollectionNoReset.cs" />
     <Compile Include="Utils\VisualTreeUtility.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />

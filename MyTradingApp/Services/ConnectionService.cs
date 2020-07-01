@@ -56,7 +56,7 @@ namespace MyTradingApp.Services
             try
             {
                 port = 7497; // 7496 for live account
-                _ibClient.ClientId = 1; // Assume a single client
+                _ibClient.ClientId = BrokerConstants.ClientId;
                 _ibClient.ClientSocket.eConnect(host, port, _ibClient.ClientId);
 
                 var reader = new EReader(_ibClient.ClientSocket, _signal);

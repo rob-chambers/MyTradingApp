@@ -2,6 +2,7 @@
 using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
+using MyTradingApp.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -29,13 +30,14 @@ namespace MyTradingApp.Services
             }
         }
 
-        public int PlaceNewOrder(Contract contract, Order order)
+        public void PlaceNewOrder(Contract contract, Order order)
         {
             var id = _ibClient.NextOrderId;
+            order.ClientId = BrokerConstants.ClientId;
             _orders.Add(id, contract.Symbol);
+            order.OrderId = id;
             _ibClient.ClientSocket.placeOrder(id, contract, order);
             _ibClient.NextOrderId++;
-            return id;
-        }
+         }
     }
 }

@@ -366,7 +366,10 @@ namespace MyTradingApp.Tests
             const double Qty = 123;
 
             var builder = new OrdersViewModelBuilder();
-            builder.OrderManager.PlaceNewOrder(Arg.Any<Contract>(), Arg.Any<Order>()).Returns(OrderId);
+            builder.OrderManager
+                .When(x => x.PlaceNewOrder(Arg.Any<Contract>(), Arg.Any<Order>()))
+                .Do(x => x.Arg<Order>().OrderId = OrderId);
+
             var vm = builder
                 .AddSingleOrder(DefaultSymbol, true)
                 .CompleteAccountSummary(new AccountSummaryCompletedMessage
@@ -403,7 +406,6 @@ namespace MyTradingApp.Tests
             builder.OrderManager.Received()
                 .PlaceNewOrder(Arg.Is<Contract>(x => x.Symbol == DefaultSymbol &&
                     x.SecType == BrokerConstants.Stock &&
-                    x.LocalSymbol == DefaultSymbol &&
                     x.Currency == BrokerConstants.UsCurrency &&
                     x.Exchange == BrokerConstants.Routers.Smart &&
                     x.PrimaryExch == Exchange.ToString()

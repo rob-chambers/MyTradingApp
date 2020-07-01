@@ -2,6 +2,7 @@
 {
     internal static class BrokerConstants
     {
+        public const int ClientId = 12032108;
         public const string UsCurrency = "USD";
         public const string Stock = "STK";
         public const string Cash = "CASH";

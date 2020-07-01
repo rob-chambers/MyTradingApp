@@ -43,5 +43,7 @@ namespace MyTradingApp.ViewModels
         }
 
         public Contract Contract { get; set; }
+
+        public Order Order { get; set; }
     }
 }

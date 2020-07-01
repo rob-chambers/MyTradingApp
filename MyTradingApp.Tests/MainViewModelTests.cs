@@ -42,7 +42,8 @@ namespace MyTradingApp.Tests
             _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
-            var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager);
+            var positionsManager = Substitute.For<IPositionManager>();
+            var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager, positionsManager);
 
             return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel);
         }

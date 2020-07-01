@@ -5,7 +5,7 @@ namespace MyTradingApp.Services
 {
     public interface IOrderManager
     {
-        int PlaceNewOrder(Contract contract, Order order);
+        void PlaceNewOrder(Contract contract, Order order);
 
         void HandleOrderStatus(OrderStatusMessage message);
     }

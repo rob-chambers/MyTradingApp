@@ -38,6 +38,7 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IContractManager, ContractManager>();
             SimpleIoc.Default.Register<IMarketDataManager, MarketDataManager>();
             SimpleIoc.Default.Register<IHistoricalDataManager, HistoricalDataManager>();
+            SimpleIoc.Default.Register<IPositionManager, PositionManager>();
             SimpleIoc.Default.Register<IOrderCalculationService, OrderCalculationService>();
             SimpleIoc.Default.Register<IExchangeRateService, ExchangeRateService>();
         }        

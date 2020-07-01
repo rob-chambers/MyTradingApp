@@ -5,6 +5,7 @@ using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
+using MyTradingApp.Utils;
 using ObjectDumper;
 using Serilog;
 using System;
@@ -32,6 +33,7 @@ namespace MyTradingApp.ViewModels
         private RelayCommand<OrderItem> _findCommand;
         private bool _isStreaming;
         private RelayCommand _startStopStreamingCommand;
+        private RelayCommand _deleteAllCommand;
         private string _streamingButtonCaption;
         private RelayCommand<OrderItem> _submitCommand;
         #endregion
@@ -45,7 +47,7 @@ namespace MyTradingApp.ViewModels
             IOrderCalculationService orderCalculationService,
             IOrderManager orderManager)
         {
-            Orders = new ObservableCollection<OrderItem>();
+            Orders = new ObservableCollectionNoReset<OrderItem>();
             Orders.CollectionChanged += OnOrdersCollectionChanged;
             PopulateDirectionList();
             PopulateExchangeList();
@@ -64,18 +66,21 @@ namespace MyTradingApp.ViewModels
 
         private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (!IsStreaming)
+            if (e.Action != NotifyCollectionChangedAction.Remove)
             {
                 return;
             }
 
-            if (e.Action == NotifyCollectionChangedAction.Remove)
+            foreach (OrderItem item in e.OldItems)
             {
-                foreach (OrderItem item in e.OldItems)
+                item.PropertyChanged -= OnItemPropertyChanged;
+                item.Symbol.PropertyChanged -= OnSymbolPropertyChanged;
+
+                Messenger.Default.Send(new OrderRemovedMessage(item));
+                if (IsStreaming)
                 {
-                    Messenger.Default.Send(new OrderRemovedMessage(item));
                     _marketDataManager.StopPriceStreaming(item.Symbol.Code);
-                }
+                }                    
             }
         }
 
@@ -139,7 +144,7 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        public ObservableCollection<OrderItem> Orders
+        public ObservableCollectionNoReset<OrderItem> Orders
         {
             get;
             private set;
@@ -152,6 +157,19 @@ namespace MyTradingApp.ViewModels
                 return _startStopStreamingCommand ??
                     (_startStopStreamingCommand = new RelayCommand(StartStopStreaming, CanStartStopStreaming));
             }
+        }
+
+        public RelayCommand DeleteAllCommand
+        {
+            get
+            {
+                return _deleteAllCommand ?? (_deleteAllCommand = new RelayCommand(DeleteAll));
+            }
+        }
+
+        private void DeleteAll()
+        {
+            Orders.Clear();
         }
 
         public string StreamingButtonCaption
@@ -208,6 +226,9 @@ namespace MyTradingApp.ViewModels
                 // On https://interactivebrokers.github.io/tws-api/basic_contracts.html, it mentions that stocks on the Nasdaq should be routed through ISLAND
                 case Exchange.Nasdaq:
                     return BrokerConstants.Routers.Island;
+
+                case Exchange.London:
+                    return "LSE";
             }
 
             return exchange.ToString();
@@ -314,7 +335,6 @@ namespace MyTradingApp.ViewModels
 
             // TODO: Test this will work
             order.Transmit = true;
-
             return order;
         }
 
@@ -499,18 +519,26 @@ namespace MyTradingApp.ViewModels
 
             var order = GetOrder(orderItem);
 
-            var id = _orderManager.PlaceNewOrder(contract, order);
-
-            // Find this order in the collection and update its id
-            var index = Orders.IndexOf(orderItem);
-            if (index >= 0)
-            {
-                Orders[index].Id = id;
-            }
+            _orderManager.PlaceNewOrder(contract, order);
+            orderItem.Id = order.OrderId;
 
             // Attach stop order
             var stopOrder = GetInitialStopOrder(orderItem);
             _orderManager.PlaceNewOrder(contract, stopOrder);
+
+            // Transition from a TRAIL to a standard stop
+            //var newOrder = GetInitialStopOrder(orderItem);
+            //newOrder.OrderId = stopOrderId;
+            //var newOrderType = BrokerConstants.OrderTypes.Stop;
+            //var triggerPrice = (orderItem.EntryPrice - orderItem.InitialStopLossPrice) * 1.1 + orderItem.EntryPrice;
+            //var newStopPrice = orderItem.EntryPrice;
+
+            //newOrder.TriggerPrice = triggerPrice;
+            //newOrder.AdjustedOrderType = newOrderType;
+            //newOrder.AdjustedStopPrice = newStopPrice;
+            //newOrder.Transmit = true;
+
+            //_orderManager.PlaceNewOrder(contract, newOrder);
         }
 
         private void UpdateOrderStatus(OrderItem order, string status)

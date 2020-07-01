@@ -4,6 +4,7 @@
     {
         NYSE,
         Nasdaq,
-        Amex
+        Amex,
+        London
     }
 }

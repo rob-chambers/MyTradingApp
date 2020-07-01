@@ -12,12 +12,25 @@
     mc:Ignorable="d">
 
     <StackPanel>
-        <Button
-            Width="150"
-            Margin="0,0,0,20"
-            HorizontalAlignment="Left"
-            Command="{Binding StartStopStreamingCommand}"
-            Content="{Binding StreamingButtonCaption}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button
+                Width="150"
+                Margin="0,0,0,20"
+                HorizontalAlignment="Left"
+                Command="{Binding StartStopStreamingCommand}"
+                Content="{Binding StreamingButtonCaption}" />
+
+            <Button
+                Grid.Column="1"
+                Margin="0,0,0,20"
+                HorizontalAlignment="Right"
+                Command="{Binding DeleteAllCommand}"
+                Content="Delete All" />
+        </Grid>
         <ListView ItemsSource="{Binding Orders}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
@@ -116,7 +129,7 @@
                                                 <Style.Triggers>
                                                     <MultiDataTrigger>
                                                         <MultiDataTrigger.Conditions>
-                                                            <Condition Binding="{Binding ElementName=infoImage, Path=IsMouseOver, Mode=OneWay}" Value="true" />
+                                                            <Condition Binding="{Binding ElementName=iconBackground, Path=IsMouseOver, Mode=OneWay}" Value="true" />
                                                             <Condition Binding="{Binding Symbol.HasCompanyDescription}" Value="true" />
                                                         </MultiDataTrigger.Conditions>
                                                         <Setter Property="IsOpen" Value="True" />
@@ -126,12 +139,18 @@
                                         </Popup.Style>
                                     </Popup>
 
-                                    <iconPacks:PackIconMaterial
-                                        x:Name="infoImage"
+                                    <Border
+                                        x:Name="iconBackground"
+                                        Width="16"
+                                        Height="16"
                                         Margin="0,0,3,0"
-                                        Foreground="{StaticResource MahApps.Brushes.AccentBase}"
-                                        Kind="InformationOutline"
-                                        Visibility="{Binding Symbol.HasCompanyDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                        Background="Transparent">
+                                        <iconPacks:PackIconMaterial
+                                            x:Name="infoImage"
+                                            Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                                            Kind="InformationOutline"
+                                            Visibility="{Binding Symbol.HasCompanyDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </Border>
                                     <TextBlock Text="{Binding Symbol.Name}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
