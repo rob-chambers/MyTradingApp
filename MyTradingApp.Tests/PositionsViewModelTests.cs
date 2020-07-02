@@ -19,7 +19,8 @@ namespace MyTradingApp.Tests
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
             var accountManager = Substitute.For<IAccountManager>();
             var positionsManager = Substitute.For<IPositionManager>();
-            return new PositionsViewModel(manager, accountManager, positionsManager);
+            var contractManager = Substitute.For<IContractManager>();
+            return new PositionsViewModel(manager, accountManager, positionsManager, contractManager);
         }
 
         [Fact]
@@ -111,6 +112,7 @@ namespace MyTradingApp.Tests
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
+            Assert.Equal(10, position.PercentageGainLoss);
         }
 
         [Fact]
@@ -133,6 +135,7 @@ namespace MyTradingApp.Tests
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
+            Assert.Equal(10, position.PercentageGainLoss);
         }
 
         [Fact]

@@ -8,7 +8,6 @@ using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -474,6 +473,26 @@ namespace MyTradingApp.Tests
             Assert.Equal(Quantity, order.Quantity);
             Assert.Equal(StopPrice, order.InitialStopLossPrice);
             Assert.Equal(EntryPrice, order.EntryPrice);
+        }
+
+        [Fact]
+        public void DeleteAllRemovesAllPendingOrCancelledOrders()
+        {
+            // Arrange
+            var builder = new OrdersViewModelBuilder();
+            var vm = builder.Build();
+            vm.AddCommand.Execute(null);
+            vm.AddCommand.Execute(null);
+            vm.AddCommand.Execute(null);
+            vm.Orders[1].Status = OrderStatus.Submitted;
+            vm.Orders[2].Status = OrderStatus.Cancelled;
+
+            // Act
+            vm.DeleteAllCommand.Execute(null);
+
+            // Assert
+            var order = vm.Orders.Single();
+            Assert.Equal(OrderStatus.Submitted, order.Status);
         }
     }
 }

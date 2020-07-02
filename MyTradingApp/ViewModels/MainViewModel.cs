@@ -6,6 +6,7 @@ using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,7 +26,7 @@ namespace MyTradingApp.ViewModels
         private const int REDUCED_LINES_IN_MESSAGE_BOX = 100;
 
         // TODO: Expose RiskPercentageOfAccountto UI
-        private const double RiskPercentageOfAccount = 0.01;
+        private const double RiskPercentageOfAccount = 0.005;
         private readonly IAccountManager _accountManager;
         private readonly IConnectionService _connectionService;
         private readonly IExchangeRateService _exchangeRateService;
@@ -267,6 +268,7 @@ namespace MyTradingApp.ViewModels
         private void HandleErrorMessage(ErrorMessage message)
         {
             ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
+            Log.Error(message.ErrorCode + " - " + message.Message);
         }
 
         private void HandleClientError(object sender, ClientError e)
@@ -281,6 +283,15 @@ namespace MyTradingApp.ViewModels
             {
                 AddTextToMessagePanel("Error: " + e.ErrorMessage + "\n");
                 return;
+            }
+            
+            // The following are connection OK messages, as opposed to errors
+            switch (e.ErrorCode)
+            {
+                case 2104:
+                case 2106:
+                case 2158:
+                    return;
             }
 
             var error = new ErrorMessage(e.Id, e.ErrorCode, e.ErrorMessage);

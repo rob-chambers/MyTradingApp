@@ -91,6 +91,7 @@
     <Compile Include="Orders\OrdersViewModelBuilder.cs" />
     <Compile Include="PositionsViewModelTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RoundingTests.cs" />
     <Compile Include="StatusBarViewModelTests.cs" />
   </ItemGroup>
   <ItemGroup>

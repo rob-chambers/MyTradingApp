@@ -61,6 +61,8 @@ namespace MyTradingApp.ViewModels
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
+            Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
+
             SetStreamingButtonCaption();
         }
 
@@ -116,8 +118,13 @@ namespace MyTradingApp.ViewModels
                             Orders.Remove(order);
                         }
                     },
-                    order => order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled));
+                    order => CanDelete(order)));
             }
+        }
+
+        private bool CanDelete(OrderItem order)
+        {
+            return order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled;
         }
 
         public ObservableCollection<Direction> DirectionList { get; private set; }
@@ -169,7 +176,10 @@ namespace MyTradingApp.ViewModels
 
         private void DeleteAll()
         {
-            Orders.Clear();
+            foreach (var order in Orders.Where(o => CanDelete(o)).ToList())
+            {
+                Orders.Remove(order);
+            }
         }
 
         public string StreamingButtonCaption
@@ -288,7 +298,7 @@ namespace MyTradingApp.ViewModels
             _marketDataManager.RequestStreamingPrice(contract);
         }
 
-        private Order GetOrder(OrderItem orderItem)
+        private Order GetPrimaryOrder(OrderItem orderItem)
         {
             var order = new Order();
             if (orderItem.Id != 0)
@@ -303,7 +313,7 @@ namespace MyTradingApp.ViewModels
             order.OrderType = BrokerConstants.OrderTypes.Stop;
 
             var stopPrice = orderItem.EntryPrice;
-            order.AuxPrice = stopPrice;
+            order.AuxPrice = Rounding.ValueAdjustedForMinTick(stopPrice, orderItem.Symbol.MinTick);
             order.TotalQuantity = orderItem.Quantity;
             order.Account = _accountId;
             order.ModelCode = string.Empty;
@@ -326,7 +336,7 @@ namespace MyTradingApp.ViewModels
 
             order.OrderType = BrokerConstants.OrderTypes.Stop;
 
-            var stopPrice = orderItem.InitialStopLossPrice;
+            var stopPrice = Rounding.ValueAdjustedForMinTick(orderItem.InitialStopLossPrice, orderItem.Symbol.MinTick);
             order.AuxPrice = stopPrice;
             order.TotalQuantity = orderItem.Quantity;
             order.Account = _accountId;
@@ -341,6 +351,17 @@ namespace MyTradingApp.ViewModels
         private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
         {
             _accountId = message.AccountId;
+        }
+
+        private void HandleContractDetailsEventMessage(ContractDetailsEventMessage message)
+        {
+            var order = Orders.SingleOrDefault(o => o.Symbol.Code == message.Details.Contract.Symbol);
+            if (order == null)
+            {
+                return;
+            }
+
+            order.Symbol.MinTick = message.Details.MinTick;
         }
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
@@ -382,6 +403,7 @@ namespace MyTradingApp.ViewModels
             order.Symbol.Name = string.Empty;
             RequestLatestPrice(order);
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
+            _contractManager.RequestDetails(MapOrderToContract(order));
         }
 
         private void IssueHistoricalDataRequest(OrderItem order)
@@ -517,8 +539,7 @@ namespace MyTradingApp.ViewModels
             var contract = MapOrderToContract(orderItem);
             contract.LocalSymbol = orderItem.Symbol.Code;
 
-            var order = GetOrder(orderItem);
-
+            var order = GetPrimaryOrder(orderItem);            
             _orderManager.PlaceNewOrder(contract, order);
             orderItem.Id = order.OrderId;
 

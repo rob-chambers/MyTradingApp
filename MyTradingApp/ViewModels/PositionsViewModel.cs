@@ -1,10 +1,11 @@
 ﻿using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
+using MyTradingApp.Utils;
+using ObjectDumper;
+using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,24 +17,29 @@ namespace MyTradingApp.ViewModels
         private readonly IMarketDataManager _marketDataManager;
         private readonly IAccountManager _accountManager;
         private readonly IPositionManager _positionManager;
-        private RelayCommand<PositionItem> _tempCommand;
+        private readonly IContractManager _contractManager;
+
+        //private RelayCommand<PositionItem> _tempCommand;
 
         public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
 
         public PositionsViewModel(
             IMarketDataManager marketDataManager, 
             IAccountManager accountManager,
-            IPositionManager positionManager)
+            IPositionManager positionManager,
+            IContractManager contractManager)
         {            
             Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
             Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
             Messenger.Default.Register<OpenOrdersMessage>(this, HandleOpenOrdersMessage);
+            Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
 
             _marketDataManager = marketDataManager;
             _accountManager = accountManager;
             _positionManager = positionManager;
+            _contractManager = contractManager;
         }
 
         private void HandleConnectionChangingMessage(ConnectionChangingMessage message)
@@ -70,10 +76,10 @@ namespace MyTradingApp.ViewModels
             foreach (var item in message.Positions)
             {
                 Positions.Add(item);
-                if (item.Quantity > 0)
+                if (item.Quantity != 0 && item.Contract != null)
                 {
                     _marketDataManager.RequestStreamingPrice(item.Contract);
-                }                
+                }
             }
 
             // Get associated stop orders
@@ -82,15 +88,27 @@ namespace MyTradingApp.ViewModels
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
         {
-            var positon = Positions.SingleOrDefault(p => p.Symbol.Code == tickPrice.Symbol);
-            if (positon == null)
+            var position = Positions.SingleOrDefault(p => p.Symbol.Code == tickPrice.Symbol);
+            if (position == null)
             {
                 return;
             }            
 
-            positon.Symbol.LatestPrice = tickPrice.Price;
-            positon.ProfitLoss = positon.Quantity * (positon.Symbol.LatestPrice - positon.AvgPrice);
-            positon.PercentageGainLoss = Math.Round((positon.Symbol.LatestPrice - positon.AvgPrice) / positon.AvgPrice * 100, 2);
+            position.Symbol.LatestPrice = tickPrice.Price;
+            position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
+
+            position.PercentageGainLoss = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
+            if (position.Quantity < 0)
+            {
+                // For shorts, we profit when price falls
+                position.PercentageGainLoss = -position.PercentageGainLoss;
+            }
+
+            var stop = position.CheckToAdjustStop();
+            if (stop.HasValue)
+            {
+                MoveStop(position, stop.Value);
+            }
         }
 
         private void HandleOpenOrdersMessage(OpenOrdersMessage message)
@@ -98,6 +116,12 @@ namespace MyTradingApp.ViewModels
             foreach (var order in message.Orders.Where(o => o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
                 o.Order.OrderType == BrokerConstants.OrderTypes.Trail))
             {
+                if (order.OrderId == 0)
+                {
+                    // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
+                    continue;
+                }
+
                 var symbol = order.Contract.Symbol;
                 var position = Positions.SingleOrDefault(x => x.Symbol.Code == symbol);
                 if (position != null)
@@ -106,31 +130,62 @@ namespace MyTradingApp.ViewModels
                     position.Order = order.Order;
                 }
             }
+
+            // Request contract details for all positions
+            foreach (var item in Positions.Where(p => p.Contract != null))
+            {
+                _contractManager.RequestDetails(item.Contract);
+            }
         }
 
-        public RelayCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new RelayCommand<PositionItem>(MoveStop));
+        private void HandleContractDetailsEventMessage(ContractDetailsEventMessage message)
+        {
+            var symbol = message.Details.Contract.Symbol;
+            var position = Positions.SingleOrDefault(p => p.Symbol.Code == symbol);
+            if (position == null)
+            {
+                return;
+            }
 
-        private void MoveStop(PositionItem position)
+            position.ContractDetails = message.Details;
+            var dump = position.ContractDetails.DumpToString("Contract Details");
+            Log.Debug(dump);
+        }
+
+        //public RelayCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new RelayCommand<PositionItem>(MoveStop));
+
+        private void MoveStop(PositionItem position, double newStopPercentage)
         {
             //var order = GetOrder();
             //_positionManager.UpdateStopOrder(position.Contract, order);
-
-        }
-
-        private Order GetOrder()
-        {
-            // These fields are required when modifying an existing stop
-            var order = new Order
+            var order = position.Order;
+            if (order != null && position.ContractDetails != null)
             {
-                ParentId = 1,
-                OrderId = 2,
-                Action = BrokerConstants.Actions.Sell,
-                OrderType = BrokerConstants.OrderTypes.Stop,
-                AuxPrice = 10.70,
-                TotalQuantity = 1242
-            };
+                var newStop = position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100;
+                newStop = Rounding.ValueAdjustedForMinTick(newStop, position.ContractDetails.MinTick);
 
-            return order;
+                if (order.AuxPrice != newStop)
+                {
+                    order.AuxPrice = newStop;
+                    _positionManager.UpdateStopOrder(position.Contract, order);
+                }
+            }
         }
+
+        //private Order GetOrder()
+        //{
+        //    // These fields are required when modifying an existing stop
+        //    var order = new Order
+        //    {
+        //        ParentId = 1,
+        //        OrderId = 2,
+        //        Action = BrokerConstants.Actions.Sell,
+        //        OrderType = BrokerConstants.OrderTypes.Stop,
+        //        AuxPrice = 10.70,
+        //        TotalQuantity = 1242
+        //    };
+
+        //    return order;
+        //}
     }
 }

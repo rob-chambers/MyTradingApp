@@ -1,6 +1,8 @@
 ﻿using GalaSoft.MvvmLight;
 using IBApi;
 using MyTradingApp.Models;
+using MyTradingApp.TrailingStopStrategies;
+using System;
 
 namespace MyTradingApp.ViewModels
 {
@@ -11,6 +13,12 @@ namespace MyTradingApp.ViewModels
         private double _quantity;
         private double _profitLoss;
         private double _percentageGainLoss;
+        private double _lastTrailingStopPercentage = 0;
+
+        public PositionItem()
+        {
+            TrailingStopStrategy = new DayTradingProfitLockerStrategy();
+        }
 
         public Symbol Symbol
         {
@@ -45,5 +53,27 @@ namespace MyTradingApp.ViewModels
         public Contract Contract { get; set; }
 
         public Order Order { get; set; }
+
+        public TrailingStopStrategy TrailingStopStrategy { get; set; }
+        
+        public ContractDetails ContractDetails { get; set; }
+
+        public double? CheckToAdjustStop()
+        {
+            var stopPercentage = TrailingStopStrategy.CalculateTrailingStopPercentage(PercentageGainLoss);
+
+            stopPercentage = Math.Round(stopPercentage, 1);
+
+            var diff = stopPercentage - _lastTrailingStopPercentage;
+
+            // TODO: Calculate appropriate threshold to move stop
+            if (diff > 0.5)
+            {
+                _lastTrailingStopPercentage = stopPercentage;
+                return stopPercentage;
+            }
+
+            return null;
+        }
     }
 }

@@ -12,6 +12,7 @@ namespace MyTradingApp.Models
         private string _companyDescription;
         private double _latestHigh;
         private double _latestLow = double.MaxValue;
+        private double _minTick;
 
         public string Code
         {
@@ -78,6 +79,12 @@ namespace MyTradingApp.Models
             set => Set(ref _isFound, value);
         }
 
+        public double MinTick
+        {
+            get => _minTick;
+            set => Set(ref _minTick, value);
+        }
+
         private void CalculateLatestHigh()
         {
             if (_latestPrice > _latestHigh)
@@ -92,6 +99,11 @@ namespace MyTradingApp.Models
             {
                 LatestLow = _latestPrice;
             }
+        }
+
+        public override string ToString()
+        {
+            return Code;
         }
     }
 }
