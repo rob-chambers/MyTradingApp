@@ -45,8 +45,8 @@ namespace MyTradingApp.Tests
             var positionsManager = Substitute.For<IPositionManager>();
             var contractManager = Substitute.For<IContractManager>();
             var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager, positionsManager, contractManager);
-
-            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel);
+            var detailsViewModel = new DetailsViewModel();
+            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel);
         }
 
         [Fact]

@@ -31,6 +31,7 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<PositionsViewModel>();
             SimpleIoc.Default.Register<SettingsViewModel>();
             SimpleIoc.Default.Register<StatusBarViewModel>();
+            SimpleIoc.Default.Register<DetailsViewModel>();
             SimpleIoc.Default.Register<IBClient>();
             SimpleIoc.Default.Register<IAccountManager, AccountManager>();
             SimpleIoc.Default.Register<IConnectionService, ConnectionService>();
@@ -52,5 +53,7 @@ namespace MyTradingApp.ViewModels
         public StatusBarViewModel StatusBar => ServiceLocator.Current.GetInstance<StatusBarViewModel>();
 
         public PositionsViewModel Positions => ServiceLocator.Current.GetInstance<PositionsViewModel>();
+
+        public DetailsViewModel Details => ServiceLocator.Current.GetInstance<DetailsViewModel>();
     }
 }

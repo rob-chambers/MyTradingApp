@@ -180,10 +180,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\ColourConverter.cs" />
+    <Compile Include="Converters\NotBooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\SelectedItemToContentConverter.cs" />
+    <Compile Include="Converters\IsDetailsPanelVisibleToWidthConverter.cs" />
     <Compile Include="EventMessages\ConnectionChangedMessage.cs" />
     <Compile Include="EventMessages\ConnectionChangingMessage.cs" />
     <Compile Include="EventMessages\ContractDetailsEventMessage.cs" />
+    <Compile Include="EventMessages\DetailsPanelClosedMessage.cs" />
     <Compile Include="EventMessages\ExchangeRateMessage.cs" />
     <Compile Include="EventMessages\ExistingPositionsMessage.cs" />
     <Compile Include="EventMessages\OpenOrdersMessage.cs" />
@@ -227,6 +230,7 @@
     <Compile Include="Utils\Rounding.cs" />
     <Compile Include="Utils\VisualTreeUtility.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
+    <Compile Include="ViewModels\DetailsViewModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Models\OrderItem.cs" />
@@ -240,6 +244,9 @@
     <Compile Include="ViewModels\ViewModelLocator.cs" />
     <Compile Include="Views\AboutView.xaml.cs">
       <DependentUpon>AboutView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DetailsView.xaml.cs">
+      <DependentUpon>DetailsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
@@ -269,6 +276,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\AboutView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

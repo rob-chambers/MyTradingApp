@@ -147,6 +147,7 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
+            position.Symbol.Name = message.Details.LongName;
             position.ContractDetails = message.Details;
             var dump = position.ContractDetails.DumpToString("Contract Details");
             Log.Debug(dump);

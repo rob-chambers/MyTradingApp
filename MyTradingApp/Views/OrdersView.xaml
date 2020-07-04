@@ -31,22 +31,29 @@
                 Command="{Binding DeleteAllCommand}"
                 Content="Delete All" />
         </Grid>
-        <ListView ItemsSource="{Binding Orders}">
+        <ListView ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Focusable" Value="false" />
+                    <!--<Setter Property="Focusable" Value="false" />-->
                     <Setter Property="Height" Value="40" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
                     <Style.Triggers>
                         <!--  Hide selection  -->
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="{x:Null}" />
+                            <!--<Setter Property="Background" Value="{x:Null}" />-->
+                            <Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent}" />
                             <Setter Property="BorderBrush" Value="{x:Null}" />
                         </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
+                        <!--<Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{x:Null}" />
                             <Setter Property="BorderBrush" Value="{x:Null}" />
-                        </Trigger>
+                        </Trigger>-->
 
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent3}" />
+                            <Setter Property="BorderBrush" Value="{x:Null}" />
+                        </Trigger>
+                        
                         <DataTrigger Binding="{Binding Status}" Value="PreSubmitted">
                             <Setter Property="Background" Value="LightYellow" />
                         </DataTrigger>

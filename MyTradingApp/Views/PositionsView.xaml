@@ -17,9 +17,8 @@
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="Focusable" Value="False" />
-                    <!--<Setter Property="Height" Value="40" />-->
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{x:Null}" />
@@ -42,34 +41,46 @@
                         Width="200"
                         DisplayMemberBinding="{Binding Symbol.Name}"
                         Header=" Name" />
-                    <GridViewColumn
-                        Width="80"
-                        DisplayMemberBinding="{Binding AvgPrice, StringFormat='0.0000'}"
-                        Header=" Avg Price" />
+                    <GridViewColumn Width="80" Header=" Avg Price">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding AvgPrice, StringFormat='0.0000'}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Width="auto" Header=" Qty">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock
-                                    HorizontalAlignment="Stretch"
+                                    HorizontalAlignment="Right"
                                     Foreground="{Binding Quantity, Converter={StaticResource ColourConverter}}"
                                     Text="{Binding Quantity}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn
-                        Width="100"
-                        DisplayMemberBinding="{Binding Symbol.LatestPrice, StringFormat='0.00'}"
-                        Header=" Latest Price" />
+                    <GridViewColumn Width="100" Header=" Latest Price">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding Symbol.LatestPrice, StringFormat='0.00'}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
 
-                    <GridViewColumn
-                        Width="80"
-                        DisplayMemberBinding="{Binding ProfitLoss, StringFormat='c'}"
-                        Header=" P/L" />
+                    <GridViewColumn Width="80" Header=" P/L">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding ProfitLoss, StringFormat='c'}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
 
-                    <GridViewColumn
-                        Width="80"
-                        DisplayMemberBinding="{Binding PercentageGainLoss}"
-                        Header=" G/L%" />
+                    <GridViewColumn Width="80" Header=" G/L%">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding PercentageGainLoss}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
 
                     <GridViewColumn Width="auto">
                         <GridViewColumn.CellTemplate>

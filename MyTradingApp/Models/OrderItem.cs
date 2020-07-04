@@ -110,5 +110,7 @@ namespace MyTradingApp.Models
             get => _isLocked;
             set => Set(ref _isLocked, value);
         }
+
+        public double StandardDeviation { get; set; }
     }
 }

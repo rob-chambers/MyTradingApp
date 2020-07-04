@@ -36,6 +36,7 @@ namespace MyTradingApp.ViewModels
         private RelayCommand _deleteAllCommand;
         private string _streamingButtonCaption;
         private RelayCommand<OrderItem> _submitCommand;
+        private OrderItem _selectedOrder;
         #endregion
 
         #region Constructors
@@ -199,6 +200,12 @@ namespace MyTradingApp.ViewModels
             }
         }
 
+        public OrderItem SelectedOrder
+        {
+            get => _selectedOrder;
+            set => Set(ref _selectedOrder, value);
+        }
+
         #endregion
 
         #region Methods
@@ -262,6 +269,8 @@ namespace MyTradingApp.ViewModels
             order.EntryPrice = _orderCalculationService.GetEntryPrice(symbol, order.Direction);
             order.InitialStopLossPrice = sl;
             order.Quantity = _orderCalculationService.GetCalculatedQuantity(symbol, order.Direction);
+
+            order.StandardDeviation = _orderCalculationService.CalculateStandardDeviation(symbol);
         }
 
         private void CancelStreaming()
@@ -362,6 +371,7 @@ namespace MyTradingApp.ViewModels
             }
 
             order.Symbol.MinTick = message.Details.MinTick;
+            order.Symbol.Name = message.Details.LongName;
         }
 
         private void HandleTickPriceMessage(TickPrice tickPrice)

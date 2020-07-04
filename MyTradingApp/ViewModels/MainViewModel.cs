@@ -50,6 +50,7 @@ namespace MyTradingApp.ViewModels
         private double _riskPerTrade;
         private ObservableCollection<MenuItemViewModel> _menuItems;
         private ObservableCollection<MenuItemViewModel> _menuOptionItems;
+        private bool _isDetailsPanelVisible;
 
         #endregion
 
@@ -65,7 +66,8 @@ namespace MyTradingApp.ViewModels
             IHistoricalDataManager historicalDataManager,
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
-            PositionsViewModel positionsViewModel)
+            PositionsViewModel positionsViewModel,
+            DetailsViewModel detailsViewModel)
         {
             CreateMenuItems();
 
@@ -75,7 +77,9 @@ namespace MyTradingApp.ViewModels
             _accountManager = accountManager;
             OrdersViewModel = ordersViewModel;
             OrdersViewModel.Orders.CollectionChanged += OnOrdersCollectionChanged;
+            OrdersViewModel.PropertyChanged += OnOrdersViewModelPropertyChanged;
             PositionsViewModel = positionsViewModel;
+            DetailsViewModel = detailsViewModel;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
             _exchangeRateService = exchangeRateService;
@@ -90,6 +94,7 @@ namespace MyTradingApp.ViewModels
             Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
+            Messenger.Default.Register<DetailsPanelClosedMessage>(this, HandleDetailsPanelClosed);
 
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
@@ -98,11 +103,11 @@ namespace MyTradingApp.ViewModels
             RiskMultiplier = 0.1;
         }
 
-#endregion
+        #endregion
 
         #region Properties
 
-#region Commands
+        #region Commands
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
 
@@ -128,6 +133,12 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _connectButtonCaption, value);
         }
 
+        public bool IsDetailsPanelVisible
+        {
+            get => _isDetailsPanelVisible;
+            set => Set(ref _isDetailsPanelVisible, value);
+        }
+
         public string ErrorText
         {
             get => _errorText;
@@ -143,6 +154,8 @@ namespace MyTradingApp.ViewModels
         public OrdersViewModel OrdersViewModel { get; private set; }
 
         public PositionsViewModel PositionsViewModel { get; private set; }
+
+        public DetailsViewModel DetailsViewModel { get; }
 
         public double RiskMultiplier
         {
@@ -265,6 +278,11 @@ namespace MyTradingApp.ViewModels
             SetConnectionStatus();
         }
 
+        private void HandleDetailsPanelClosed(DetailsPanelClosedMessage message)
+        {
+            IsDetailsPanelVisible = false;
+        }
+
         private void HandleErrorMessage(ErrorMessage message)
         {
             ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
@@ -341,6 +359,16 @@ namespace MyTradingApp.ViewModels
             OrdersViewModel.Orders.Remove(item);
 
             _accountManager.RequestPositions();
+        }
+
+        private void OnOrdersViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(OrdersViewModel.SelectedOrder))
+            {
+                return;
+            }
+
+            DetailsViewModel.Selection = OrdersViewModel.SelectedOrder;
         }
 
         private void SetConnectionStatus()
