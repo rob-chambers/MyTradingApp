@@ -9,11 +9,6 @@ namespace MyTradingApp.ViewModels
         private object _toolTip;
         private bool _isVisible = true;
 
-        protected MenuItemViewModel(MainViewModel mainViewModel)
-        {
-            MainViewModel = mainViewModel;
-        }
-
         public MainViewModel MainViewModel { get; }
 
         public object Icon

@@ -17,8 +17,7 @@ namespace MyTradingApp.Views
 
         private void OnSymbolTextBoxKeyUp(object sender, KeyEventArgs e)
         {
-            var textBox = sender as TextBox;
-            if (textBox == null || textBox.Text.Length == 0)
+            if (!(sender is TextBox textBox) || textBox.Text.Length == 0)
             {
                 return;
             }

@@ -9,10 +9,9 @@ namespace MyTradingApp.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            Brush color = null;
             var num = (double)value;
-            color = (num >= 0) 
-                ? Brushes.Green 
+            Brush color = num >= 0
+                ? Brushes.Green
                 : Brushes.Red;
 
             return color;

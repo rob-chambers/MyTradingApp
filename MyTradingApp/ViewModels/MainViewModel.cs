@@ -25,8 +25,6 @@ namespace MyTradingApp.ViewModels
 
         private const int REDUCED_LINES_IN_MESSAGE_BOX = 100;
 
-        // TODO: Expose RiskPercentageOfAccountto UI
-        private const double RiskPercentageOfAccount = 0.005;
         private readonly IAccountManager _accountManager;
         private readonly IConnectionService _connectionService;
         private readonly IExchangeRateService _exchangeRateService;
@@ -51,6 +49,7 @@ namespace MyTradingApp.ViewModels
         private ObservableCollection<MenuItemViewModel> _menuItems;
         private ObservableCollection<MenuItemViewModel> _menuOptionItems;
         private bool _isDetailsPanelVisible;
+        private SettingsViewModel _settingsViewModel;
 
         #endregion
 
@@ -67,10 +66,9 @@ namespace MyTradingApp.ViewModels
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
-            DetailsViewModel detailsViewModel)
-        {
-            CreateMenuItems();
-
+            DetailsViewModel detailsViewModel,
+            SettingsViewModel settingsViewModel)
+        {           
             _iBClient = iBClient;
             _connectionService = connectionService;
             _orderManager = orderManager;
@@ -80,6 +78,8 @@ namespace MyTradingApp.ViewModels
             OrdersViewModel.PropertyChanged += OnOrdersViewModelPropertyChanged;
             PositionsViewModel = positionsViewModel;
             DetailsViewModel = detailsViewModel;
+            _settingsViewModel = settingsViewModel;
+            _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
             _statusBarViewModel = statusBarViewModel;
             _historicalDataManager = historicalDataManager;
             _exchangeRateService = exchangeRateService;
@@ -101,6 +101,8 @@ namespace MyTradingApp.ViewModels
 
             // TODO: Allow persistence of preferences.  Change back to 1.0 for live account
             RiskMultiplier = 0.1;
+
+            CreateMenuItems();
         }
 
         #endregion
@@ -188,6 +190,8 @@ namespace MyTradingApp.ViewModels
             {
                 _connectionService.Disconnect();
             }
+
+            _settingsViewModel?.Save();
         }
 
         private void AddTextToMessagePanel(string text)
@@ -197,7 +201,7 @@ namespace MyTradingApp.ViewModels
 
         private void CalculateRiskPerTrade()
         {
-            RiskPerTrade = _netLiquidation * RiskPercentageOfAccount * _exchangeRate * RiskMultiplier;
+            RiskPerTrade = _netLiquidation * _settingsViewModel.RiskPercentOfAccountSize / 100 * _exchangeRate * RiskMultiplier;
         }
 
         private void ClearLog()
@@ -214,13 +218,13 @@ namespace MyTradingApp.ViewModels
 
             MenuItems = new ObservableCollection<MenuItemViewModel>
             {
-                new HomeViewModel(this)
+                new HomeViewModel
                 {
                     Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Home },
                     Label = "Home",
                     ToolTip = "Welcome Home"
                 },
-                new AboutViewModel(this)
+                new AboutViewModel
                 {
                     Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Help },
                     Label = "About",
@@ -228,14 +232,13 @@ namespace MyTradingApp.ViewModels
                 }
             };
 
+            _settingsViewModel.Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Cog };
+            _settingsViewModel.Label = "Settings";
+            _settingsViewModel.ToolTip = "Settings for the application";
+
             MenuOptionItems = new ObservableCollection<MenuItemViewModel>
             {
-                new SettingsViewModel(this)
-                {
-                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Cog },
-                    Label = "Settings",
-                    ToolTip = "The App settings"
-                }
+                _settingsViewModel
             };
         }
 
@@ -318,6 +321,7 @@ namespace MyTradingApp.ViewModels
 
         private void HandleExchangeRateMessage(ExchangeRateMessage message)
         {
+            // TODO: Store last known exchange rate
             _exchangeRate = message.Price;
             CalculateRiskPerTrade();
         }
@@ -369,6 +373,16 @@ namespace MyTradingApp.ViewModels
             }
 
             DetailsViewModel.Selection = OrdersViewModel.SelectedOrder;
+        }
+
+        private void OnSettingsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(SettingsViewModel.RiskPercentOfAccountSize))
+            {
+                return;
+            }
+
+            CalculateRiskPerTrade();
         }
 
         private void SetConnectionStatus()

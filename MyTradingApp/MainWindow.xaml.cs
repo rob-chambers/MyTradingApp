@@ -91,7 +91,7 @@ namespace MyTradingApp
         {
             if (e.Cancel) return;
 
-            ((MainViewModel)DataContext).AppIsClosing();
+            ((MainViewModel)DataContext).AppIsClosing();            
 
             Log.Debug("Shutting down");
         }

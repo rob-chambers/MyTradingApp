@@ -53,7 +53,7 @@
                             <Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent3}" />
                             <Setter Property="BorderBrush" Value="{x:Null}" />
                         </Trigger>
-                        
+
                         <DataTrigger Binding="{Binding Status}" Value="PreSubmitted">
                             <Setter Property="Background" Value="LightYellow" />
                         </DataTrigger>
