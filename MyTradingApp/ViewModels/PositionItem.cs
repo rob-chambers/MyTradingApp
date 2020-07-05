@@ -67,7 +67,7 @@ namespace MyTradingApp.ViewModels
             var diff = stopPercentage - _lastTrailingStopPercentage;
 
             // TODO: Calculate appropriate threshold to move stop
-            if (diff > 0.5)
+            if (Math.Abs(diff) > 0.5)
             {
                 _lastTrailingStopPercentage = stopPercentage;
                 return stopPercentage;

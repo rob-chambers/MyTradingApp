@@ -6,8 +6,11 @@ namespace MyTradingApp.TrailingStopStrategies
     {
         public DayTradingProfitLockerStrategy()
         {
-            Risk = 7;
-            ProfitTarget = 28;
+            //Risk = 7;
+            //ProfitTarget = 28;
+
+            Risk = 2;
+            ProfitTarget = 6;
         }
 
         public override double ResumingTrailingAtProfitTarget => 10;

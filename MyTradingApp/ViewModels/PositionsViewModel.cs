@@ -72,6 +72,7 @@ namespace MyTradingApp.ViewModels
 
         private void HandlePositionsMessage(ExistingPositionsMessage message)
         {
+            StopStreaming();
             Positions.Clear();
             foreach (var item in message.Positions)
             {
@@ -162,7 +163,9 @@ namespace MyTradingApp.ViewModels
             var order = position.Order;
             if (order != null && position.ContractDetails != null)
             {
-                var newStop = position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100;
+                var newStop = position.Quantity > 0
+                    ? position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100
+                    : position.Symbol.LatestLow + position.Symbol.LatestLow * newStopPercentage / 100;
                 newStop = Rounding.ValueAdjustedForMinTick(newStop, position.ContractDetails.MinTick);
 
                 if (order.AuxPrice != newStop)
