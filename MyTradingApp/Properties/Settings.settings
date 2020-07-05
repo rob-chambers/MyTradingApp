@@ -5,5 +5,8 @@
     <Setting Name="RiskPercentOfAccountSize" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
+    <Setting Name="LastRiskMultiplier" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.1</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

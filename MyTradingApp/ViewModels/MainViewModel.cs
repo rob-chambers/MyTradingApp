@@ -99,8 +99,7 @@ namespace MyTradingApp.ViewModels
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
 
-            // TODO: Allow persistence of preferences.  Change back to 1.0 for live account
-            RiskMultiplier = 0.1;
+            RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
 
             CreateMenuItems();
         }
@@ -191,6 +190,7 @@ namespace MyTradingApp.ViewModels
                 _connectionService.Disconnect();
             }
 
+            _settingsViewModel.LastRiskMultiplier = RiskMultiplier;
             _settingsViewModel?.Save();
         }
 

@@ -34,5 +34,17 @@ namespace MyTradingApp.Properties {
                 this["RiskPercentOfAccountSize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
+        public double LastRiskMultiplier {
+            get {
+                return ((double)(this["LastRiskMultiplier"]));
+            }
+            set {
+                this["LastRiskMultiplier"] = value;
+            }
+        }
     }
 }

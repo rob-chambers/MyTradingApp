@@ -4,6 +4,7 @@
     {
         private double _riskPercentOfAccountSize;
         private bool _isLoading;
+        private double _lastRiskMultiplier;
 
         public SettingsViewModel()
         {
@@ -16,6 +17,7 @@
             try
             {
                 RiskPercentOfAccountSize = Properties.Settings.Default.RiskPercentOfAccountSize;
+                LastRiskMultiplier = Properties.Settings.Default.LastRiskMultiplier;
             }
             finally
             {
@@ -33,6 +35,19 @@
                 {
                     Properties.Settings.Default.RiskPercentOfAccountSize = value;
                 }                
+            }
+        }
+
+        public double LastRiskMultiplier
+        {
+            get => _lastRiskMultiplier;
+            set
+            {
+                Set(ref _lastRiskMultiplier, value);
+                if (!_isLoading)
+                {
+                    Properties.Settings.Default.LastRiskMultiplier = value;
+                }
             }
         }
 
