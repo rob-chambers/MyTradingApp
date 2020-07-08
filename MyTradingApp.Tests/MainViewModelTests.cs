@@ -78,9 +78,9 @@ namespace MyTradingApp.Tests
         }
 
         [Theory]
-        [InlineData(100000, 0.5, 1, 250)]
-        [InlineData(60000, 0.75, 1, 225)]
-        [InlineData(200000, 0.75, 2, 1500)]
+        [InlineData(100000, 0.5, 1, 500)]
+        [InlineData(60000, 0.75, 1, 450)]
+        [InlineData(200000, 0.75, 2, 3000)]
         public void RiskPerTradeCalculatedOnConnectionCorrectly(double netLiquidationValue, double exchangeRate, double riskMultiplier, double expected)
         {
             // Arrange

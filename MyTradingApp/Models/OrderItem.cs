@@ -15,6 +15,7 @@ namespace MyTradingApp.Models
         private int _quantityInterval = 1;
         private int _id;
         private bool _isLocked;
+        private bool _hasHistory;
 
         public OrderItem()
         {
@@ -112,5 +113,11 @@ namespace MyTradingApp.Models
         }
 
         public double StandardDeviation { get; set; }
+
+        public bool HasHistory 
+        {
+            get => _hasHistory;
+            set => Set(ref _hasHistory, value);
+        }
     }
 }

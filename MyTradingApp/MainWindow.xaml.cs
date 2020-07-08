@@ -90,9 +90,11 @@ namespace MyTradingApp
         private void OnMainWindowClosing(object sender, CancelEventArgs e)
         {
             if (e.Cancel) return;
-
-            ((MainViewModel)DataContext).AppIsClosing();            
-
+            if (DataContext != null)
+            {
+                ((MainViewModel)DataContext).AppIsClosing();
+            }
+           
             Log.Debug("Shutting down");
         }
     }

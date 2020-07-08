@@ -29,6 +29,8 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
         <Button
@@ -39,17 +41,32 @@
             Close
         </Button>
         <Label Grid.Row="1" Margin="10">Symbol:</Label>
-
         <TextBlock
             Grid.Row="1"
             Grid.Column="1"
             Margin="10"
             Text="{Binding Selection.Symbol.Code}" />
+        
         <Label Grid.Row="2" Margin="10">Standard Deviation:</Label>
         <TextBlock
             Grid.Row="2"
             Grid.Column="1"
             Margin="10"
             Text="{Binding Selection.StandardDeviation}" />
+
+        <Label Grid.Row="3" Margin="10">Has History?:</Label>
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="10"
+            Text="{Binding Selection.HasHistory}" />
+
+        <Label Grid.Row="4" Margin="10">Latest Price:</Label>
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="10"
+            Text="{Binding Selection.Symbol.LatestPrice}" />
+
     </Grid>
 </UserControl>

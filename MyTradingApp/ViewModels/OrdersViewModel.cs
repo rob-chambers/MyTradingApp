@@ -386,17 +386,14 @@ namespace MyTradingApp.ViewModels
             _orderCalculationService.SetLatestPrice(tickPrice.Symbol, tickPrice.Price);
             CalculateRisk(tickPrice.Symbol);
 
-            if (!order.Symbol.IsFound)
-            {                
-                order.Symbol.IsFound = true;
-                IssueHistoricalDataRequest(order);
-                StartStopStreamingCommand.RaiseCanExecuteChanged();
-                SubmitCommand.RaiseCanExecuteChanged();                
+            order.Symbol.IsFound = true;
+            IssueHistoricalDataRequest(order);
+            StartStopStreamingCommand.RaiseCanExecuteChanged();
+            SubmitCommand.RaiseCanExecuteChanged();                
 
-                if (IsStreaming)
-                {
-                    StreamSymbol(order);
-                }
+            if (IsStreaming)
+            {
+                StreamSymbol(order);
             }
         }
 
@@ -455,6 +452,7 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
+            order.HasHistory = true;
             _orderCalculationService.SetHistoricalData(order.Symbol.Code, message.Bars);
             CalculateRisk(order.Symbol.Code);
         }

@@ -2,6 +2,7 @@
 using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
+using Serilog;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,16 +28,20 @@ namespace MyTradingApp.Services
         {
             if (msg.Price == -1) return;  // Market is probably closed
 
-            string symbol;
+            if (!_activeRequests.ContainsKey(msg.RequestId))
+            {
+                Log.Warning("Get price for an unexpected request id of {0}", msg.RequestId);
+                return;
+            }
+
+            var symbol = _activeRequests[msg.RequestId].Symbol;
             switch (msg.Field)
             {
                 case TickType.LAST:
-                    symbol = _activeRequests[msg.RequestId].Symbol;
                     Messenger.Default.Send(new TickPrice(symbol, msg.Price));
                     break;
 
                 case TickType.ASK:
-                    symbol = _activeRequests[msg.RequestId].Symbol;
                     Messenger.Default.Send(new TickPrice(symbol, msg.Price));
                     break;
             }

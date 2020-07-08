@@ -226,8 +226,12 @@
     <Compile Include="TrailingStopStrategies\DayTradingProfitLockerStrategy.cs" />
     <Compile Include="TrailingStopStrategies\ProfitLockerStrategy.cs" />
     <Compile Include="TrailingStopStrategies\TrailingStopStrategy.cs" />
+    <Compile Include="Utils\AsyncCommand.cs" />
+    <Compile Include="Utils\IAsyncCommand.cs" />
+    <Compile Include="Utils\IErrorHandler.cs" />
     <Compile Include="Utils\ObservableCollectionNoReset.cs" />
     <Compile Include="Utils\Rounding.cs" />
+    <Compile Include="Utils\TaskExtensions.cs" />
     <Compile Include="Utils\VisualTreeUtility.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="ViewModels\DetailsViewModel.cs" />

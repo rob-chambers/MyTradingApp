@@ -2,6 +2,7 @@
 using IBApi;
 using MyTradingApp.Models;
 using MyTradingApp.TrailingStopStrategies;
+using Serilog;
 using System;
 
 namespace MyTradingApp.ViewModels
@@ -69,6 +70,7 @@ namespace MyTradingApp.ViewModels
             // TODO: Calculate appropriate threshold to move stop
             if (Math.Abs(diff) > 0.5)
             {
+                Log.Debug("Found new stop price.  Old stop: {0}, new stop: {1}", _lastTrailingStopPercentage, stopPercentage);
                 _lastTrailingStopPercentage = stopPercentage;
                 return stopPercentage;
             }

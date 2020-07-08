@@ -4,7 +4,6 @@ using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
-using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
@@ -18,8 +17,7 @@ namespace MyTradingApp.ViewModels
         private readonly IAccountManager _accountManager;
         private readonly IPositionManager _positionManager;
         private readonly IContractManager _contractManager;
-
-        //private RelayCommand<PositionItem> _tempCommand;
+        //private AsyncCommand<PositionItem> _tempCommand;
 
         public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
 
@@ -85,7 +83,7 @@ namespace MyTradingApp.ViewModels
 
             // Get associated stop orders
             _positionManager.RequestOpenOrders();
-        }
+        }    
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
         {
@@ -150,11 +148,20 @@ namespace MyTradingApp.ViewModels
 
             position.Symbol.Name = message.Details.LongName;
             position.ContractDetails = message.Details;
-            var dump = position.ContractDetails.DumpToString("Contract Details");
-            Log.Debug(dump);
         }
 
-        //public RelayCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new RelayCommand<PositionItem>(MoveStop));
+        //public AsyncCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new AsyncCommand<PositionItem>(DoTempCommand));
+
+        //private async Task DoTempCommand(PositionItem position)
+        //{
+        //    var result = await Task.Delay(5000).ContinueWith(t =>
+        //    {
+        //        var r = new Random();
+        //        return r.Next(int.MaxValue);
+        //    });
+
+        //    position.AvgPrice = result;
+        //}
 
         private void MoveStop(PositionItem position, double newStopPercentage)
         {
@@ -168,8 +175,15 @@ namespace MyTradingApp.ViewModels
                     : position.Symbol.LatestLow + position.Symbol.LatestLow * newStopPercentage / 100;
                 newStop = Rounding.ValueAdjustedForMinTick(newStop, position.ContractDetails.MinTick);
 
-                if (order.AuxPrice != newStop)
+                if (position.Quantity > 0 && order.AuxPrice < newStop)
                 {
+                    Log.Debug("Moving stop on {0} from {1} to {2}", position.Symbol.Code, order.AuxPrice, newStop);
+                    order.AuxPrice = newStop;
+                    _positionManager.UpdateStopOrder(position.Contract, order);
+                }
+                else if (position.Quantity < 0 && order.AuxPrice > newStop)
+                {
+                    Log.Debug("Moving stop on {0} from {1} to {2}", position.Symbol.Code, order.AuxPrice, newStop);
                     order.AuxPrice = newStop;
                     _positionManager.UpdateStopOrder(position.Contract, order);
                 }
