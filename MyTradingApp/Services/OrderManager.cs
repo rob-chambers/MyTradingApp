@@ -3,8 +3,9 @@ using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
+using ObjectDumper;
+using Serilog;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace MyTradingApp.Services
 {
@@ -17,12 +18,25 @@ namespace MyTradingApp.Services
         {
             _ibClient = ibClient;
             ibClient.OrderStatus += HandleOrderStatus;
+            ibClient.CompletedOrder += HandleCompletedOrder;
+            ibClient.CompletedOrdersEnd += HandleCompletedOrdersEnd;
         }
 
-        public void HandleOrderStatus(OrderStatusMessage message)
+        private void HandleCompletedOrdersEnd()
+        {
+            Log.Debug("End of completed orders");
+        }
+
+        private void HandleCompletedOrder(CompletedOrderMessage message)
+        {
+            var value = message.DumpToString("Completed Order Message");
+            Log.Debug(value);
+        }
+
+        private void HandleOrderStatus(OrderStatusMessage message)
         {
             var orderId = message.OrderId;
-            Debug.WriteLine("Order status: {0}, permid: {1}, orderid: {2}", message.Status, message.PermId, orderId);
+            Log.Debug("Order status: {0}, permid: {1}, orderid: {2}", message.Status, message.PermId, orderId);
             if (_orders.ContainsKey(orderId))
             {
                 var symbol = _orders[orderId];

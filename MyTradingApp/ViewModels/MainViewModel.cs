@@ -87,7 +87,6 @@ namespace MyTradingApp.ViewModels
             _iBClient.HistoricalData += _historicalDataManager.HandleMessage;
             _iBClient.HistoricalDataUpdate += _historicalDataManager.HandleMessage;
             _iBClient.HistoricalDataEnd += _historicalDataManager.HandleMessage;
-            _iBClient.OrderStatus += _orderManager.HandleOrderStatus;
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += HandleAccountSummaryEndMessage;
 
@@ -274,8 +273,6 @@ namespace MyTradingApp.ViewModels
 
                 // Send a request to get the exchange rate
                 _exchangeRateService.RequestExchangeRate();
-
-                //_accountManager.RequestPositions();
             }
 
             SetConnectionStatus();

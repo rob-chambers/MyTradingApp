@@ -217,7 +217,7 @@ namespace MyTradingApp.ViewModels
                 Symbol = order.Symbol.Code,
                 SecType = BrokerConstants.Stock,
                 Exchange = BrokerConstants.Routers.Smart,
-                PrimaryExch = MapExchange(order.Symbol.Exchange),
+                PrimaryExch = IbClientRequestHelper.MapExchange(order.Symbol.Exchange),
                 Currency = BrokerConstants.UsCurrency,
                 LastTradeDateOrContractMonth = string.Empty,
                 Strike = 0,
@@ -234,21 +234,6 @@ namespace MyTradingApp.ViewModels
             {
                 CalculateRisk(item.Symbol.Code);
             }
-        }
-
-        private static string MapExchange(Exchange exchange)
-        {
-            switch (exchange)
-            {
-                // On https://interactivebrokers.github.io/tws-api/basic_contracts.html, it mentions that stocks on the Nasdaq should be routed through ISLAND
-                case Exchange.Nasdaq:
-                    return BrokerConstants.Routers.Island;
-
-                case Exchange.London:
-                    return "LSE";
-            }
-
-            return exchange.ToString();
         }
 
         private void CalculateRisk(string symbol)
@@ -351,8 +336,6 @@ namespace MyTradingApp.ViewModels
             order.Account = _accountId;
             order.ModelCode = string.Empty;
             order.Tif = BrokerConstants.TimeInForce.GoodTilCancelled;
-
-            // TODO: Test this will work
             order.Transmit = true;
             return order;
         }
@@ -376,11 +359,18 @@ namespace MyTradingApp.ViewModels
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
         {
+            if (tickPrice.Type != TickType.LAST)
+            {
+                return;
+            }
+
             var order = Orders.SingleOrDefault(o => o.Symbol.Code == tickPrice.Symbol);
             if (order == null)
             {
                 return;
             }
+
+            //Log.Debug(tickPrice.DumpToString("Tick Price"));
 
             order.Symbol.LatestPrice = tickPrice.Price;
             _orderCalculationService.SetLatestPrice(tickPrice.Symbol, tickPrice.Price);
@@ -466,9 +456,6 @@ namespace MyTradingApp.ViewModels
                 // Most likely an existing pending order (i.e. one that wasn't submitted via this app while it is currently open)
                 return;
             }
-
-            var value = message.DumpToString("Order Status Message");
-            Log.Debug(value);
 
             UpdateOrderStatus(order, message.Message.Status);
         }

@@ -28,6 +28,9 @@
                             <Setter Property="Background" Value="{x:Null}" />
                             <Setter Property="BorderBrush" Value="{x:Null}" />
                         </Trigger>
+                        <DataTrigger Binding="{Binding IsOpen}" Value="false">
+                            <Setter Property="Background" Value="DarkGray" />
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </ListView.ItemContainerStyle>

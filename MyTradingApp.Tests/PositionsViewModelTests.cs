@@ -86,7 +86,7 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, Price));
+            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
 
             // Assert
             Assert.Equal(Price, position.Symbol.LatestPrice);
@@ -108,7 +108,7 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, Price));
+            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
@@ -131,7 +131,7 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, Price));
+            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
@@ -148,7 +148,8 @@ namespace MyTradingApp.Tests
             {
                 Contract = new Contract
                 {
-                    Symbol = Symbol,                    
+                    Symbol = Symbol,
+                    Exchange = Exchange.NYSE.ToString()
                 },
                 Symbol = new Symbol { Code = Symbol },
                 Quantity = 100
@@ -159,6 +160,7 @@ namespace MyTradingApp.Tests
                 Contract = new Contract
                 {
                     Symbol = "AMZN",
+                    Exchange = Exchange.Nasdaq.ToString()
                 },
                 Symbol = new Symbol { Code = "AMZN" },
                 Quantity = 200
@@ -169,6 +171,7 @@ namespace MyTradingApp.Tests
                 Contract = new Contract
                 {
                     Symbol = "TSLA",
+                    Exchange = Exchange.NYSE.ToString()
                 },
                 Symbol = new Symbol { Code = "TSLA" },
                 Quantity = 0
@@ -178,32 +181,57 @@ namespace MyTradingApp.Tests
             Messenger.Default.Send(new ExistingPositionsMessage(new List<PositionItem> { position1, position2, closedPosition }));
 
             // Assert
-            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == Symbol && x == position1.Contract));
-            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == position2.Symbol.Code && x == position2.Contract));
-            manager.DidNotReceive().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code && x == closedPosition.Contract));
+            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == Symbol && 
+                x.Currency == BrokerConstants.UsCurrency &&
+                x.Exchange == BrokerConstants.Routers.Smart &&
+                x.PrimaryExch == Exchange.NYSE.ToString() &&
+                x.SecType == BrokerConstants.Stock));
+            
+            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == position2.Symbol.Code &&
+                x.Currency == BrokerConstants.UsCurrency &&
+                x.Exchange == BrokerConstants.Routers.Smart &&
+                x.PrimaryExch == BrokerConstants.Routers.Island &&
+                x.SecType == BrokerConstants.Stock));
+
+            manager.DidNotReceive().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code));
         }
 
         [Fact]
         public void BeforeDisconnectingStopStreaming()
         {
-            // Act
+            // Arrange
+            const string ClosedSymbol = "AMZN";
+
             var manager = Substitute.For<IMarketDataManager>();
             var vm = GetVm(manager);
-            var position = new PositionItem
+            var openPosition = new PositionItem
             {
                 Contract = new Contract
                 {
                     Symbol = Symbol,
                 },
                 Symbol = new Symbol { Code = Symbol },
+                Quantity = 100
             };
-            vm.Positions.Add(position);
+
+            var closedPosition = new PositionItem
+            {
+                Contract = new Contract
+                {
+                    Symbol = ClosedSymbol,
+                },
+                Symbol = new Symbol { Code = ClosedSymbol },
+            };
+
+            vm.Positions.Add(openPosition);
+            vm.Positions.Add(closedPosition);
 
             // Act
             Messenger.Default.Send(new ConnectionChangingMessage(false));
 
             // Assert
             manager.Received().StopPriceStreaming(Symbol);
+            manager.DidNotReceive().StopPriceStreaming(ClosedSymbol);
         }
     }
 }

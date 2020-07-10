@@ -1,12 +1,15 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
+using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
+using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MyTradingApp.ViewModels
@@ -33,11 +36,43 @@ namespace MyTradingApp.ViewModels
             Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
             Messenger.Default.Register<OpenOrdersMessage>(this, HandleOpenOrdersMessage);
             Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
 
             _marketDataManager = marketDataManager;
             _accountManager = accountManager;
             _positionManager = positionManager;
             _contractManager = contractManager;
+        }
+
+        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        {
+            if (message.Message.Status != BrokerConstants.OrderStatus.Filled)
+            {
+                return;
+            }
+
+            // Find corresponding order
+            var position = Positions.SingleOrDefault(p => p.Order?.OrderId == message.Message.OrderId);
+            if (position == null)
+            {
+                // Could be a stop order for trade entry
+                return;
+            }
+
+            Log.Information("Order id {0} against existing position [{1}] was filled.", position.Order.OrderId, position.Symbol.Code);
+            //Log.Debug(message.Message.DumpToString("Order Status"));
+
+            // Double check the entire position was closed
+            if (message.Message.Remaining == 0)
+            {
+                Log.Debug("Marking position as closed and stopping streaming");
+                position.Quantity = 0;
+                _marketDataManager.StopPriceStreaming(position.Symbol.Code);
+            }
+            else
+            {
+                Log.Warning("There are still {0} shares remaining so the position is still open", message.Message.Remaining);
+            }
         }
 
         private void HandleConnectionChangingMessage(ConnectionChangingMessage message)
@@ -62,7 +97,7 @@ namespace MyTradingApp.ViewModels
 
         private void StopStreaming()
         {
-            foreach (var item in Positions)
+            foreach (var item in Positions.Where(p => p.IsOpen))
             {
                 _marketDataManager.StopPriceStreaming(item.Symbol.Code);
             }
@@ -75,15 +110,18 @@ namespace MyTradingApp.ViewModels
             foreach (var item in message.Positions)
             {
                 Positions.Add(item);
-                if (item.Quantity != 0 && item.Contract != null)
+                if (item.IsOpen && item.Contract != null)
                 {
-                    _marketDataManager.RequestStreamingPrice(item.Contract);
+                    Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
+                    //                    ModifyContractForRequest(item.Contract);                    
+                    var newContract = MapContractToNewContract(item.Contract);
+                    _marketDataManager.RequestStreamingPrice(newContract);
                 }
             }
 
             // Get associated stop orders
             _positionManager.RequestOpenOrders();
-        }    
+        }
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
         {
@@ -118,6 +156,7 @@ namespace MyTradingApp.ViewModels
                 if (order.OrderId == 0)
                 {
                     // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
+                    Log.Warning(message.DumpToString("Order without an id"));
                     continue;
                 }
 
@@ -143,6 +182,7 @@ namespace MyTradingApp.ViewModels
             var position = Positions.SingleOrDefault(p => p.Symbol.Code == symbol);
             if (position == null)
             {
+                // This is OK - this event may have been raised for orders
                 return;
             }
 
@@ -173,7 +213,7 @@ namespace MyTradingApp.ViewModels
                 var newStop = position.Quantity > 0
                     ? position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100
                     : position.Symbol.LatestLow + position.Symbol.LatestLow * newStopPercentage / 100;
-                newStop = Rounding.ValueAdjustedForMinTick(newStop, position.ContractDetails.MinTick);
+                newStop = Math.Round(newStop, 2);
 
                 if (position.Quantity > 0 && order.AuxPrice < newStop)
                 {
@@ -188,6 +228,12 @@ namespace MyTradingApp.ViewModels
                     _positionManager.UpdateStopOrder(position.Contract, order);
                 }
             }
+        }
+
+        private static void ModifyContractForRequest(Contract contract)
+        {
+            contract.PrimaryExch = Exchange.NYSE.ToString();
+            contract.Exchange = BrokerConstants.Routers.Smart;
         }
 
         //private Order GetOrder()
@@ -205,5 +251,35 @@ namespace MyTradingApp.ViewModels
 
         //    return order;
         //}
+
+        private static Contract MapContractToNewContract(Contract originalContract)
+        {
+            var exchange = originalContract.Exchange;
+            if (!Enum.TryParse<Exchange>(exchange, true, out var exchangeEnum))
+            {
+                Log.Warning("Couldn't find exchange enum value {0}", exchange);
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+
+                return null;
+            }
+
+            var contract = new Contract
+            {
+                Symbol = originalContract.Symbol,
+                SecType = BrokerConstants.Stock,
+                Exchange = BrokerConstants.Routers.Smart,
+                PrimaryExch = IbClientRequestHelper.MapExchange(exchangeEnum),
+                Currency = BrokerConstants.UsCurrency,
+                LastTradeDateOrContractMonth = string.Empty,
+                Strike = 0,
+                Multiplier = string.Empty,
+                LocalSymbol = string.Empty
+            };
+
+            return contract;
+        }
     }
 }

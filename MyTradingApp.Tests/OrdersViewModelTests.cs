@@ -228,7 +228,7 @@ namespace MyTradingApp.Tests
             vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true; ;
             builder.MarketDataManager
                 .When(x => x.RequestLatestPrice(Arg.Any<Contract>()))
-                .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, 0)));
+                .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, 0)));
 
             // Act
             vm.FindCommand.Execute(order);
@@ -461,7 +461,7 @@ namespace MyTradingApp.Tests
                 .Build();
 
             // Act
-            Messenger.Default.Send(new TickPrice(DefaultSymbol, LatestPrice));
+            Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, LatestPrice));
 
             // Assert
             var order = vm.Orders[0];

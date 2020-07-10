@@ -53,6 +53,11 @@ namespace IBApi
 
         public override int GetHashCode()
         {
+            if (Name == null)
+            {
+                return 0;
+            }
+
             return Name.GetHashCode() + Value.GetHashCode();
         }
 

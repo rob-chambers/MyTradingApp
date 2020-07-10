@@ -36,7 +36,11 @@ namespace MyTradingApp.ViewModels
         public double Quantity
         {
             get => _quantity;
-            set => Set(ref _quantity, value);
+            set
+            {
+                Set(ref _quantity, value);
+                RaisePropertyChanged(nameof(IsOpen));
+            }
         }
 
         public double ProfitLoss
@@ -50,6 +54,8 @@ namespace MyTradingApp.ViewModels
             get => _percentageGainLoss;
             set => Set(ref _percentageGainLoss, value);
         }
+
+        public bool IsOpen => Quantity != 0;
 
         public Contract Contract { get; set; }
 
@@ -65,10 +71,12 @@ namespace MyTradingApp.ViewModels
 
             stopPercentage = Math.Round(stopPercentage, 1);
 
-            var diff = stopPercentage - _lastTrailingStopPercentage;
+            var diff = _lastTrailingStopPercentage - stopPercentage;
 
             // TODO: Calculate appropriate threshold to move stop
-            if (Math.Abs(diff) > 0.5)
+            const double Buffer = 0.5;
+
+            if (diff > Buffer)
             {
                 Log.Debug("Found new stop price.  Old stop: {0}, new stop: {1}", _lastTrailingStopPercentage, stopPercentage);
                 _lastTrailingStopPercentage = stopPercentage;

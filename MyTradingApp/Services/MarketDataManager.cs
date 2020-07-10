@@ -38,11 +38,9 @@ namespace MyTradingApp.Services
             switch (msg.Field)
             {
                 case TickType.LAST:
-                    Messenger.Default.Send(new TickPrice(symbol, msg.Price));
-                    break;
-
+                    // Fall-through
                 case TickType.ASK:
-                    Messenger.Default.Send(new TickPrice(symbol, msg.Price));
+                    Messenger.Default.Send(new TickPrice(symbol, msg.Field, msg.Price));
                     break;
             }
         }

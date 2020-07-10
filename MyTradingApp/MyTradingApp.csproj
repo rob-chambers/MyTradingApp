@@ -228,6 +228,7 @@
     <Compile Include="TrailingStopStrategies\TrailingStopStrategy.cs" />
     <Compile Include="Utils\AsyncCommand.cs" />
     <Compile Include="Utils\IAsyncCommand.cs" />
+    <Compile Include="Utils\IbClientRequestHelper.cs" />
     <Compile Include="Utils\IErrorHandler.cs" />
     <Compile Include="Utils\ObservableCollectionNoReset.cs" />
     <Compile Include="Utils\Rounding.cs" />
