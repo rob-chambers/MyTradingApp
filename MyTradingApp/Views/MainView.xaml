@@ -75,11 +75,30 @@
                     <views:OrdersView DataContext="{Binding OrdersViewModel}" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
                 </Expander>
 
-                <Expander
-                    Grid.Row="1"
-                    Header="Positions"
-                    IsExpanded="True">
-                    <views:PositionsView DataContext="{Binding PositionsViewModel}" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
+                <Expander Grid.Row="1" IsExpanded="True">
+
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="POSITIONS">
+                                <Label.Style>
+                                    <Style TargetType="Label">
+                                        <Setter Property="mahapps:ControlsHelper.ContentCharacterCasing" Value="Upper" />
+                                        <Setter Property="Foreground" Value="White" />
+                                    </Style>
+                                </Label.Style>
+                            </Label>
+                            <mahapps:ToggleSwitch
+                                Margin="30,0,0,0"
+                                IsOn="{Binding ElementName=positionsView, Path=ShowClosedPositions, Mode=TwoWay}"
+                                OffContent="Show Closed Positions"
+                                OnContent="Hide Closed Positions" />
+                        </StackPanel>
+                    </Expander.Header>
+
+                    <views:PositionsView
+                        x:Name="positionsView"
+                        DataContext="{Binding PositionsViewModel}"
+                        IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
                 </Expander>
             </Grid>
 

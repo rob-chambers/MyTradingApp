@@ -28,11 +28,8 @@ namespace MyTradingApp.Services
         {
             var orderId = message.OrderId;
 
-            // We only care about the status of stop orders that have a parent (which mean it's not an order to enter)
-            var orders = _orderMessages.Where(o => o.OrderId == orderId &&
-                o.Order.ParentId > 0 &&
-                (o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
-                    o.Order.OrderType == BrokerConstants.OrderTypes.Trail))
+            // We only care about the status of the trailing stop orders
+            var orders = _orderMessages.Where(o => o.OrderId == orderId && o.Order.OrderType == BrokerConstants.OrderTypes.Trail)
                 .ToList();
 
             foreach (var openOrder in orders)

@@ -9,7 +9,7 @@ namespace MyTradingApp.TrailingStopStrategies
             //Risk = 7;
             //ProfitTarget = 28;
 
-            Risk = 2;
+            Risk = 3;
             ProfitTarget = 6;
         }
 
@@ -31,7 +31,7 @@ namespace MyTradingApp.TrailingStopStrategies
         
         private double CalculateTrailingStop(double gainPercentage)
         {
-            // TODO: USe sophisticated calculation
+            // TODO: Use sophisticated calculation
             // For now, keep it simple
             var diff = (ProfitTarget - gainPercentage) / 3 + 2;
             return diff;

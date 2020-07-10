@@ -8,7 +8,9 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     DataContext="{Binding Positions, Source={StaticResource Locator}}"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    x:Name="positionsView"
+    >
     <Grid>
         <Grid.Resources>
             <converters:ColourConverter x:Key="ColourConverter" />
@@ -31,6 +33,13 @@
                         <DataTrigger Binding="{Binding IsOpen}" Value="false">
                             <Setter Property="Background" Value="DarkGray" />
                         </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding ElementName=positionsView, Path=ShowClosedPositions, Mode=OneWay}" Value="false" />
+                                <Condition Binding="{Binding IsOpen}" Value="false" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </MultiDataTrigger>
                     </Style.Triggers>
                 </Style>
             </ListView.ItemContainerStyle>

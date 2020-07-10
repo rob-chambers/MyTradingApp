@@ -76,7 +76,7 @@ namespace MyTradingApp.ViewModels
             // TODO: Calculate appropriate threshold to move stop
             const double Buffer = 0.5;
 
-            if (diff > Buffer)
+            if (diff > Buffer || _lastTrailingStopPercentage == 0)
             {
                 Log.Debug("Found new stop price.  Old stop: {0}, new stop: {1}", _lastTrailingStopPercentage, stopPercentage);
                 _lastTrailingStopPercentage = stopPercentage;

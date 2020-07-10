@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
+using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
@@ -315,6 +316,17 @@ namespace MyTradingApp.ViewModels
             return order;
         }
 
+        private Order GetTrailingStopOrder(OrderItem orderItem)
+        {
+            var stopOrder = GetInitialStopOrder(orderItem);
+            stopOrder.OrderType = BrokerConstants.OrderTypes.Trail;
+            stopOrder.AuxPrice = 0;
+            stopOrder.TrailingPercent = 5;
+            stopOrder.ParentId = 0;
+
+            return stopOrder;
+        }
+
         private Order GetInitialStopOrder(OrderItem orderItem)
         {
             var order = new Order();
@@ -458,6 +470,18 @@ namespace MyTradingApp.ViewModels
             }
 
             UpdateOrderStatus(order, message.Message.Status);
+            if (order.Status == OrderStatus.Filled)
+            {
+                SubmitStopOrder(order, message.Message);
+            }
+        }
+
+        private void SubmitStopOrder(OrderItem order, OrderStatusMessage message)
+        {
+            var stopOrder = GetTrailingStopOrder(order);
+            stopOrder.TotalQuantity = message.Filled;
+            var contract = MapOrderToContract(order);
+            _orderManager.PlaceNewOrder(contract, stopOrder);
         }
 
         private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -538,9 +562,9 @@ namespace MyTradingApp.ViewModels
             _orderManager.PlaceNewOrder(contract, order);
             orderItem.Id = order.OrderId;
 
-            // Attach stop order
-            var stopOrder = GetInitialStopOrder(orderItem);
-            _orderManager.PlaceNewOrder(contract, stopOrder);
+            //// Attach stop order
+            //var stopOrder = GetInitialStopOrder(orderItem);
+            //_orderManager.PlaceNewOrder(contract, stopOrder);
 
             // Transition from a TRAIL to a standard stop
             //var newOrder = GetInitialStopOrder(orderItem);

@@ -11,7 +11,7 @@ namespace MyTradingApp.Services
     internal class MarketDataManager : IMarketDataManager
     {
         public const int TICK_ID_BASE = 10000000;
-        public const int TICK_ID_BASE_ONE_OFF = TICK_ID_BASE + 1000;
+        public const int TICK_ID_BASE_ONE_OFF = TICK_ID_BASE + 10000;
 
         private readonly Dictionary<int, Contract> _activeRequests = new Dictionary<int, Contract>();
         private readonly IBClient _iBClient;

@@ -52,27 +52,29 @@ namespace MyTradingApp.ViewModels
             }
 
             // Find corresponding order
-            var position = Positions.SingleOrDefault(p => p.Order?.OrderId == message.Message.OrderId);
-            if (position == null)
+            if (!Positions.Any(p => p.Symbol.Code == message.Symbol))
             {
                 // Could be a stop order for trade entry
                 return;
             }
 
-            Log.Information("Order id {0} against existing position [{1}] was filled.", position.Order.OrderId, position.Symbol.Code);
-            //Log.Debug(message.Message.DumpToString("Order Status"));
+            Log.Debug("Order status has changed for an existing position, so refreshing all positions.");
+            _accountManager.RequestPositions();
 
-            // Double check the entire position was closed
-            if (message.Message.Remaining == 0)
-            {
-                Log.Debug("Marking position as closed and stopping streaming");
-                position.Quantity = 0;
-                _marketDataManager.StopPriceStreaming(position.Symbol.Code);
-            }
-            else
-            {
-                Log.Warning("There are still {0} shares remaining so the position is still open", message.Message.Remaining);
-            }
+            //Log.Information("Order id {0} against existing position [{1}] was filled.", position.Order.OrderId, position.Symbol.Code);
+            ////Log.Debug(message.Message.DumpToString("Order Status"));
+
+            //// Double check the entire position was closed
+            //if (message.Message.Remaining == 0)
+            //{
+            //    Log.Debug("Marking position as closed and stopping streaming");
+            //    position.Quantity = 0;
+            //    _marketDataManager.StopPriceStreaming(position.Symbol.Code);
+            //}
+            //else
+            //{
+            //    Log.Warning("There are still {0} shares remaining so the position is still open", message.Message.Remaining);
+            //}
         }
 
         private void HandleConnectionChangingMessage(ConnectionChangingMessage message)
@@ -125,21 +127,34 @@ namespace MyTradingApp.ViewModels
 
         private void HandleTickPriceMessage(TickPrice tickPrice)
         {
-            var position = Positions.SingleOrDefault(p => p.Symbol.Code == tickPrice.Symbol);
-            if (position == null)
+            if (tickPrice.Type != TickType.LAST)
             {
                 return;
-            }            
+            }
 
+            var positions = Positions.Where(p => p.Symbol.Code == tickPrice.Symbol && p.IsOpen).ToList();
+            if (!positions.Any())
+            {
+                return;
+            }
+
+            if (positions.Count > 1)
+            {
+                Log.Warning("More than one position found for {0}", tickPrice.Symbol);
+            }
+
+            var position = positions.First();
             position.Symbol.LatestPrice = tickPrice.Price;
             position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
 
-            position.PercentageGainLoss = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
+            var value = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
             if (position.Quantity < 0)
             {
                 // For shorts, we profit when price falls
-                position.PercentageGainLoss = -position.PercentageGainLoss;
+                value = -value;
             }
+
+            position.PercentageGainLoss = value;
 
             var stop = position.CheckToAdjustStop();
             if (stop.HasValue)
@@ -210,31 +225,25 @@ namespace MyTradingApp.ViewModels
             var order = position.Order;
             if (order != null && position.ContractDetails != null)
             {
-                var newStop = position.Quantity > 0
-                    ? position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100
-                    : position.Symbol.LatestLow + position.Symbol.LatestLow * newStopPercentage / 100;
-                newStop = Math.Round(newStop, 2);
+                //var newStop = position.Quantity > 0
+                //    ? position.Symbol.LatestHigh - position.Symbol.LatestHigh * newStopPercentage / 100
+                //    : position.Symbol.LatestLow + position.Symbol.LatestLow * newStopPercentage / 100;
+                //newStop = Math.Round(newStop, 2);
 
-                if (position.Quantity > 0 && order.AuxPrice < newStop)
+                if (newStopPercentage < order.TrailingPercent)
                 {
-                    Log.Debug("Moving stop on {0} from {1} to {2}", position.Symbol.Code, order.AuxPrice, newStop);
-                    order.AuxPrice = newStop;
-                    _positionManager.UpdateStopOrder(position.Contract, order);
-                }
-                else if (position.Quantity < 0 && order.AuxPrice > newStop)
-                {
-                    Log.Debug("Moving stop on {0} from {1} to {2}", position.Symbol.Code, order.AuxPrice, newStop);
-                    order.AuxPrice = newStop;
+                    Log.Debug("Tightening trailing stop on {0} from {1}% to {2}%", position.Symbol.Code, order.TrailingPercent, newStopPercentage);
+                    order.TrailingPercent = newStopPercentage;
                     _positionManager.UpdateStopOrder(position.Contract, order);
                 }
             }
         }
 
-        private static void ModifyContractForRequest(Contract contract)
-        {
-            contract.PrimaryExch = Exchange.NYSE.ToString();
-            contract.Exchange = BrokerConstants.Routers.Smart;
-        }
+        //private static void ModifyContractForRequest(Contract contract)
+        //{
+        //    contract.PrimaryExch = Exchange.NYSE.ToString();
+        //    contract.Exchange = BrokerConstants.Routers.Smart;
+        //}
 
         //private Order GetOrder()
         //{

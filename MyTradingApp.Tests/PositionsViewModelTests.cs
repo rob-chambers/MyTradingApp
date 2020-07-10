@@ -82,7 +82,7 @@ namespace MyTradingApp.Tests
             const double Price = 10.11;
 
             var vm = GetVm();
-            var position = new PositionItem { Symbol = new Symbol { Code = Symbol }};
+            var position = new PositionItem { Symbol = new Symbol { Code = Symbol }, Quantity = 100 };
             vm.Positions.Add(position);
 
             // Act

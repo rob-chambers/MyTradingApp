@@ -401,21 +401,21 @@ namespace MyTradingApp.Tests
                     x.TotalQuantity == Qty && 
                     x.Account == AccountId));
 
-            // Assert stop order
-            builder.OrderManager.Received()
-                .PlaceNewOrder(Arg.Is<Contract>(x => x.Symbol == DefaultSymbol &&
-                    x.SecType == BrokerConstants.Stock &&
-                    x.Currency == BrokerConstants.UsCurrency &&
-                    x.Exchange == BrokerConstants.Routers.Smart &&
-                    x.PrimaryExch == Exchange.ToString()
-                ), Arg.Is<Order>(x => x.ParentId == OrderId &&
-                    x.Action == BrokerConstants.Actions.Sell &&
-                    x.OrderType == BrokerConstants.OrderTypes.Stop &&
-                    x.Tif == BrokerConstants.TimeInForce.GoodTilCancelled &&
-                    x.AuxPrice == Stop &&
-                    x.TotalQuantity == Qty &&
-                    x.Account == AccountId &&
-                    x.Transmit));
+            //// Assert stop order
+            //builder.OrderManager.Received()
+            //    .PlaceNewOrder(Arg.Is<Contract>(x => x.Symbol == DefaultSymbol &&
+            //        x.SecType == BrokerConstants.Stock &&
+            //        x.Currency == BrokerConstants.UsCurrency &&
+            //        x.Exchange == BrokerConstants.Routers.Smart &&
+            //        x.PrimaryExch == Exchange.ToString()
+            //    ), Arg.Is<Order>(x => x.ParentId == OrderId &&
+            //        x.Action == BrokerConstants.Actions.Sell &&
+            //        x.OrderType == BrokerConstants.OrderTypes.Stop &&
+            //        x.Tif == BrokerConstants.TimeInForce.GoodTilCancelled &&
+            //        x.AuxPrice == Stop &&
+            //        x.TotalQuantity == Qty &&
+            //        x.Account == AccountId &&
+            //        x.Transmit));
 
             Assert.Equal(OrderId, vm.Orders[0].Id);
         }
