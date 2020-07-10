@@ -75,9 +75,11 @@ namespace MyTradingApp.Services
                 buffer = 0.12;
             }
 
-            return direction == Direction.Buy
+            var price = direction == Direction.Buy
                 ? _latestPrice[symbol] + buffer
                 : _latestPrice[symbol] - buffer;
+
+            return Math.Round(price, 2);
         }
 
         public void SetHistoricalData(string symbol, ICollection<Bar> bars)
