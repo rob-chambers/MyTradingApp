@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAPI", "MyTradingApp\c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Tests", "MyTradingApp.Tests\MyTradingApp.Tests.csproj", "{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Stops", "MyTradingApp.Stops\MyTradingApp.Stops.csproj", "{39A7BD19-EDD7-43DF-AECE-E70B827969EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{6F22A39A-07E4-4829-A5ED-ABD506EAD099}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

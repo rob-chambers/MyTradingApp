@@ -176,12 +176,24 @@ namespace MyTradingApp.ViewModels
                 }
 
                 var symbol = order.Contract.Symbol;
-                var position = Positions.SingleOrDefault(x => x.Symbol.Code == symbol);
-                if (position != null)
+                var positions = Positions.Where(x => x.Symbol.Code == symbol).ToList();
+                if (!positions.Any())
                 {
-                    position.Contract = order.Contract;
-                    position.Order = order.Order;
+                    continue;
                 }
+
+                if (positions.Count > 1)
+                {
+                    Log.Warning("Found more than one position for {0} - taking first", symbol);
+                    if (Debugger.IsAttached)
+                    {
+                        Debugger.Break();
+                    }
+                }
+
+                var position = positions.First();
+                position.Contract = order.Contract;
+                position.Order = order.Order;
             }
 
             // Request contract details for all positions
