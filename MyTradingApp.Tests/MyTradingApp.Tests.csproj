@@ -96,6 +96,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RoundingTests.cs" />
     <Compile Include="StatusBarViewModelTests.cs" />
+    <Compile Include="Stops\AggressiveExitStrategyTests.cs" />
+    <Compile Include="Stops\StopManagerTests.cs" />
+    <Compile Include="Stops\StopTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -105,6 +108,10 @@
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
+      <Project>{39a7bd19-edd7-43df-aece-e70b827969ee}</Project>
+      <Name>MyTradingApp.Stops</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MyTradingApp\client\CSharpAPI.csproj">
       <Project>{8ede0744-96c2-40b0-a8dc-37df79370203}</Project>
       <Name>CSharpAPI</Name>

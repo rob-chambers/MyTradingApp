@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MyTradingApp.Stops
 {
-    public class BarCollection : Dictionary<DateTime, Bar>
+    public sealed class BarCollection : Dictionary<DateTime, Bar>
     {
     }
 }

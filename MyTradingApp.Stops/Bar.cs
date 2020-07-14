@@ -2,8 +2,21 @@
 
 namespace MyTradingApp.Stops
 {
-    public class Bar
+    public sealed class Bar
     {
+        public Bar()
+        {
+        }
+
+        public Bar(DateTime date, double open, double high, double low, double close)
+        {
+            Date = date;
+            Open = open;
+            High = high;
+            Low = low;
+            Close = close;
+        }
+
         public DateTime Date { get; set; }
 
         public double Open { get; set; }

@@ -6,10 +6,31 @@ namespace MyTradingApp.Stops
 {
     public class StopManager
     {
+        private BarCollection _bars = new BarCollection();
+        private double _high;
+        private double _low;
+
         public Position Position { get; set; }
 
-        private double _standardStopPrice;
+        public BarCollection Bars 
+        {
+            get => _bars;
+            private set
+            {
+                _bars = value;
 
+                // Performance enhancement - don't bother getting low if we are going long as stops are based on the high only
+                if (Position.Direction == TradeDirection.Long)
+                {
+                    _high = GetHighestHigh(DateTime.MaxValue);
+                }
+                else
+                {
+                    _low = GetLowestLow(DateTime.MaxValue);
+                }                                
+            }
+        }
+        
         public void AddLatestBar(Bar bar)
         {
             Bars.Add(bar.Date, bar);
@@ -17,6 +38,11 @@ namespace MyTradingApp.Stops
 
         public void SetHistoricalBars(BarCollection bars)
         {
+            if (Position == null)
+            {
+                throw new InvalidOperationException("No position set.");
+            }
+
             Bars = bars;
             foreach (var stop in Position.ExitStrategy.Stops)
             {
@@ -24,101 +50,35 @@ namespace MyTradingApp.Stops
             }
         }
 
-        public BarCollection Bars { get; private set; }
-
-        //public Stop GetStop()
-        //{
-        //    var latestBar = _bars.ElementAt(_bars.Count - 1);
-
-        //}
-
         public Stop GetStop(DateTime date)
         {
+            if (Position == null)
+            {
+                throw new InvalidOperationException("No position set.");
+            }
+
             if (!Bars.ContainsKey(date))
             {
                 return null;
             }
 
-            var high = GetHighestHigh(date);
-            var low = GetLowestLow(date);
-
-            var currentPrice = Bars[date].Close;
+            //var currentPrice = Bars[date].Close;
             //var gain = (currentPrice - Position.EntryPrice) / Position.EntryPrice * 100;
-            var gain = (high - Position.EntryPrice) / Position.EntryPrice * 100;
-            if (Position.Direction == TradeDirection.Short)
+            double gain;
+            if (Position.Direction == TradeDirection.Long)
             {
-                gain = -gain;
+                gain = (_high - Position.EntryPrice) / Position.EntryPrice * 100; ;
+            }
+            else
+            {
+                gain = (Position.EntryPrice - _low) / Position.EntryPrice * 100;
             }
 
-            //var exit = Position.ExitStrategy.GetExitForPercentageGain(gain);
             var stop = Position.ExitStrategy.GetStopForPercentageGain(gain);
-            //var stop = exit.Stop;
-
-            stop.CalculatePrice(Position, gain, high, low);
-
-            //switch (stop.Type)
-            //{
-            //    case StopType.Trailing:
-            //        var trail = (TrailingStop)stop;
-
-            //        if (Position.Direction == TradeDirection.Long)
-            //        {
-            //            stop.Price = high - high * trail.Percentage / 100D;
-            //        }
-            //        else
-            //        {
-            //            stop.Price = low + low * trail.Percentage / 100D;
-            //        }
-
-            //        break;
-
-            //    case StopType.Standard:
-            //        if (_standardStopPrice != 0)
-            //        {
-            //            stop.Price = _standardStopPrice;
-            //        }
-            //        else
-            //        {
-            //            if (Position.Direction == TradeDirection.Long)
-            //            {
-            //                stop.Price = high - high * exit.LowerPercentage.Value / 100D;
-            //            }
-            //            else
-            //            {
-            //                stop.Price = low + low * exit.LowerPercentage.Value / 100D;
-            //            }
-
-            //            _standardStopPrice = stop.Price;
-            //        }
-
-            //        break;
-
-            //    case StopType.Closing:
-            //        var closingStop = (ClosingStop)stop;
-            //        var trailPercentage = CalcClosingStopValue(gain, closingStop);
-
-            //        if (Position.Direction == TradeDirection.Long)
-            //        {
-            //            stop.Price = high - high * trailPercentage / 100D;
-            //        }
-            //        else
-            //        {
-            //            stop.Price = low + low * trailPercentage / 100D;
-            //        }
-
-            //        break;
-            //}
+            stop.CalculatePrice(Position, gain, _high, _low);
 
             return stop;
         }
-
-        //private double CalcClosingStopValue(double gain, ClosingStop closingStop)
-        //{
-        //    var multiplier = (closingStop.Lower.TrailingStopPercentage - closingStop.Upper.TrailingStopPercentage) / (closingStop.Upper.GainPercentage - closingStop.Lower.GainPercentage);
-        //    var value = closingStop.Lower.TrailingStopPercentage - (gain - closingStop.Lower.GainPercentage) * multiplier;
-
-        //    return value;
-        //}
 
         private double GetHighestHigh(DateTime date)
         {

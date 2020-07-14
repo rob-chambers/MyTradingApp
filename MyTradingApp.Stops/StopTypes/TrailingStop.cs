@@ -2,9 +2,9 @@
 {
     public class TrailingStop : Stop
     {
-        public double Percentage { get; set; }
-
         public override StopType Type => StopType.Trailing;
+
+        public double Percentage { get; set; }        
 
         public override void CalculatePrice(Position position, double gainPercentage, double high, double low)
         {

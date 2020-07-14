@@ -209,6 +209,7 @@ namespace MyTradingApp.StopsTestHarness
         {
             Stocks.Add("ECOM");
             Stocks.Add("PLUG");
+            Stocks.Add("INO");
 
             InitDirectionsList();
 
