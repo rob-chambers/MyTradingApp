@@ -1,5 +1,4 @@
 ﻿using MyTradingApp.Domain;
-using System.Collections.Generic;
 
 namespace MyTradingApp.Services
 {
@@ -9,7 +8,7 @@ namespace MyTradingApp.Services
 
         void SetLatestPrice(string symbol, double price);
 
-        void SetHistoricalData(string symbol, ICollection<Bar> bars);
+        void SetHistoricalData(string symbol, BarCollection bars);
 
         double CalculateStandardDeviation(string symbol);
 

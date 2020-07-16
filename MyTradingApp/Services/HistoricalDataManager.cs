@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Domain;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
 using System;
@@ -74,19 +75,22 @@ namespace MyTradingApp.Services
             Messenger.Default.Send(new HistoricalDataCompletedMessage(symbol, PrepareEventData(symbol)));
         }
 
-        private ICollection<Bar> PrepareEventData(string symbol)
+        private BarCollection PrepareEventData(string symbol)
         {
-            var list = new List<Bar>();
+            var list = new BarCollection();
             var data = _historicalData[symbol];
 
-            list.AddRange(data.Select(x => new Bar
+            foreach (var item in data.Select(x => new Bar
             {
                 Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
                 Open = x.Open,
                 High = x.High,
                 Low = x.Low,
                 Close = x.Close
-            }).OrderByDescending(x => x.Date));
+            }).OrderByDescending(x => x.Date))
+            {
+                list.Add(item.Date, item);
+            }
 
             return list;
         }

@@ -12,7 +12,7 @@ namespace MyTradingApp.Services
         /// </summary>
         private const double MinBuffer = 0.05;
 
-        private readonly Dictionary<string, ICollection<Bar>> _bars = new Dictionary<string, ICollection<Bar>>();
+        private readonly Dictionary<string, BarCollection> _bars = new Dictionary<string, BarCollection>();
         private readonly Dictionary<string, double> _latestPrice = new Dictionary<string, double>();
         private double _riskPerTrade;        
 
@@ -49,7 +49,7 @@ namespace MyTradingApp.Services
             var mean = CalculateMovingAverage(symbol);
             for (var i = 0; i < _bars[symbol].Count; i++)
             {
-                var value = _bars[symbol].ElementAt(i).Close - mean;
+                var value = _bars[symbol].ElementAt(i).Value.Close - mean;
                 value *= value;
                 values.Add(value);
             }
@@ -82,7 +82,7 @@ namespace MyTradingApp.Services
             return Math.Round(price, 2);
         }
 
-        public void SetHistoricalData(string symbol, ICollection<Bar> bars)
+        public void SetHistoricalData(string symbol, BarCollection bars)
         {
             if (_bars.ContainsKey(symbol))
             {
@@ -109,12 +109,12 @@ namespace MyTradingApp.Services
 
         private double CalculateMovingAverage(string symbol)
         {
-            return _bars[symbol].Average(x => x.Close);
+            return _bars[symbol].Average(x => x.Value.Close);
         }
 
         private double CheckToAdjustBelowRecentLow(string symbol, double lowerBand)
         {
-            var highestPrice = _bars[symbol].Max(x => x.Close);
+            var highestPrice = _bars[symbol].Max(x => x.Value.Close);
             var ratio = (highestPrice - lowerBand) / 30;
             var maxDistanceAboveLow = Math.Round(ratio, 2);
             var buffer = maxDistanceAboveLow / 2;
@@ -126,7 +126,7 @@ namespace MyTradingApp.Services
             var result = lowerBand;
             for (var i = 0; i < _bars.Count; i++)
             {
-                var low = _bars[symbol].ElementAt(i).Low;
+                var low = _bars[symbol].ElementAt(i).Value.Low;
                 if (lowerBand >= low && lowerBand <= low + maxDistanceAboveLow)
                 {
                     result = low - buffer;

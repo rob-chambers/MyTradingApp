@@ -15,6 +15,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Domain", "MyTradingApp.Domain\MyTradingApp.Domain.csproj", "{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{39A46FAF-1603-44FF-A766-CFFB6A60127B}"
+	ProjectSection(SolutionItems) = preProject
+		Order and Position Flow.pdf = Order and Position Flow.pdf
+		UI Design.epgz = UI Design.epgz
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
