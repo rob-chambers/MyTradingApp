@@ -4,7 +4,7 @@ namespace MyTradingApp.Stops
 {
     public class AggressiveExitStrategy : ExitStrategy
     {
-        private const double TrailingPercentage = 10;
+        private const double TrailingPercentage = 20;
 
         public AggressiveExitStrategy() : base(new StopCollection
             {
@@ -19,9 +19,9 @@ namespace MyTradingApp.Stops
                 },
                 new ClosingStop
                 {
-                    InitiateAtGainPercentage = 13,
+                    InitiateAtGainPercentage = TrailingPercentage + 5,
                     InitialTrailPercentage = TrailingPercentage,
-                    ProfitTargetPercentage = 28
+                    ProfitTargetPercentage = 50
                 }
             })
         {

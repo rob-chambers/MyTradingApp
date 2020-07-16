@@ -1,6 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
 using IBApi;
-using MyTradingApp.Models;
 using MyTradingApp.TrailingStopStrategies;
 using Serilog;
 using System;

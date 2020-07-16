@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Stops", "MyTra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{6F22A39A-07E4-4829-A5ED-ABD506EAD099}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Domain", "MyTradingApp.Domain\MyTradingApp.Domain.csproj", "{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

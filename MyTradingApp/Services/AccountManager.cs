@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.ViewModels;
 using System.Collections.Generic;
 

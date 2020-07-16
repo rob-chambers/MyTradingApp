@@ -1,4 +1,5 @@
-﻿using MyTradingApp.Stops;
+﻿using MyTradingApp.Domain;
+using MyTradingApp.Stops;
 using MyTradingApp.Stops.StopTypes;
 using System;
 using Xunit;
@@ -25,7 +26,7 @@ namespace MyTradingApp.Tests.Stops
 
             manager.Position = new Position
             {
-                Direction = TradeDirection.Long,
+                Direction = Direction.Buy,
                 EntryPrice = 10,
                 ExitStrategy = new AggressiveExitStrategy()
             };
@@ -58,7 +59,7 @@ namespace MyTradingApp.Tests.Stops
 
             manager.Position = new Position
             {
-                Direction = TradeDirection.Short,
+                Direction = Direction.Sell,
                 EntryPrice = 10,
                 ExitStrategy = new AggressiveExitStrategy()
             };

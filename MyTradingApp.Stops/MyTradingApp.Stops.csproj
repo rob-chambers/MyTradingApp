@@ -42,8 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AggressiveExitStrategy.cs" />
-    <Compile Include="Bar.cs" />
-    <Compile Include="BarCollection.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="StopTypes\ClosingStop.cs" />
     <Compile Include="StopTypes\Stop.cs" />
@@ -53,9 +51,12 @@
     <Compile Include="ExitStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StopManager.cs" />
-    <Compile Include="StopType.cs" />
-    <Compile Include="TradeDirection.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MyTradingApp.Domain\MyTradingApp.Domain.csproj">
+      <Project>{beae3fc0-c8c8-4217-aa4c-84e5acb1e3f7}</Project>
+      <Name>MyTradingApp.Domain</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

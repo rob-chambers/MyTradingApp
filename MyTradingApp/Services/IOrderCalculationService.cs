@@ -1,4 +1,4 @@
-﻿using MyTradingApp.Models;
+﻿using MyTradingApp.Domain;
 using System.Collections.Generic;
 
 namespace MyTradingApp.Services

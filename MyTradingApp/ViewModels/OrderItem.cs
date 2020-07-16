@@ -1,7 +1,8 @@
 ﻿using GalaSoft.MvvmLight;
+using MyTradingApp.Domain;
 using System;
 
-namespace MyTradingApp.Models
+namespace MyTradingApp.ViewModels
 {
     internal class OrderItem : ViewModelBase
     {

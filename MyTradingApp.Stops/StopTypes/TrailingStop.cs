@@ -1,4 +1,6 @@
-﻿namespace MyTradingApp.Stops.StopTypes
+﻿using MyTradingApp.Domain;
+
+namespace MyTradingApp.Stops.StopTypes
 {
     public class TrailingStop : Stop
     {
@@ -8,7 +10,7 @@
 
         public override void CalculatePrice(Position position, double gainPercentage, double high, double low)
         {
-            if (position.Direction == TradeDirection.Long)
+            if (position.Direction == Direction.Buy)
             {
                 Price = high - high * Percentage / 100D;
             }

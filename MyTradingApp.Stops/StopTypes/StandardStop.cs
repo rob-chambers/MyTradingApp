@@ -1,4 +1,6 @@
-﻿namespace MyTradingApp.Stops.StopTypes
+﻿using MyTradingApp.Domain;
+
+namespace MyTradingApp.Stops.StopTypes
 {
     public class StandardStop : Stop
     {
@@ -16,7 +18,7 @@
                 return;
             }
 
-            if (position.Direction == TradeDirection.Long)
+            if (position.Direction == Direction.Buy)
             {
                 Price = high - high * InitialTrailPercentage / 100D;
             }

@@ -1,4 +1,5 @@
-﻿using MyTradingApp.Stops.StopTypes;
+﻿using MyTradingApp.Domain;
+using MyTradingApp.Stops.StopTypes;
 using System;
 using System.Linq;
 
@@ -17,17 +18,7 @@ namespace MyTradingApp.Stops
             get => _bars;
             private set
             {
-                _bars = value;
-
-                // Performance enhancement - don't bother getting low if we are going long as stops are based on the high only
-                if (Position.Direction == TradeDirection.Long)
-                {
-                    _high = GetHighestHigh(DateTime.MaxValue);
-                }
-                else
-                {
-                    _low = GetLowestLow(DateTime.MaxValue);
-                }                                
+                _bars = value;                             
             }
         }
         
@@ -62,12 +53,21 @@ namespace MyTradingApp.Stops
                 return null;
             }
 
+            if (Position.Direction == Direction.Buy)
+            {
+                _high = GetHighestHigh(date);
+            }
+            else
+            {
+                _low = GetLowestLow(date);
+            }
+
             //var currentPrice = Bars[date].Close;
             //var gain = (currentPrice - Position.EntryPrice) / Position.EntryPrice * 100;
             double gain;
-            if (Position.Direction == TradeDirection.Long)
+            if (Position.Direction == Direction.Buy)
             {
-                gain = (_high - Position.EntryPrice) / Position.EntryPrice * 100; ;
+                gain = (_high - Position.EntryPrice) / Position.EntryPrice * 100;
             }
             else
             {

@@ -1,4 +1,4 @@
-﻿using MyTradingApp.Models;
+﻿using MyTradingApp.Domain;
 
 namespace MyTradingApp.EventMessages
 {

@@ -1,4 +1,4 @@
-﻿namespace MyTradingApp.Stops
+﻿namespace MyTradingApp.Domain
 {
     public enum StopType : byte
     {

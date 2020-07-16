@@ -1,4 +1,5 @@
-﻿using MyTradingApp.EventMessages;
+﻿using MyTradingApp.Domain;
+using MyTradingApp.EventMessages;
 using System.Collections.Generic;
 
 namespace MyTradingApp.Models

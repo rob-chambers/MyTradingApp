@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
 using System;
 using System.Threading;
 

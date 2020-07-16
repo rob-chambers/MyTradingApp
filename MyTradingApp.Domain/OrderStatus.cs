@@ -1,4 +1,4 @@
-﻿namespace MyTradingApp.Models
+﻿namespace MyTradingApp.Domain
 {
     public enum OrderStatus
     {

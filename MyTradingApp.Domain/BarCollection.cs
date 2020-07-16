@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MyTradingApp.Stops
+namespace MyTradingApp.Domain
 {
     public sealed class BarCollection : Dictionary<DateTime, Bar>
     {

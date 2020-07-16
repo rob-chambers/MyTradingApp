@@ -1,5 +1,5 @@
-﻿using MyTradingApp.Models;
-using System;
+﻿using MyTradingApp.Domain;
+using MyTradingApp.ViewModels;
 
 namespace MyTradingApp.Tests.Orders
 {

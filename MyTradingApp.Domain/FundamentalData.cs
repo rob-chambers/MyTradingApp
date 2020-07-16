@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Xml.Linq;
 
-namespace MyTradingApp.Models
+namespace MyTradingApp.Domain
 {
     public class FundamentalData
     {

@@ -1,4 +1,4 @@
-﻿using MyTradingApp.Models;
+﻿using MyTradingApp.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,4 @@
-﻿namespace MyTradingApp.Models
+﻿namespace MyTradingApp.ViewModels
 {
     internal enum NotificationType
     {

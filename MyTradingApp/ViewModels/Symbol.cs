@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
+using MyTradingApp.Domain;
 
-namespace MyTradingApp.Models
+namespace MyTradingApp.ViewModels
 {
     internal class Symbol : ViewModelBase
     {
@@ -39,7 +40,7 @@ namespace MyTradingApp.Models
             {
                 Set(ref _companyDescription, value);
                 RaisePropertyChanged(nameof(HasCompanyDescription));
-            }            
+            }
         }
 
         public bool HasCompanyDescription => !string.IsNullOrEmpty(CompanyDescription);

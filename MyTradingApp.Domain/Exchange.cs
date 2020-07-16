@@ -1,6 +1,6 @@
-﻿namespace MyTradingApp.Models
+﻿namespace MyTradingApp.Domain
 {
-    internal enum Exchange
+    public enum Exchange
     {
         NYSE,
         Nasdaq,

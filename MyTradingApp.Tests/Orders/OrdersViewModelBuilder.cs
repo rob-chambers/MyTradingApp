@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
 using MyTradingApp.Repositories;

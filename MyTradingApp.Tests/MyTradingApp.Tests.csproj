@@ -108,6 +108,10 @@
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MyTradingApp.Domain\MyTradingApp.Domain.csproj">
+      <Project>{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}</Project>
+      <Name>MyTradingApp.Domain</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
       <Project>{39a7bd19-edd7-43df-aece-e70b827969ee}</Project>
       <Name>MyTradingApp.Stops</Name>

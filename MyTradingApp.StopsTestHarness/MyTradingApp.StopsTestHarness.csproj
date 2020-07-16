@@ -126,6 +126,9 @@
     <Content Include="INO.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="APPS.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -136,6 +139,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MyTradingApp.Domain\MyTradingApp.Domain.csproj">
+      <Project>{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}</Project>
+      <Name>MyTradingApp.Domain</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
       <Project>{39A7BD19-EDD7-43DF-AECE-E70B827969EE}</Project>
       <Name>MyTradingApp.Stops</Name>

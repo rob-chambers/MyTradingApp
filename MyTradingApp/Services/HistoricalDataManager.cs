@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Bar = MyTradingApp.Domain.Bar;
 
 namespace MyTradingApp.Services
 {
@@ -73,12 +74,12 @@ namespace MyTradingApp.Services
             Messenger.Default.Send(new HistoricalDataCompletedMessage(symbol, PrepareEventData(symbol)));
         }
 
-        private ICollection<Models.Bar> PrepareEventData(string symbol)
+        private ICollection<Bar> PrepareEventData(string symbol)
         {
-            var list = new List<Models.Bar>();
+            var list = new List<Bar>();
             var data = _historicalData[symbol];
 
-            list.AddRange(data.Select(x => new Models.Bar
+            list.AddRange(data.Select(x => new Bar
             {
                 Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
                 Open = x.Open,

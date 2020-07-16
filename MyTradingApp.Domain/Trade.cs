@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MyTradingApp.Models
+namespace MyTradingApp.Domain
 {
     public class Trade
     {

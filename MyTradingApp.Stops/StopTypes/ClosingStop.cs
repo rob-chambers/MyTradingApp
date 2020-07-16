@@ -1,4 +1,6 @@
-﻿namespace MyTradingApp.Stops.StopTypes
+﻿using MyTradingApp.Domain;
+
+namespace MyTradingApp.Stops.StopTypes
 {
     public class ClosingStop : Stop
     {
@@ -14,7 +16,7 @@
         {
             var trailPercentage = CalcClosingStopValue(gainPercentage);
 
-            if (position.Direction == TradeDirection.Long)
+            if (position.Direction == Direction.Buy)
             {
                 Price = high - high * trailPercentage / 100D;
             }
@@ -28,6 +30,11 @@
         {
             var multiplier = (InitialTrailPercentage - FinalTrailPercentage) / (ProfitTargetPercentage - InitiateAtGainPercentage.Value);
             var value = InitialTrailPercentage - (gain - InitiateAtGainPercentage.Value) * multiplier;
+
+            if (value <= FinalTrailPercentage)
+            {
+                value = FinalTrailPercentage;
+            }
 
             return value;
         }

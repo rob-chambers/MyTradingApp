@@ -1,4 +1,4 @@
-﻿using MyTradingApp.Models;
+﻿using MyTradingApp.Domain;
 using MyTradingApp.Persistence;
 
 namespace MyTradingApp.Repositories

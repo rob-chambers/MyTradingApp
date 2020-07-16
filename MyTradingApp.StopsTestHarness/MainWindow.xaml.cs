@@ -2,6 +2,7 @@
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
+using MyTradingApp.Domain;
 using MyTradingApp.Stops;
 using MyTradingApp.Stops.StopTypes;
 using System;
@@ -18,8 +19,6 @@ namespace MyTradingApp.StopsTestHarness
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const double EntryPrice = 12.50;
-
         private readonly StopManager _stopManager = new StopManager();
         private readonly List<double> _stops = new List<double>();
         private readonly Dictionary<string, BarCollection> _prices = new Dictionary<string, BarCollection>();
@@ -38,9 +37,9 @@ namespace MyTradingApp.StopsTestHarness
 
         public List<string> Stocks { get; set; } = new List<string>();
 
-        public List<TradeDirection> Directions { get; set; } = new List<TradeDirection>();
+        public List<Direction> Directions { get; set; } = new List<Direction>();
 
-        public TradeDirection SelectedDirection
+        public Direction SelectedDirection
         {
             get => _stopManager.Position.Direction;
             set
@@ -70,6 +69,7 @@ namespace MyTradingApp.StopsTestHarness
             }
 
             _stopManager.SetHistoricalBars(_prices[SelectedStock]);
+            _stopManager.Position.EntryPrice = _prices[SelectedStock].First().Value.Close;
             DrawChart();
         }
 
@@ -210,13 +210,13 @@ namespace MyTradingApp.StopsTestHarness
             Stocks.Add("ECOM");
             Stocks.Add("PLUG");
             Stocks.Add("INO");
+            Stocks.Add("APPS");
 
             InitDirectionsList();
 
             var position = new Position
             {
-                Direction = TradeDirection.Long,
-                EntryPrice = EntryPrice,
+                Direction = Direction.Buy,
                 ExitStrategy = new AggressiveExitStrategy()
             };
 
@@ -226,7 +226,7 @@ namespace MyTradingApp.StopsTestHarness
 
         private void InitDirectionsList()
         {
-            foreach (TradeDirection item in Enum.GetValues(typeof(TradeDirection)))
+            foreach (Direction item in Enum.GetValues(typeof(Direction)))
             {
                 Directions.Add(item);
             }

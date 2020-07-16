@@ -2,9 +2,9 @@
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.IconPacks;
+using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.Services;
 using Serilog;
 using System;
