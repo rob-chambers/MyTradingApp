@@ -354,7 +354,7 @@ namespace MyTradingApp.ViewModels
             if (status != OrderStatus.Filled)
             {
                 return;
-            }
+            }            
 
             // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
             OrdersViewModel.Orders.Remove(item);

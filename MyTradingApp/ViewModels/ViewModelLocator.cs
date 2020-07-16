@@ -2,6 +2,8 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using IBApi;
+using MyTradingApp.Persistence;
+using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 
 namespace MyTradingApp.ViewModels
@@ -42,6 +44,8 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IPositionManager, PositionManager>();
             SimpleIoc.Default.Register<IOrderCalculationService, OrderCalculationService>();
             SimpleIoc.Default.Register<IExchangeRateService, ExchangeRateService>();
+            SimpleIoc.Default.Register<ITradeRepository, TradeRepository>();
+            SimpleIoc.Default.Register<IApplicationContext, ApplicationContext>();
         }        
 
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();

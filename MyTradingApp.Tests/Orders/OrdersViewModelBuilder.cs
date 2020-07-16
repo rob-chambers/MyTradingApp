@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Models;
+using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
@@ -17,6 +18,7 @@ namespace MyTradingApp.Tests.Orders
         private IMarketDataManager _marketDataManager;
         private IOrderManager _orderManager;
         private AccountSummaryCompletedMessage _accountSummaryCompletedMessage;
+        private ITradeRepository _tradeRepository;
 
         public IOrderCalculationService OrderCalculationService
         {
@@ -50,6 +52,14 @@ namespace MyTradingApp.Tests.Orders
             }
         }
 
+        public ITradeRepository TradeRepository
+        {
+            get
+            {
+                return _tradeRepository ?? (_tradeRepository = Substitute.For<ITradeRepository>());
+            }
+        }
+
         public OrdersViewModelBuilder AddSingleOrder(string symbol, bool found)
         {
             var builder = new OrderBuilder();
@@ -69,7 +79,7 @@ namespace MyTradingApp.Tests.Orders
         public OrdersViewModel Build()
         {
             var historicalDataManager = Substitute.For<IHistoricalDataManager>();            
-            var vm = new OrdersViewModel(ContractManager, MarketDataManager, historicalDataManager, OrderCalculationService, OrderManager);
+            var vm = new OrdersViewModel(ContractManager, MarketDataManager, historicalDataManager, OrderCalculationService, OrderManager, TradeRepository);
 
             foreach (var item in _orderItems)
             {

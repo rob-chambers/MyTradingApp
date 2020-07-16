@@ -1,6 +1,6 @@
 ﻿namespace MyTradingApp.Models
 {
-    public enum Direction
+    public enum Direction : byte
     {
         Buy,
         Sell

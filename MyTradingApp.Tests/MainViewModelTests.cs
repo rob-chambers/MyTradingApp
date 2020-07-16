@@ -3,6 +3,7 @@ using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
+using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
@@ -22,6 +23,7 @@ namespace MyTradingApp.Tests
         private IHistoricalDataManager _historicalDataManager;
         private IOrderCalculationService _orderCalculationService;
         private IExchangeRateService _exchangeRateService;
+        private ITradeRepository _tradeRepository;
         private OrdersViewModel _ordersViewModel;
         private StatusBarViewModel _statusBarViewModel;
         private SettingsViewModel _settingsViewModel;
@@ -38,8 +40,10 @@ namespace MyTradingApp.Tests
             _historicalDataManager = Substitute.For<IHistoricalDataManager>();
             _orderCalculationService = Substitute.For<IOrderCalculationService>();
             _exchangeRateService = Substitute.For<IExchangeRateService>();
+            _tradeRepository = Substitute.For<ITradeRepository>();
             var orderManager = Substitute.For<IOrderManager>();
-            _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager);
+
+            _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager, _tradeRepository);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
             var positionsManager = Substitute.For<IPositionManager>();

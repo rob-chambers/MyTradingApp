@@ -58,12 +58,12 @@ namespace MyTradingApp.Services
             return Math.Sqrt(avg);
         }
 
-        public double GetCalculatedQuantity(string symbol, Direction direction)
+        public ushort GetCalculatedQuantity(string symbol, Direction direction)
         {
             var diff = Math.Abs(GetEntryPrice(symbol, direction) - CalculateInitialStopLoss(symbol, direction));
             var size = _riskPerTrade / diff;
 
-            return Math.Round(size, 0);
+            return Convert.ToUInt16(Math.Round(size, 0));
         }
 
         public double GetEntryPrice(string symbol, Direction direction)

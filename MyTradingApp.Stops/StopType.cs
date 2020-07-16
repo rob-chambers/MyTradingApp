@@ -1,6 +1,6 @@
 ﻿namespace MyTradingApp.Stops
 {
-    public enum StopType
+    public enum StopType : byte
     {
         Standard,
         Trailing,

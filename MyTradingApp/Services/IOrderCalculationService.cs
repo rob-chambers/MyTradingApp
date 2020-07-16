@@ -15,7 +15,7 @@ namespace MyTradingApp.Services
 
         double CalculateInitialStopLoss(string symbol, Direction direction);
 
-        double GetCalculatedQuantity(string symbol, Direction direction);
+        ushort GetCalculatedQuantity(string symbol, Direction direction);
 
         double GetEntryPrice(string symbol, Direction direction);
 

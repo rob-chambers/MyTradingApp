@@ -332,7 +332,7 @@ namespace MyTradingApp.Tests
             // Arrange            
             const double Stop = 12;
             const double Entry = 10;
-            const double Quantity = 100;
+            const ushort Quantity = 100;
 
             var builder = new OrdersViewModelBuilder();
             builder.OrderCalculationService.CanCalculate(DefaultSymbol).Returns(true);
@@ -362,7 +362,7 @@ namespace MyTradingApp.Tests
             const string AccountId = "U12345678";
             const double Entry = 10;
             const double Stop = 9.14;
-            const double Qty = 123;
+            const ushort Qty = 123;
 
             var builder = new OrdersViewModelBuilder();
             builder.OrderManager
@@ -447,7 +447,7 @@ namespace MyTradingApp.Tests
             const double LatestPrice = 10;
             const double EntryPrice = 10.12;
             const double StopPrice = 9;
-            const int Quantity = 567;
+            const ushort Quantity = 567;
 
             var builder = new OrdersViewModelBuilder();
             var calculationService = builder.OrderCalculationService;
@@ -493,6 +493,31 @@ namespace MyTradingApp.Tests
             // Assert
             var order = vm.Orders.Single();
             Assert.Equal(OrderStatus.Submitted, order.Status);
+        }
+
+        [Fact]
+        public void TradeRecordedToDatabaseWhenFilled()
+        {
+            // Arrange
+            const double FillPrice = 10.03;
+            const ushort Quantity = 123;
+
+            var builder = new OrdersViewModelBuilder().AddSingleOrder(DefaultSymbol, true);
+            var vm = builder.Build();
+            vm.Orders[0].Quantity = Quantity;
+
+            // Act
+            var message = new OrderStatusMessage(0, OrderStatus.Filled.ToString(), 0, 0, FillPrice, 0, 0, 0, 0, null, 0);
+            Messenger.Default.Send(new OrderStatusChangedMessage(DefaultSymbol, message));
+
+            // Assert
+            builder.TradeRepository.Received().AddTrade(Arg.Is<Trade>(x =>
+                x.Direction == Direction.Buy &&
+                x.Quantity == Quantity &&
+                x.EntryPrice == FillPrice &&
+                x.ExitPrice == null &&
+                x.ExitTimeStamp == null &&
+                x.ProfitLoss == null));
         }
     }
 }

@@ -7,7 +7,7 @@ namespace MyTradingApp.Models
     {
         private Symbol _symbol = new Symbol();
         private Direction _direction;
-        private double _quantity;
+        private ushort _quantity;
         private double _entryPrice;
         private double _initialStopLossPrice;
         private OrderStatus _status;
@@ -40,7 +40,7 @@ namespace MyTradingApp.Models
             set => Set(ref _direction, value);
         }
 
-        public double Quantity
+        public ushort Quantity
         {
             get => _quantity;
             set

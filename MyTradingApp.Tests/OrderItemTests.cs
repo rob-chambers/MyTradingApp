@@ -10,7 +10,7 @@ namespace MyTradingApp.Tests
         [InlineData(1000, 5)]
         [InlineData(5000, 10)]
         [InlineData(10000, 10)]
-        public void IntervalSetCorrectly(int quantity, int interval)
+        public void IntervalSetCorrectly(ushort quantity, int interval)
         {
             var item = new OrderItem
             {

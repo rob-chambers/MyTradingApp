@@ -5,9 +5,9 @@ using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Models;
+using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
-using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
@@ -27,7 +27,7 @@ namespace MyTradingApp.ViewModels
         private readonly IMarketDataManager _marketDataManager;
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IOrderManager _orderManager;
-
+        private readonly ITradeRepository _tradeRepository;
         private string _accountId;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
@@ -47,7 +47,8 @@ namespace MyTradingApp.ViewModels
             IMarketDataManager marketDataManager,
             IHistoricalDataManager historicalDataManager,
             IOrderCalculationService orderCalculationService,
-            IOrderManager orderManager)
+            IOrderManager orderManager,
+            ITradeRepository tradeRepository)
         {
             Orders = new ObservableCollectionNoReset<OrderItem>();
             Orders.CollectionChanged += OnOrdersCollectionChanged;
@@ -57,7 +58,8 @@ namespace MyTradingApp.ViewModels
             _marketDataManager = marketDataManager;
             _historicalDataManager = historicalDataManager;
             _orderCalculationService = orderCalculationService;
-            _orderManager = orderManager;            
+            _orderManager = orderManager;
+            _tradeRepository = tradeRepository;
             Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
             Messenger.Default.Register<HistoricalDataCompletedMessage>(this, OnHistoricalDataManagerDataCompleted);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
@@ -472,8 +474,21 @@ namespace MyTradingApp.ViewModels
             UpdateOrderStatus(order, message.Message.Status);
             if (order.Status == OrderStatus.Filled)
             {
+                AddTrade(order, message.Message.AvgFillPrice);
                 SubmitStopOrder(order, message.Message);
             }
+        }
+
+        private void AddTrade(OrderItem order, double fillPrice)
+        {
+            _tradeRepository.AddTrade(new Trade
+            {
+                Symbol = order.Symbol.Code,
+                Direction = order.Direction,
+                EntryPrice = fillPrice,
+                EntryTimeStamp = DateTime.UtcNow,
+                Quantity = order.Quantity
+            });
         }
 
         private void SubmitStopOrder(OrderItem order, OrderStatusMessage message)
