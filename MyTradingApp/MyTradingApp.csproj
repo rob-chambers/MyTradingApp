@@ -205,6 +205,8 @@
     <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
     <Compile Include="EventMessages\FundamentalDataMessage.cs" />
     <Compile Include="EventMessages\HistoricalDataCompletedEventArgs.cs" />
+    <Compile Include="EventMessages\BarPriceMessage.cs" />
+    <Compile Include="Services\PositionsStopService.cs" />
     <Compile Include="ViewModels\NotificationType.cs" />
     <Compile Include="ViewModels\OrderItem.cs" />
     <Compile Include="Persistence\ApplicationContext.cs" />

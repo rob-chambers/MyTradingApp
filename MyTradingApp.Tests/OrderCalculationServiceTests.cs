@@ -9,9 +9,12 @@ namespace MyTradingApp.Tests
     public class OrderCalculationServiceTests
     {
         [Fact]
-        public void StandardDeviationCalulctatedCorrectly()
+        public void StandardDeviationCalculatedCorrectly()
         {
             var service = new OrderCalculationService();
+
+            var barCollection = new BarCollection();
+
             var bars = new List<Bar>
             {
                 new Bar { Close = 9 },
@@ -35,7 +38,14 @@ namespace MyTradingApp.Tests
                 new Bar { Close = 9 },
                 new Bar { Close = 4 },
             };
-            service.SetHistoricalData("MSFT", bars);
+
+            var r = new Random();
+            foreach (var item in bars)
+            {
+                barCollection.Add(DateTime.Now.AddMilliseconds(r.NextDouble() * 10000000), item);
+            }
+
+            service.SetHistoricalData("MSFT", barCollection);
             var sd = Math.Round(service.CalculateStandardDeviation("MSFT"), 3);
 
             Assert.Equal(2.983, sd);

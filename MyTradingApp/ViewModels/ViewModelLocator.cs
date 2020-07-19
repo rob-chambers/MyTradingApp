@@ -46,7 +46,7 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IExchangeRateService, ExchangeRateService>();
             SimpleIoc.Default.Register<ITradeRepository, TradeRepository>();
             SimpleIoc.Default.Register<IApplicationContext, ApplicationContext>();
-        }        
+        }
 
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
 

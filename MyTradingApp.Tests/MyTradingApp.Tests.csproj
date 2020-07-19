@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FundamentalDataTests.cs" />
+    <Compile Include="MarketDataManagerTests.cs" />
     <Compile Include="OrderCalculationServiceTests.cs" />
     <Compile Include="OrderItemTests.cs" />
     <Compile Include="MainViewModelTests.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Stops\AggressiveExitStrategyTests.cs" />
     <Compile Include="Stops\StopManagerTests.cs" />
     <Compile Include="Stops\StopTests.cs" />
+    <Compile Include="TestMarketDataManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

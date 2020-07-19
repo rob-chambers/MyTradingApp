@@ -3,7 +3,6 @@ using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
 using ObjectDumper;
@@ -31,13 +30,13 @@ namespace MyTradingApp.ViewModels
             IPositionManager positionManager,
             IContractManager contractManager)
         {            
-            Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
             Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
             Messenger.Default.Register<OpenOrdersMessage>(this, HandleOpenOrdersMessage);
             Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
+            Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
 
             _marketDataManager = marketDataManager;
             _accountManager = accountManager;
@@ -118,7 +117,9 @@ namespace MyTradingApp.ViewModels
                     Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
                     //                    ModifyContractForRequest(item.Contract);                    
                     var newContract = MapContractToNewContract(item.Contract);
-                    _marketDataManager.RequestStreamingPrice(newContract);
+                    _marketDataManager.RequestStreamingPrice(newContract, true);
+
+                    // positionsStopService.Manage(item);
                 }
             }
 
@@ -126,14 +127,9 @@ namespace MyTradingApp.ViewModels
             _positionManager.RequestOpenOrders();
         }
 
-        private void HandleTickPriceMessage(TickPrice tickPrice)
+        private void HandleBarPriceMessage(BarPriceMessage message)
         {
-            if (tickPrice.Type != TickType.LAST)
-            {
-                return;
-            }
-
-            var positions = Positions.Where(p => p.Symbol.Code == tickPrice.Symbol && p.IsOpen).ToList();
+            var positions = Positions.Where(p => p.Symbol.Code == message.Symbol && p.IsOpen).ToList();
             if (!positions.Any())
             {
                 return;
@@ -141,11 +137,13 @@ namespace MyTradingApp.ViewModels
 
             if (positions.Count > 1)
             {
-                Log.Warning("More than one position found for {0}", tickPrice.Symbol);
+                Log.Warning("More than one position found for {0}", message.Symbol);
             }
 
             var position = positions.First();
-            position.Symbol.LatestPrice = tickPrice.Price;
+
+            Log.Debug(message.Bar.DumpToString("{0} Bar"), message.Symbol);
+            position.Symbol.LatestPrice = message.Bar.Close;
             position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
 
             var value = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
@@ -207,13 +205,19 @@ namespace MyTradingApp.ViewModels
         private void HandleContractDetailsEventMessage(ContractDetailsEventMessage message)
         {
             var symbol = message.Details.Contract.Symbol;
-            var position = Positions.SingleOrDefault(p => p.Symbol.Code == symbol);
-            if (position == null)
+            var positions = Positions.Where(p => p.Symbol.Code == symbol).ToList();
+            if (!positions.Any())
             {
                 // This is OK - this event may have been raised for orders
                 return;
             }
 
+            if (positions.Count > 1)
+            {
+                Log.Warning("Found more than one position for {0} - taking the first", symbol);
+            }
+
+            var position = positions.First();
             position.Symbol.Name = message.Details.LongName;
             position.ContractDetails = message.Details;
         }

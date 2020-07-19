@@ -37,3 +37,6 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("9.76.01.0")]
 [assembly: AssemblyFileVersion("9.76.01.0")]
+
+[assembly:InternalsVisibleTo("MyTradingApp")]
+[assembly: InternalsVisibleTo("MyTradingApp.Tests")]

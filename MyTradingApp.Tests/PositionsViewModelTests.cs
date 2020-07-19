@@ -86,7 +86,10 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
+            Messenger.Default.Send(new BarPriceMessage(Symbol, new Domain.Bar
+            {
+                Close = Price
+            }));
 
             // Assert
             Assert.Equal(Price, position.Symbol.LatestPrice);
@@ -108,7 +111,10 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
+            Messenger.Default.Send(new BarPriceMessage(Symbol, new Domain.Bar
+            {
+                Close = Price
+            }));
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
@@ -131,7 +137,10 @@ namespace MyTradingApp.Tests
             vm.Positions.Add(position);
 
             // Act
-            Messenger.Default.Send(new TickPrice(Symbol, TickType.LAST, Price));
+            Messenger.Default.Send(new BarPriceMessage(Symbol, new Domain.Bar
+            {
+                Close = Price
+            }));
 
             // Assert
             Assert.Equal(100, position.ProfitLoss);
@@ -185,15 +194,15 @@ namespace MyTradingApp.Tests
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
                 x.PrimaryExch == Exchange.NYSE.ToString() &&
-                x.SecType == BrokerConstants.Stock));
+                x.SecType == BrokerConstants.Stock), true);
             
             manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == position2.Symbol.Code &&
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
                 x.PrimaryExch == BrokerConstants.Routers.Island &&
-                x.SecType == BrokerConstants.Stock));
+                x.SecType == BrokerConstants.Stock), true);
 
-            manager.DidNotReceive().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code));
+            manager.DidNotReceive().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code), true);
         }
 
         [Fact]
