@@ -10,6 +10,7 @@ using MyTradingApp.ViewModels;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -169,9 +170,7 @@ namespace MyTradingApp.Tests
                     NetLiquidation = netLiquidationValue
                 }));
 
-            _exchangeRateService
-                .When(x => x.RequestExchangeRate())
-                .Do(x => Messenger.Default.Send(new ExchangeRateMessage(exchangeRate)));
+            _exchangeRateService.GetExchangeRateAsync().Returns(Task.FromResult(exchangeRate));
         }
 
         [Fact]

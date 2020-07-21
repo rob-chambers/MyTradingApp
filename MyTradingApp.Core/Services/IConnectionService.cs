@@ -1,5 +1,6 @@
 ﻿using MyTradingApp.Domain;
 using System;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
@@ -12,5 +13,9 @@ namespace MyTradingApp.Services
         void Connect();
 
         void Disconnect();
+
+        Task ConnectAsync();
+
+        Task DisconnectAsync();
     }
 }

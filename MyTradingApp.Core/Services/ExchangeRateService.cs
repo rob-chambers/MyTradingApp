@@ -1,51 +1,48 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.Constants;
+using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using IBApi;
-using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public class ExchangeRateService : IExchangeRateService
     {
-        private const string ExchangeRatePair = "AUD";
-        private readonly IMarketDataManager _marketDataManager;
+        private const double DefaultExchangeRate = 0.7;
+        private readonly ITwsObjectFactory _twsObjectFactory;
+        private TickPriceEventArgs _tickPriceEventArgs;
 
-        public ExchangeRateService(IMarketDataManager marketDataManager)
+        public ExchangeRateService(ITwsObjectFactory twsObjectFactory)
         {
-            _marketDataManager = marketDataManager;
-            Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
+            _twsObjectFactory = twsObjectFactory;
         }
 
-        public void RequestExchangeRate()
+        public async Task<double> GetExchangeRateAsync()
         {
-            var contract = GetExchangeRateContract();
-            _marketDataManager.RequestLatestPrice(contract);
-        }
+            var twsController = _twsObjectFactory.TwsControllerBase;
 
-        private Contract GetExchangeRateContract()
-        {
+            // Initialize the contract
             var contract = new Contract
             {
-                Symbol = ExchangeRatePair,
-                SecType = BrokerConstants.Cash,
-                Exchange = BrokerConstants.Routers.IdealPro,
-                Currency = BrokerConstants.UsCurrency,
-                LastTradeDateOrContractMonth = string.Empty,
-                Multiplier = string.Empty,
-                LocalSymbol = string.Empty
+                SecType = TwsContractSecType.Cash,
+                Symbol = "AUD",
+                Exchange = TwsExchange.Idealpro,
+                Currency = TwsCurrency.Usd
             };
 
-            return contract;
+            // Call the API
+            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
+            var marketDataResult = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
+            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent -= OnTickPriceEvent;
+
+            return _tickPriceEventArgs == null
+                ? DefaultExchangeRate
+                : _tickPriceEventArgs.Price;
         }
 
-        private void HandleTickPriceMessage(TickPrice tickPrice)
+        private void OnTickPriceEvent(object sender, TickPriceEventArgs args)
         {
-            // Was it a request for the exchange rate?
-            if (tickPrice.Symbol == ExchangeRatePair)
-            {
-                Messenger.Default.Send(new ExchangeRateMessage(tickPrice.Price));
-            }
+            _tickPriceEventArgs = args;
         }
     }
 }

@@ -6,12 +6,14 @@ using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using MyTradingApp.Services;
+using MyTradingApp.Utils;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
@@ -90,7 +92,6 @@ namespace MyTradingApp.ViewModels
             _iBClient.AccountSummary += accountManager.HandleAccountSummary;
             _iBClient.AccountSummaryEnd += HandleAccountSummaryEndMessage;
 
-            Messenger.Default.Register<ExchangeRateMessage>(this, HandleExchangeRateMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
             Messenger.Default.Register<DetailsPanelClosedMessage>(this, HandleDetailsPanelClosed);
@@ -111,7 +112,7 @@ namespace MyTradingApp.ViewModels
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
 
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new RelayCommand(new Action(ToggleConnection)));
+        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(ToggleConnectionAsync));
 
 #endregion
 
@@ -182,11 +183,12 @@ namespace MyTradingApp.ViewModels
 
         #region Methods
 
-        public void AppIsClosing()
+        public async void AppIsClosing()
         {
             if (_connectionService.IsConnected)
             {
                 _connectionService.Disconnect();
+                await _connectionService.DisconnectAsync();                
             }
 
             _settingsViewModel.LastRiskMultiplier = RiskMultiplier;
@@ -270,9 +272,6 @@ namespace MyTradingApp.ViewModels
             if (isConnected)
             {
                 GetAccountSummary();
-
-                // Send a request to get the exchange rate
-                _exchangeRateService.RequestExchangeRate();
             }
 
             SetConnectionStatus();
@@ -314,13 +313,6 @@ namespace MyTradingApp.ViewModels
 
             var error = new ErrorMessage(e.Id, e.ErrorCode, e.ErrorMessage);
             HandleErrorMessage(error);
-        }
-
-        private void HandleExchangeRateMessage(ExchangeRateMessage message)
-        {
-            // TODO: Store last known exchange rate
-            _exchangeRate = message.Price;
-            CalculateRiskPerTrade();
         }
 
         private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -411,18 +403,23 @@ namespace MyTradingApp.ViewModels
             ErrorText = string.Join(string.Empty, _linesInMessageBox);
         }
 
-        private void ToggleConnection()
+        private async Task ToggleConnectionAsync()
         {
             try
             {                
                 if (_connectionService.IsConnected)
                 {
                     _connectionService.Disconnect();
+                    await _connectionService.DisconnectAsync();
                 }
                 else
                 {
                     _connectionService.Connect();
-                }                
+                    await _connectionService.ConnectAsync();
+                    var rate = await _exchangeRateService.GetExchangeRateAsync();
+                    _exchangeRate = rate;
+                    CalculateRiskPerTrade();
+                }
             }
             catch (Exception ex)
             {

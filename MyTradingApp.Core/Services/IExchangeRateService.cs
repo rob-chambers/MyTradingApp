@@ -1,7 +1,9 @@
-﻿namespace MyTradingApp.Services
+﻿using System.Threading.Tasks;
+
+namespace MyTradingApp.Services
 {
     public interface IExchangeRateService
     {
-        void RequestExchangeRate();
+        Task<double> GetExchangeRateAsync();
     }
 }

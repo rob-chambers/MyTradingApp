@@ -1,9 +1,12 @@
-﻿using GalaSoft.MvvmLight;
+﻿using AutoFinance.Broker.InteractiveBrokers;
+using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using GalaSoft.MvvmLight;
 using IBApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyTradingApp.Core.Repositories;
+using MyTradingApp.Domain;
 using MyTradingApp.Persistence;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
@@ -75,6 +78,9 @@ namespace MyTradingApp.Desktop
             services.AddScoped<IExchangeRateService, ExchangeRateService>();
             services.AddScoped<ITradeRepository, TradeRepository>();
             services.AddScoped<ISettingsRepository, SettingsRepository>();
+
+            // Treat requests sent via the new TwsObjectFactory as if they are from a different client
+            services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId + 1));
         }
     }
 }

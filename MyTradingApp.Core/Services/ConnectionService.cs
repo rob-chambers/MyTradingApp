@@ -1,9 +1,11 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
@@ -11,14 +13,16 @@ namespace MyTradingApp.Services
     {
         private readonly IBClient _ibClient;
         private readonly EReaderSignal _signal;
+        private readonly ITwsObjectFactory _twsObjectFactory;
         private bool _isConnected;
 
         public event EventHandler<ClientError> ClientError;
 
-        public ConnectionService(IBClient iBClient, EReaderSignal signal)
+        public ConnectionService(IBClient iBClient, EReaderSignal signal, ITwsObjectFactory twsObjectFactory)
         {
             _ibClient = iBClient;
             _signal = signal;
+            _twsObjectFactory = twsObjectFactory;
             _ibClient.ConnectionClosed += OnClientConnectionClosed;
             _ibClient.Error += OnClientError;
         }
@@ -87,10 +91,21 @@ namespace MyTradingApp.Services
             }
         }
 
+        public async Task ConnectAsync()
+        {
+            var twsController = _twsObjectFactory.TwsControllerBase;
+            await twsController.EnsureConnectedAsync();
+        }
+
         public void Disconnect()
         {
             Messenger.Default.Send(new ConnectionChangingMessage(false));
             _ibClient.ClientSocket.eDisconnect();
+        }
+
+        public async Task DisconnectAsync()
+        {
+            await _twsObjectFactory.TwsController.DisconnectAsync();
         }
     }
 }
