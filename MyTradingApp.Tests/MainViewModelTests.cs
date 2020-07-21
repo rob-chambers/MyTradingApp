@@ -1,14 +1,15 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core.Repositories;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -25,11 +26,12 @@ namespace MyTradingApp.Tests
         private IOrderCalculationService _orderCalculationService;
         private IExchangeRateService _exchangeRateService;
         private ITradeRepository _tradeRepository;
+        private ISettingsRepository _settingsRepository;
         private OrdersViewModel _ordersViewModel;
         private StatusBarViewModel _statusBarViewModel;
         private SettingsViewModel _settingsViewModel;
 
-        private MainViewModel GetVm()
+        private MainViewModel GetVm(ISettingsRepository settingsRepository = null)
         {
             MainViewModel.IsUnitTesting = true;
             _ibClient = new IBClient(new EReaderMonitorSignal());
@@ -42,6 +44,29 @@ namespace MyTradingApp.Tests
             _orderCalculationService = Substitute.For<IOrderCalculationService>();
             _exchangeRateService = Substitute.For<IExchangeRateService>();
             _tradeRepository = Substitute.For<ITradeRepository>();
+
+            if (settingsRepository == null)
+            {
+                _settingsRepository = Substitute.For<ISettingsRepository>();
+                _settingsRepository.GetAll().Returns(new List<Setting>
+                {
+                    new Setting
+                    {
+                        Key = "RiskPercentOfAccountSize",
+                        Value = "1"
+                    },
+                    new Setting
+                    {
+                        Key = "LastRiskMultiplier",
+                        Value = "1"
+                    }
+                });
+            }
+            else
+            {
+                _settingsRepository = settingsRepository;
+            }
+
             var orderManager = Substitute.For<IOrderManager>();
 
             _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager, _tradeRepository);
@@ -51,7 +76,7 @@ namespace MyTradingApp.Tests
             var contractManager = Substitute.For<IContractManager>();
             var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager, positionsManager, contractManager);
             var detailsViewModel = new DetailsViewModel();
-            _settingsViewModel = new SettingsViewModel();
+            _settingsViewModel = new SettingsViewModel(_settingsRepository);
 
             return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel, _settingsViewModel);
         }
@@ -202,15 +227,28 @@ namespace MyTradingApp.Tests
         [Fact]
         public void ModifyingRiskPercentageOfAccountSizeModifiesRiskPerTrade()
         {
-            var vm = GetVm();
+            var settingsRepository = Substitute.For<ISettingsRepository>();
+            settingsRepository.GetAll().Returns(new List<Setting>
+                {
+                    new Setting
+                    {
+                        Key = "RiskPercentOfAccountSize",
+                        Value = "0.1"                        
+                    },
+                    new Setting
+                    {
+                        Key = "LastRiskMultiplier",
+                        Value = "1"
+                    }
+                });
+
+            var vm = GetVm(settingsRepository);
             ConnectionTest(10000, 1);
             vm.ConnectCommand.Execute(null);
-
-            _settingsViewModel.RiskPercentOfAccountSize = 1;
             Assert.Equal(10, vm.RiskPerTrade);
 
             _settingsViewModel.RiskPercentOfAccountSize = 2;
-            Assert.Equal(20, vm.RiskPerTrade);
+            Assert.Equal(200, vm.RiskPerTrade);
         }
     }
 }

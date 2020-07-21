@@ -1,12 +1,12 @@
-﻿using CommonServiceLocator;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using IBApi;
 using MyTradingApp.Persistence;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
+using MyTradingApp.ViewModels;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp
 {
     internal class ViewModelLocator
     {
@@ -15,8 +15,6 @@ namespace MyTradingApp.ViewModels
         /// </summary>
         public ViewModelLocator()
         {
-            ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
-
             if (ViewModelBase.IsInDesignModeStatic)
             {
                 // Create design time view services and models
@@ -48,16 +46,16 @@ namespace MyTradingApp.ViewModels
             SimpleIoc.Default.Register<IApplicationContext, ApplicationContext>();
         }
 
-        public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
+        public MainViewModel Main => SimpleIoc.Default.GetInstance<MainViewModel>();
 
-        public SettingsViewModel Settings => ServiceLocator.Current.GetInstance<SettingsViewModel>();
+        public SettingsViewModel Settings => SimpleIoc.Default.GetInstance<SettingsViewModel>();
 
-        public OrdersViewModel Orders => ServiceLocator.Current.GetInstance<OrdersViewModel>();
+        public OrdersViewModel Orders => SimpleIoc.Default.GetInstance<OrdersViewModel>();
 
-        public StatusBarViewModel StatusBar => ServiceLocator.Current.GetInstance<StatusBarViewModel>();
+        public StatusBarViewModel StatusBar => SimpleIoc.Default.GetInstance<StatusBarViewModel>();
 
-        public PositionsViewModel Positions => ServiceLocator.Current.GetInstance<PositionsViewModel>();
+        public PositionsViewModel Positions => SimpleIoc.Default.GetInstance<PositionsViewModel>();
 
-        public DetailsViewModel Details => ServiceLocator.Current.GetInstance<DetailsViewModel>();
+        public DetailsViewModel Details => SimpleIoc.Default.GetInstance<DetailsViewModel>();
     }
 }

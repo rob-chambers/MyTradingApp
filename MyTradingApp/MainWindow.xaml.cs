@@ -1,6 +1,5 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.Controls;
-using MyTradingApp.Models;
 using MyTradingApp.ViewModels;
 using Serilog;
 using System;

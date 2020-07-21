@@ -7,19 +7,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp", "MyTradingAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAPI", "MyTradingApp\client\CSharpAPI.csproj", "{8EDE0744-96C2-40B0-A8DC-37DF79370203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Tests", "MyTradingApp.Tests\MyTradingApp.Tests.csproj", "{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Stops", "MyTradingApp.Stops\MyTradingApp.Stops.csproj", "{39A7BD19-EDD7-43DF-AECE-E70B827969EE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{6F22A39A-07E4-4829-A5ED-ABD506EAD099}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Domain", "MyTradingApp.Domain\MyTradingApp.Domain.csproj", "{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{39A46FAF-1603-44FF-A766-CFFB6A60127B}"
 	ProjectSection(SolutionItems) = preProject
+		ef-core-commands.txt = ef-core-commands.txt
 		Order and Position Flow.pdf = Order and Position Flow.pdf
 		UI Design.epgz = UI Design.epgz
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Core", "MyTradingApp.Core\MyTradingApp.Core.csproj", "{59FE62D8-C26A-44E4-BB57-3538F0263106}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Domain", "MyTradingApp.Domain\MyTradingApp.Domain.csproj", "{65FC7A4D-0DF8-4119-8614-9C31167AF51F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InteractiveBrokers.TwsClient", "InteractiveBrokers.TwsClient\InteractiveBrokers.TwsClient.csproj", "{35BADE00-1E3B-4606-9403-FA7027F37D8E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Stops", "MyTradingApp.Stops\MyTradingApp.Stops.csproj", "{80071E3F-AF24-4C6F-B20C-BB6977F77842}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Desktop", "MyTradingApp.Desktop\MyTradingApp.Desktop.csproj", "{4BF5FED3-2B70-43AD-8486-D6EA9CDFB445}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Tests", "MyTradingApp.Tests\MyTradingApp.Tests.csproj", "{1FAA192C-3863-4E49-9BCD-B6CCD66F197A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,22 +42,34 @@ Global
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.Build.0 = Release|Any CPU
-		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19EAEF6D-E354-40BF-9B52-86D5101A0A5D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{39A7BD19-EDD7-43DF-AECE-E70B827969EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65FC7A4D-0DF8-4119-8614-9C31167AF51F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65FC7A4D-0DF8-4119-8614-9C31167AF51F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65FC7A4D-0DF8-4119-8614-9C31167AF51F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65FC7A4D-0DF8-4119-8614-9C31167AF51F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35BADE00-1E3B-4606-9403-FA7027F37D8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35BADE00-1E3B-4606-9403-FA7027F37D8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35BADE00-1E3B-4606-9403-FA7027F37D8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35BADE00-1E3B-4606-9403-FA7027F37D8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80071E3F-AF24-4C6F-B20C-BB6977F77842}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80071E3F-AF24-4C6F-B20C-BB6977F77842}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80071E3F-AF24-4C6F-B20C-BB6977F77842}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80071E3F-AF24-4C6F-B20C-BB6977F77842}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BF5FED3-2B70-43AD-8486-D6EA9CDFB445}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BF5FED3-2B70-43AD-8486-D6EA9CDFB445}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BF5FED3-2B70-43AD-8486-D6EA9CDFB445}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BF5FED3-2B70-43AD-8486-D6EA9CDFB445}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FAA192C-3863-4E49-9BCD-B6CCD66F197A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FAA192C-3863-4E49-9BCD-B6CCD66F197A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FAA192C-3863-4E49-9BCD-B6CCD66F197A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FAA192C-3863-4E49-9BCD-B6CCD66F197A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

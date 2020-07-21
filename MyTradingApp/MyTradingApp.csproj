@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -46,12 +45,6 @@
     </Reference>
     <Reference Include="ControlzEx, Version=4.0.0.0, Culture=neutral, PublicKeyToken=69f1c32f803d307e, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.4.3.1\lib\net462\ControlzEx.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.4.1.0, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
@@ -131,6 +124,63 @@
     <Reference Include="MahApps.Metro.IconPacks.Zondicons, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0c0d510f9915137a, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.IconPacks.4.3.0\lib\net47\MahApps.Metro.IconPacks.Zondicons.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.1\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.0\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.SqlClient, Version=1.0.19269.1, Culture=neutral, PublicKeyToken=23ec7fc2d6eaa4a5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.SqlClient.1.0.19269.1\lib\net46\Microsoft.Data.SqlClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.3.1.6\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.Abstractions.3.1.6\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Relational, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.Relational.3.1.6\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.SqlServer, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.EntityFrameworkCore.SqlServer.3.1.6\lib\netstandard2.0\Microsoft.EntityFrameworkCore.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Abstractions.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Memory.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.Abstractions.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Binder, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Configuration.Binder.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Configuration.Binder.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.3.1.6\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.1.6\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Options.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=3.1.6.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.3.1.6\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Identity.Client, Version=3.0.8.0, Culture=neutral, PublicKeyToken=0a613f4dd989e8ae, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Identity.Client.3.0.8\lib\net45\Microsoft.Identity.Client.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
     </Reference>
@@ -147,11 +197,44 @@
       <HintPath>..\packages\Serilog.Sinks.File.4.1.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.4.7.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Common, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.Common.4.3.0\lib\net451\System.Data.Common.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.7.1\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -192,70 +275,8 @@
     <Compile Include="Converters\NotBooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\SelectedItemToContentConverter.cs" />
     <Compile Include="Converters\IsDetailsPanelVisibleToWidthConverter.cs" />
-    <Compile Include="EventMessages\ConnectionChangedMessage.cs" />
-    <Compile Include="EventMessages\ConnectionChangingMessage.cs" />
-    <Compile Include="EventMessages\ContractDetailsEventMessage.cs" />
-    <Compile Include="EventMessages\DetailsPanelClosedMessage.cs" />
-    <Compile Include="EventMessages\ExchangeRateMessage.cs" />
-    <Compile Include="EventMessages\ExistingPositionsMessage.cs" />
-    <Compile Include="EventMessages\OpenOrdersMessage.cs" />
-    <Compile Include="EventMessages\OrderRemovedMessage.cs" />
-    <Compile Include="EventMessages\StreamingChangedMessage.cs" />
-    <Compile Include="EventMessages\SymbolMessage.cs" />
-    <Compile Include="EventMessages\OrderStatusChangedMessage.cs" />
-    <Compile Include="EventMessages\FundamentalDataMessage.cs" />
-    <Compile Include="EventMessages\HistoricalDataCompletedEventArgs.cs" />
-    <Compile Include="EventMessages\BarPriceMessage.cs" />
-    <Compile Include="Services\PositionsStopService.cs" />
-    <Compile Include="ViewModels\NotificationType.cs" />
-    <Compile Include="ViewModels\OrderItem.cs" />
-    <Compile Include="Persistence\ApplicationContext.cs" />
-    <Compile Include="Persistence\IApplicationContext.cs" />
-    <Compile Include="Repositories\EfRepository.cs" />
-    <Compile Include="Repositories\ITradeRepository.cs" />
-    <Compile Include="Repositories\TradeRepository.cs" />
-    <Compile Include="Services\AccountManager.cs" />
-    <Compile Include="EventMessages\AccountSummaryCompletedMessage.cs" />
-    <Compile Include="Services\ContractManager.cs" />
-    <Compile Include="Services\ExchangeRateService.cs" />
-    <Compile Include="Services\HistoricalDataManager.cs" />
-    <Compile Include="Services\IAccountManager.cs" />
-    <Compile Include="Services\IConnectionService.cs" />
-    <Compile Include="Services\IContractManager.cs" />
-    <Compile Include="Services\IHistoricalDataManager.cs" />
-    <Compile Include="Services\IMarketDataManager.cs" />
-    <Compile Include="Services\IOrderCalculationService.cs" />
-    <Compile Include="Services\IPositionManager.cs" />
-    <Compile Include="Services\MarketDataManager.cs" />
-    <Compile Include="Services\OrderCalculationService.cs" />
-    <Compile Include="Services\OrderManager.cs" />
-    <Compile Include="Services\IOrderManager.cs" />
-    <Compile Include="EventMessages\TickPriceMessage.cs" />
-    <Compile Include="Services\IExchangeRateService.cs" />
-    <Compile Include="Services\PositionManager.cs" />
-    <Compile Include="TrailingStopStrategies\DayTradingProfitLockerStrategy.cs" />
-    <Compile Include="TrailingStopStrategies\ProfitLockerStrategy.cs" />
-    <Compile Include="TrailingStopStrategies\TrailingStopStrategy.cs" />
-    <Compile Include="Utils\AsyncCommand.cs" />
-    <Compile Include="Utils\IAsyncCommand.cs" />
-    <Compile Include="Utils\IbClientRequestHelper.cs" />
-    <Compile Include="Utils\IErrorHandler.cs" />
-    <Compile Include="Utils\ObservableCollectionNoReset.cs" />
-    <Compile Include="Utils\Rounding.cs" />
-    <Compile Include="Utils\TaskExtensions.cs" />
-    <Compile Include="Utils\VisualTreeUtility.cs" />
-    <Compile Include="ViewModels\AboutViewModel.cs" />
-    <Compile Include="ViewModels\DetailsViewModel.cs" />
-    <Compile Include="ViewModels\HomeViewModel.cs" />
-    <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\MenuItemViewModel.cs" />
-    <Compile Include="ViewModels\OrdersViewModel.cs" />
-    <Compile Include="ViewModels\PositionItem.cs" />
-    <Compile Include="ViewModels\PositionsViewModel.cs" />
-    <Compile Include="ViewModels\SettingsViewModel.cs" />
-    <Compile Include="ViewModels\StatusBarViewModel.cs" />
-    <Compile Include="ViewModels\Symbol.cs" />
     <Compile Include="ViewModels\ViewModelLocator.cs" />
+    <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="Views\AboutView.xaml.cs">
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
@@ -282,9 +303,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Services\ConnectionService.cs" />
-    <Compile Include="Services\DataManager.cs" />
-    <Compile Include="IBClient.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -315,70 +333,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Messages\AccountDownloadEndMessage.cs" />
-    <Compile Include="Messages\AccountSummaryEndMessage.cs" />
-    <Compile Include="Messages\AccountSummaryMessage.cs" />
-    <Compile Include="Messages\AccountUpdateMultiEndMessage.cs" />
-    <Compile Include="Messages\AccountUpdateMultiMessage.cs" />
-    <Compile Include="Messages\AccountValueMessage.cs" />
-    <Compile Include="Messages\AdvisorDataMessage.cs" />
-    <Compile Include="Messages\BondContractDetailsMessage.cs" />
-    <Compile Include="Messages\CommissionMessage.cs" />
-    <Compile Include="Messages\CompletedOrderMessage.cs" />
-    <Compile Include="Messages\ConnectionStatusMessage.cs" />
-    <Compile Include="Messages\ContractDetailsEndMessage.cs" />
-    <Compile Include="Messages\ContractDetailsMessage.cs" />
-    <Compile Include="Messages\DailyPnLMessage.cs" />
-    <Compile Include="Messages\DailyPnLSingleMessage.cs" />
-    <Compile Include="Messages\DeepBookMessage.cs" />
-    <Compile Include="Messages\ErrorMessage.cs" />
-    <Compile Include="Messages\ExecutionMessage.cs" />
-    <Compile Include="Messages\FamilyCodesMessage.cs" />
-    <Compile Include="Messages\FundamentalsMessage.cs" />
-    <Compile Include="Messages\HeadTimestampMessage.cs" />
-    <Compile Include="Messages\HistogramDataMessage.cs" />
-    <Compile Include="Messages\HistoricalDataEndMessage.cs" />
-    <Compile Include="Messages\HistoricalDataMessage.cs" />
-    <Compile Include="Messages\HistoricalNewsEndMessage.cs" />
-    <Compile Include="Messages\HistoricalNewsMessage.cs" />
-    <Compile Include="Messages\HistoricalTickBidAskEndMessage.cs" />
-    <Compile Include="Messages\HistoricalTickBidAskMessage.cs" />
-    <Compile Include="Messages\HistoricalTickEndMessage.cs" />
-    <Compile Include="Messages\HistoricalTickLastEndMessage.cs" />
-    <Compile Include="Messages\HistoricalTickLastMessage.cs" />
-    <Compile Include="Messages\HistoricalTickMessage.cs" />
-    <Compile Include="Messages\ManagedAccountsMessage.cs" />
-    <Compile Include="Messages\MarketDataMessage.cs" />
-    <Compile Include="Messages\MarketDataTypeMessage.cs" />
-    <Compile Include="Messages\MarketRuleMessage.cs" />
-    <Compile Include="Messages\MktDepthExchangesMessage.cs" />
-    <Compile Include="Messages\NewsArticleMessage.cs" />
-    <Compile Include="Messages\NewsProvidersMessage.cs" />
-    <Compile Include="Messages\OpenOrderMessage.cs" />
-    <Compile Include="Messages\OrderBoundMessage.cs" />
-    <Compile Include="Messages\OrderMessage.cs" />
-    <Compile Include="Messages\OrderStatusMessage.cs" />
-    <Compile Include="Messages\PositionMessage.cs" />
-    <Compile Include="Messages\PositionMultiEndMessage.cs" />
-    <Compile Include="Messages\PositionMultiMessage.cs" />
-    <Compile Include="Messages\RealTimeBarMessage.cs" />
-    <Compile Include="Messages\ScannerEndMessage.cs" />
-    <Compile Include="Messages\ScannerMessage.cs" />
-    <Compile Include="Messages\ScannerParametersMessage.cs" />
-    <Compile Include="Messages\SecurityDefinitionOptionParameterEndMessage.cs" />
-    <Compile Include="Messages\SecurityDefinitionOptionParameterMessage.cs" />
-    <Compile Include="Messages\SoftDollarTiersMessage.cs" />
-    <Compile Include="Messages\SymbolSamplesMessage.cs" />
-    <Compile Include="Messages\TickByTickAllLastMessage.cs" />
-    <Compile Include="Messages\TickByTickBidAskMessage.cs" />
-    <Compile Include="Messages\TickByTickMidPointMessage.cs" />
-    <Compile Include="Messages\TickNewsMessage.cs" />
-    <Compile Include="Messages\TickOptionMessage.cs" />
-    <Compile Include="Messages\TickPriceMessage.cs" />
-    <Compile Include="Messages\TickReqParamsMessage.cs" />
-    <Compile Include="Messages\TickSizeMessage.cs" />
-    <Compile Include="Messages\UpdateAccountTimeMessage.cs" />
-    <Compile Include="Messages\UpdatePortfolioMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -406,17 +360,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MyTradingApp.Domain\MyTradingApp.Domain.csproj">
-      <Project>{beae3fc0-c8c8-4217-aa4c-84e5acb1e3f7}</Project>
-      <Name>MyTradingApp.Domain</Name>
+    <ProjectReference Include="..\InteractiveBrokers.TwsClient\InteractiveBrokers.TwsClient.csproj">
+      <Project>{35BADE00-1E3B-4606-9403-FA7027F37D8E}</Project>
+      <Name>InteractiveBrokers.TwsClient</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
-      <Project>{39A7BD19-EDD7-43DF-AECE-E70B827969EE}</Project>
-      <Name>MyTradingApp.Stops</Name>
-    </ProjectReference>
-    <ProjectReference Include="client\CSharpAPI.csproj">
-      <Project>{8ede0744-96c2-40b0-a8dc-37df79370203}</Project>
-      <Name>CSharpAPI</Name>
+    <ProjectReference Include="..\MyTradingApp.Core\MyTradingApp.Core.csproj">
+      <Project>{59FE62D8-C26A-44E4-BB57-3538F0263106}</Project>
+      <Name>MyTradingApp.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -426,12 +376,11 @@
     <Folder Include="Models\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets" Condition="Exists('..\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.props'))" />
-    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets'))" />
   </Target>
-  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" />
 </Project>

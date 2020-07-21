@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ReportSnapshot Major="1" Minor="0" Revision="1">
+	<CoIDs>
+		<CoID Type="RepNo">ADC09</CoID>
+		<CoID Type="CompanyName">Interactive Brokers Group, Inc.</CoID>
+		<CoID Type="IRSNo">300390693</CoID>
+		<CoID Type="CIKNo">0001381197</CoID>
+	</CoIDs>
+	<Issues>
+		<Issue ID="1" Type="C" Desc="Common Stock" Order="1">
+			<IssueID Type="Name">Ordinary Shares Class A</IssueID>
+			<IssueID Type="Ticker">IBKR</IssueID>
+			<IssueID Type="RIC">IBKR.O</IssueID>
+			<IssueID Type="DisplayRIC">IBKR.OQ</IssueID>
+			<IssueID Type="InstrumentPI">29436820</IssueID>
+			<IssueID Type="QuotePI">33159697</IssueID>
+			<Exchange Code="NASD" Country="USA">NASDAQ</Exchange>
+		</Issue>
+		<Issue ID="2" Type="C" Desc="Common Stock" Order="2">
+			<IssueID Type="Name">Fully Paid Ord. Shrs Cls. B</IssueID>
+			<IssueID Type="InstrumentPI">46031727</IssueID>
+			<Exchange Code="NA" Country="">Not Available</Exchange>
+		</Issue>
+	</Issues>
+	<CoGeneralInfo>
+		<CoStatus Code="1">Active</CoStatus>
+		<CoType Code="EQU">Equity Issue</CoType>
+		<LastModified>2020-06-02</LastModified>
+		<LatestAvailableAnnual>2019-12-31</LatestAvailableAnnual>
+		<LatestAvailableInterim>2020-03-31</LatestAvailableInterim>
+		<Employees LastUpdated="2020-03-31">1702</Employees>
+		<SharesOut Date="2020-05-07" TotalFloat="73469624.0">76753105.0</SharesOut>
+		<CommonShareholders Date="2019-12-31">17</CommonShareholders>
+		<ReportingCurrency Code="USD">U.S. Dollars</ReportingCurrency>
+		<MostRecentExchange Date="2020-06-17">1.0</MostRecentExchange>
+	</CoGeneralInfo>
+	<TextInfo>
+		<Text Type="Business Summary" lastModified="2017-03-13T05:04:36">Interactive Brokers Group, Inc. (IBG, Inc.) is a holding company. The Company is an automated global electronic broker and market maker specializing in routing orders, and executing and processing trades in securities, futures, foreign exchange instruments, bonds and mutual funds on over 120 electronic exchanges and market centers around the world and offering custody, prime brokerage, securities and margin lending services to customers. It operates in two segments: electronic brokerage and market making. It conducts its electronic brokerage business through its Interactive Brokers (IB) subsidiaries. It conducts its market making business through its Timber Hill (TH) subsidiaries. In the United States, it conducts its business from Greenwich, Connecticut and Chicago, Illinois. Outside the United States, it conducts business in Canada, England, Switzerland, Liechtenstein, China (Hong Kong and Shanghai), India, Australia and Japan.</Text>
+		<Text Type="Financial Summary" lastModified="2020-06-02T12:44:56">BRIEF: For the three months ended 31 March 2020, Interactive Brokers Group, Inc. revenues increased 11% to $694M. Net income decreased 6% to $46M. Revenues reflect International segment increase of 64% to $159M. Net income was offset by Gains (losses) from currency diversifica increase from $19M to $49M (expense). Dividend per share remained flat at $0.10. Basic Earnings per Share excluding Extraordinary Items decreased from $0.65 to $0.60.</Text>
+	</TextInfo>
+	<contactInfo lastUpdated="2020-06-02T12:45:10">
+		<streetAddress line="1">1 Pickwick Plz</streetAddress>
+		<streetAddress line="2"></streetAddress>
+		<streetAddress line="3"></streetAddress>
+		<city>GREENWICH</city>
+		<state-region>CT</state-region>
+		<postalCode>06830-5551</postalCode>
+		<country code="USA">United States</country>
+		<contactName></contactName>
+		<contactTitle></contactTitle>
+		<phone>
+			<phone type="mainphone">
+				<countryPhoneCode>1</countryPhoneCode>
+				<city-areacode>203</city-areacode>
+				<number>6185800</number>
+			</phone>
+			<phone type="mainfax">
+				<countryPhoneCode>1</countryPhoneCode>
+				<city-areacode>302</city-areacode>
+				<number>6365454</number>
+			</phone>
+		</phone>
+	</contactInfo>
+	<webLinks lastUpdated="2018-07-11T09:46:22"><webSite mainCategory="Home Page">https://www.interactivebrokers.com/</webSite><eMail mainCategory="Company Contact/E-mail"> investorservices@theocc.com</eMail></webLinks>
+	<peerInfo lastUpdated="2020-06-02T12:45:10">
+		<IndustryInfo>
+			<Industry type="TRBC" order="1" reported="0" code="5510201012" mnem="">Brokerage Services</Industry>
+			<Industry type="NAICS" order="1" reported="0" code="52312" mnem="">Securities Brokerage</Industry>
+			<Industry type="NAICS" order="2" reported="0" code="551112" mnem="">Offices of  Other Holding Companies</Industry>
+			<Industry type="SIC" order="0" reported="1" code="6211" mnem="">Security Brokers And Dealers</Industry>
+			<Industry type="SIC" order="1" reported="0" code="6211" mnem="">Security Brokers And Dealers</Industry>
+			<Industry type="SIC" order="2" reported="0" code="6719" mnem="">Holding Companies, Nec</Industry>
+		</IndustryInfo>
+		<Indexconstituet>S&amp;P 400 Mid Cap</Indexconstituet>
+	</peerInfo>
+	<officers>
+		<officer rank="1" since="11/2006">
+			<firstName>Thomas</firstName>
+			<mI></mI>
+			<lastName>Peterffy</lastName>
+			<age>75 </age>
+			<title startYear="2019" startMonth="10" startDay="01" iD1="CHM" abbr1="Chmn." iD2="DRC" abbr2="Dir.">Chairman of the Board</title>
+		</officer>
+		<officer rank="2" since="11/2006">
+			<firstName>Milan</firstName>
+			<mI></mI>
+			<lastName>Galik</lastName>
+			<age>53 </age>
+			<title startYear="2019" startMonth="10" startDay="01" iD1="PRE" abbr1="Pres." iD2="CEO" abbr2="CEO">President, Chief Executive Officer, Director</title>
+		</officer>
+		<officer rank="3" since="11/2006">
+			<firstName>Earl</firstName>
+			<mI>H.</mI>
+			<lastName>Nemser</lastName>
+			<age>73 </age>
+			<title startYear="2016" startMonth="11" startDay="" iD1="VCH" abbr1="Vice Chmn." iD2="IND" abbr2="Ind. Dir.">Independent Vice Chairman of the Board</title>
+		</officer>
+		<officer rank="4" since="11/2006">
+			<firstName>Paul</firstName>
+			<mI>J.</mI>
+			<lastName>Brody</lastName>
+			<age>59 </age>
+			<title startYear="2006" startMonth="11" startDay="" iD1="CFO" abbr1="CFO" iD2="TRS" abbr2="Treas.">Chief Financial Officer, Treasurer, Secretary, Director</title>
+		</officer>
+		<officer rank="5" since="NA">
+			<firstName>Thomas</firstName>
+			<mI>A.</mI>
+			<lastName>Frank</lastName>
+			<age>64 </age>
+			<title startYear="NA" startMonth="" startDay="" iD1="EVP" abbr1="Exec. VP" iD2="CIO" abbr2="CIO">Executive Vice President, Chief Information Officer</title>
+		</officer>
+	</officers>
+	<Ratios PriceCurrency="USD" ReportingCurrency="USD" ExchangeRate="1.00000" LatestAvailableDate="2020-03-31">
+		<Group ID="Price and Volume">
+			<Ratio FieldName="NPRICE" Type="N">42.32000</Ratio>
+			<Ratio FieldName="NHIG" Type="N">58.50000</Ratio>
+			<Ratio FieldName="NLOW" Type="N">33.70000</Ratio>
+			<Ratio FieldName="PDATE" Type="D">2020-06-18T00:00:00</Ratio>
+			<Ratio FieldName="VOL10DAVG" Type="N">0.77325</Ratio>
+			<Ratio FieldName="EV" Type="N">14493.73000</Ratio>
+		</Group>
+		<Group ID="Income Statement">
+			<Ratio FieldName="MKTCAP" Type="N">17580.73000</Ratio>
+			<Ratio FieldName="TTMREV" Type="N">2671.00000</Ratio>
+			<Ratio FieldName="TTMEBITD" Type="N">1326.00000</Ratio>
+			<Ratio FieldName="TTMNIAC" Type="N">158.00000</Ratio>
+		</Group>
+		<Group ID="Per share data">
+			<Ratio FieldName="TTMEPSXCLX" Type="N">2.04496</Ratio>
+			<Ratio FieldName="TTMREVPS" Type="N">34.58989</Ratio>
+			<Ratio FieldName="QBVPS" Type="N">19.36097</Ratio>
+			<Ratio FieldName="QCSHPS" Type="N">40.40266</Ratio>
+			<Ratio FieldName="TTMCFSHR" Type="N">14.10273</Ratio>
+			<Ratio FieldName="TTMDIVSHR" Type="N">0.40000</Ratio>
+		</Group>
+		<Group ID="Other Ratios">
+			<Ratio FieldName="TTMGROSMGN" Type="N">77.76114</Ratio>
+			<Ratio FieldName="TTMROEPCT" Type="N">11.24155</Ratio>
+			<Ratio FieldName="TTMPR2REV" Type="N">6.58208</Ratio>
+			<Ratio FieldName="PEEXCLXOR" Type="N">20.69478</Ratio>
+			<Ratio FieldName="PRICE2BK" Type="N">2.18584</Ratio>
+			<Ratio FieldName="Employees" Type="N">1702</Ratio>
+		</Group>
+	</Ratios>
+	<ForecastData ConsensusType="Mean" CurFiscalYear="2020" CurFiscalYearEndMonth="12" CurInterimEndCalYear="2020" CurInterimEndMonth="6" EarningsBasis="PRX">
+		<Ratio FieldName="ConsRecom" Type="N">
+			<Value PeriodType="CURR">2.6</Value>
+		</Ratio>
+		<Ratio FieldName="TargetPrice" Type="N">
+			<Value PeriodType="CURR">40.10000</Value>
+		</Ratio>
+		<Ratio FieldName="ProjLTGrowthRate" Type="N">
+			<Value PeriodType="CURR">-99999.99000</Value>
+		</Ratio>
+		<Ratio FieldName="ProjPE" Type="N">
+			<Value PeriodType="CURR">24.27580</Value>
+		</Ratio>
+		<Ratio FieldName="ProjSales" Type="N">
+			<Value PeriodType="CURR">1799.27460</Value>
+		</Ratio>
+		<Ratio FieldName="ProjSalesQ" Type="N">
+			<Value PeriodType="CURR">427.38340</Value>
+		</Ratio>
+		<Ratio FieldName="ProjEPS" Type="N">
+			<Value PeriodType="CURR">1.74330</Value>
+		</Ratio>
+		<Ratio FieldName="ProjEPSQ" Type="N">
+			<Value PeriodType="CURR">0.28400</Value>
+		</Ratio>
+		<Ratio FieldName="ProjProfit" Type="N">
+			<Value PeriodType="CURR">139.23330</Value>
+		</Ratio>
+		<Ratio FieldName="ProjDPS" Type="N">
+			<Value PeriodType="CURR">0.40000</Value>
+		</Ratio>
+	</ForecastData>
+</ReportSnapshot>

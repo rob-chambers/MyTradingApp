@@ -140,11 +140,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MyTradingApp.Domain\MyTradingApp.Domain.csproj">
-      <Project>{BEAE3FC0-C8C8-4217-AA4C-84E5ACB1E3F7}</Project>
+      <Project>{65fc7a4d-0df8-4119-8614-9c31167af51f}</Project>
       <Name>MyTradingApp.Domain</Name>
     </ProjectReference>
     <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
-      <Project>{39A7BD19-EDD7-43DF-AECE-E70B827969EE}</Project>
+      <Project>{80071e3f-af24-4c6f-b20c-bb6977f77842}</Project>
       <Name>MyTradingApp.Stops</Name>
     </ProjectReference>
   </ItemGroup>

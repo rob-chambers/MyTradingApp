@@ -1,0 +1,2 @@
+dotnet ef migrations add --startup-project MyTradingApp.Desktop --project MyTradingApp.Core
+dotnet ef database update --startup-project MyTradingApp.Desktop --project MyTradingApp.Core

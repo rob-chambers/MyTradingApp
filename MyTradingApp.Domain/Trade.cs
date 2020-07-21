@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyTradingApp.Domain
@@ -14,8 +13,7 @@ namespace MyTradingApp.Domain
 
         public int Id { get; set; }
 
-        [Column(TypeName = "varchar")]
-        [MaxLength(6)]
+        [Column(TypeName = "varchar(6)")]
         public string Symbol { get; set; }
 
         public DateTime EntryTimeStamp { get; set; }
