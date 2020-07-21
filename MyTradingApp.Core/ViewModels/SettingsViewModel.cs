@@ -15,7 +15,11 @@ namespace MyTradingApp.ViewModels
         public SettingsViewModel(ISettingsRepository settingsRepository)
         {
             _settingsRepository = settingsRepository;
-            LoadSettings();            
+
+            if (!IsInDesignModeStatic)
+            {
+                LoadSettings();
+            }
         }
 
         /*

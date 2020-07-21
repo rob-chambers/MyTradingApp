@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace MyTradingApp.Converters
+namespace MyTradingApp.Desktop.Converters
 {
     internal class IsDetailsPanelVisibleToWidthConverter : IValueConverter
     {

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace MyTradingApp.Converters
+namespace MyTradingApp.Desktop.Converters
 {
     internal class ColourConverter : IValueConverter
     {

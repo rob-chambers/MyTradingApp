@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Desktop.Utils
 {
     internal static class VisualTreeUtility
     {

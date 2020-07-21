@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace MyTradingApp.Converters
+namespace MyTradingApp.Desktop.Converters
 {
     internal class NotBooleanToVisibilityConverter : IValueConverter
     {

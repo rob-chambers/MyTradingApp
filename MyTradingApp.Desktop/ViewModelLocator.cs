@@ -1,36 +1,80 @@
 ﻿using GalaSoft.MvvmLight;
+using IBApi;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyTradingApp.Core.Repositories;
+using MyTradingApp.Persistence;
+using MyTradingApp.Repositories;
+using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
+using Serilog;
+using System.Windows;
 
 namespace MyTradingApp.Desktop
 {
     internal class ViewModelLocator
     {
+        private readonly ServiceProvider _serviceProvider;
+
         /// <summary>
         /// Initializes a new instance of the ViewModelLocator class.
         /// </summary>
         public ViewModelLocator()
         {
-            if (ViewModelBase.IsInDesignModeStatic)
-            {
-                // Create design time view services and models
-            }
-            else
-            {
-                // Create run time view services and models
-            }
+            Log.Debug("In ViewModelLocator ctor");
+
+            var isDesignTime = ViewModelBase.IsInDesignModeStatic;
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection, isDesignTime);
+
+            _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 
-        public MainViewModel Main => ServiceProviderFactory.ServiceProvider.GetService<MainViewModel>();
+        public MainViewModel Main => _serviceProvider.GetService<MainViewModel>();
 
-        public SettingsViewModel Settings => ServiceProviderFactory.ServiceProvider.GetService<SettingsViewModel>();
+        public SettingsViewModel Settings => _serviceProvider.GetService<SettingsViewModel>();
 
-        public OrdersViewModel Orders => ServiceProviderFactory.ServiceProvider.GetService<OrdersViewModel>();
+        public OrdersViewModel Orders => _serviceProvider.GetService<OrdersViewModel>();
 
-        public StatusBarViewModel StatusBar => ServiceProviderFactory.ServiceProvider.GetService<StatusBarViewModel>();
+        public StatusBarViewModel StatusBar => _serviceProvider.GetService<StatusBarViewModel>();
 
-        public PositionsViewModel Positions => ServiceProviderFactory.ServiceProvider.GetService<PositionsViewModel>();
+        public PositionsViewModel Positions => _serviceProvider.GetService<PositionsViewModel>();
 
-        public DetailsViewModel Details => ServiceProviderFactory.ServiceProvider.GetService<DetailsViewModel>();
+        public DetailsViewModel Details => _serviceProvider.GetService<DetailsViewModel>();
+
+        private static void ConfigureServices(IServiceCollection services, bool isDesignTime)
+        {
+            Log.Debug("Configuring services");
+
+            if (!isDesignTime)
+            {
+                var app = (App)Application.Current;
+                var connectionString = ConfigurationExtensions.GetConnectionString(app.Configuration, "DefaultConnection");
+                services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
+                services.AddScoped<IApplicationContext, ApplicationContext>();
+            }
+
+            services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
+            services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
+            services.AddScoped<MainViewModel>();
+            services.AddScoped<OrdersViewModel>();
+            services.AddScoped<PositionsViewModel>();
+            services.AddScoped<SettingsViewModel>();
+            services.AddScoped<StatusBarViewModel>();
+            services.AddScoped<DetailsViewModel>();
+            services.AddScoped<IBClient>();
+            services.AddScoped<IAccountManager, AccountManager>();
+            services.AddScoped<IConnectionService, ConnectionService>();
+            services.AddScoped<IOrderManager, OrderManager>();
+            services.AddScoped<IContractManager, ContractManager>();
+            services.AddScoped<IMarketDataManager, MarketDataManager>();
+            services.AddScoped<IHistoricalDataManager, HistoricalDataManager>();
+            services.AddScoped<IPositionManager, PositionManager>();
+            services.AddScoped<IOrderCalculationService, OrderCalculationService>();
+            services.AddScoped<IExchangeRateService, ExchangeRateService>();
+            services.AddScoped<ITradeRepository, TradeRepository>();
+            services.AddScoped<ISettingsRepository, SettingsRepository>();
+        }
     }
 }

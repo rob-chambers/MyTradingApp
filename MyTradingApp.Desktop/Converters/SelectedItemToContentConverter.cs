@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
 
-namespace MyTradingApp.Converters
+namespace MyTradingApp.Desktop.Converters
 {
     public class SelectedItemToContentConverter : IMultiValueConverter
     {

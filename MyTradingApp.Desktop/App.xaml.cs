@@ -1,12 +1,4 @@
-﻿using IBApi;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using MyTradingApp.Core.Repositories;
-using MyTradingApp.Persistence;
-using MyTradingApp.Repositories;
-using MyTradingApp.Services;
-using MyTradingApp.ViewModels;
+﻿using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.IO;
@@ -20,7 +12,7 @@ namespace MyTradingApp.Desktop
     /// </summary>
     public partial class App : Application
     {
-        public static IConfiguration Configuration { get; private set; }
+        public IConfiguration Configuration { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -34,12 +26,7 @@ namespace MyTradingApp.Desktop
             Log.Debug("Building config");
             Configuration = builder.Build();
 
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-
-            ServiceProviderFactory.ServiceProvider = serviceCollection.BuildServiceProvider();
-
-            var mainWindow = ServiceProviderFactory.ServiceProvider.GetRequiredService<MainWindow>();
+            var mainWindow = new MainWindow();
             mainWindow.Show();
         }
 
@@ -52,37 +39,6 @@ namespace MyTradingApp.Desktop
                 .CreateLogger();
 
             Log.Information("Starting up");
-        }
-
-        private static void ConfigureServices(IServiceCollection services)
-        {
-            Log.Debug("Configuring services");
-            services.AddTransient(typeof(MainWindow));
-
-            var connectionString = ConfigurationExtensions.GetConnectionString(Configuration, "DefaultConnection");
-            services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
-
-            services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
-            services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
-            services.AddScoped<MainViewModel>();
-            services.AddScoped<OrdersViewModel>();
-            services.AddScoped<PositionsViewModel>();
-            services.AddScoped<SettingsViewModel>();
-            services.AddScoped<StatusBarViewModel>();
-            services.AddScoped<DetailsViewModel>();
-            services.AddScoped<IBClient>();
-            services.AddScoped<IAccountManager, AccountManager>();
-            services.AddScoped<IConnectionService, ConnectionService>();
-            services.AddScoped<IOrderManager, OrderManager>();
-            services.AddScoped<IContractManager, ContractManager>();
-            services.AddScoped<IMarketDataManager, MarketDataManager>();
-            services.AddScoped<IHistoricalDataManager, HistoricalDataManager>();
-            services.AddScoped<IPositionManager, PositionManager>();
-            services.AddScoped<IOrderCalculationService, OrderCalculationService>();
-            services.AddScoped<IExchangeRateService, ExchangeRateService>();
-            services.AddScoped<ITradeRepository, TradeRepository>();
-            services.AddScoped<ISettingsRepository, SettingsRepository>();
-            services.AddScoped<IApplicationContext, ApplicationContext>();
         }
 
         protected override void OnExit(ExitEventArgs e)

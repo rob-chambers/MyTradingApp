@@ -1,9 +1,9 @@
-﻿using MyTradingApp.Utils;
+﻿using MyTradingApp.Desktop.Utils;
 using MyTradingApp.ViewModels;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace MyTradingApp.Views
+namespace MyTradingApp.Desktop.Views
 {
     /// <summary>
     /// Interaction logic for OrdersView.xaml

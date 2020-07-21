@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace MyTradingApp.Views
+namespace MyTradingApp.Desktop.Views
 {
     public partial class PositionsView : UserControl
     {
