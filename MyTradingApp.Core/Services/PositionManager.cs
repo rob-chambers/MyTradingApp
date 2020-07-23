@@ -1,33 +1,35 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public class PositionManager : IPositionManager
     {
         private readonly IBClient _ibClient;
+        private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly List<OpenOrderMessage> _orderMessages = new List<OpenOrderMessage>();
 
-        public PositionManager(IBClient ibClient)
+        public PositionManager(IBClient ibClient, ITwsObjectFactory twsObjectFactory)
         {
             _ibClient = ibClient;
-            _ibClient.OpenOrder += HandleOpenOrder;
-            _ibClient.OpenOrderEnd += HandleOpenOrderEnd;
-            _ibClient.OrderStatus += HandleOrderStatus;
+            _twsObjectFactory = twsObjectFactory;
+            _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatus;
         }
 
-        private void HandleOrderStatus(OrderStatusMessage message)
+        private void HandleOrderStatus(object sender, OrderStatusEventArgs args)
         {
-            var orderId = message.OrderId;
+            var orderId = args.OrderId;
 
             // We only care about the status of the trailing stop orders
             var orders = _orderMessages.Where(o => o.OrderId == orderId && o.Order.OrderType == BrokerConstants.OrderTypes.Trail)
@@ -36,7 +38,7 @@ namespace MyTradingApp.Services
             foreach (var openOrder in orders)
             {
                 LogOrder(openOrder);                
-                Messenger.Default.Send(new OrderStatusChangedMessage(openOrder.Contract.Symbol, message));
+                Messenger.Default.Send(new OrderStatusChangedMessage(openOrder.Contract.Symbol, args));
             }
         }
 
@@ -52,20 +54,10 @@ namespace MyTradingApp.Services
             }
         }
 
-        private void HandleOpenOrder(OpenOrderMessage openOrder)
+        public async Task<IEnumerable<OpenOrderEventArgs>> RequestOpenOrdersAsync()
         {
-            _orderMessages.Add(openOrder);
-        }
-
-        private void HandleOpenOrderEnd()
-        {
-            Messenger.Default.Send(new OpenOrdersMessage(_orderMessages));
-        }
-
-        public void RequestOpenOrders()
-        {
-            _orderMessages.Clear();
-            _ibClient.ClientSocket.reqAllOpenOrders();
+            var list = await _twsObjectFactory.TwsControllerBase.RequestOpenOrders();
+            return list;
         }
 
         public void UpdateStopOrder(Contract contract, Order order)

@@ -1,15 +1,14 @@
-﻿using MyTradingApp.Messages;
+﻿using MyTradingApp.EventMessages;
+using MyTradingApp.ViewModels;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public interface IAccountManager
     {
-        void RequestAccountSummary();
+        Task<AccountSummaryCompletedMessage> RequestAccountSummaryAsync();
 
-        void HandleAccountSummary(AccountSummaryMessage message);
-
-        void HandleAccountSummaryEnd();
-
-        void RequestPositions();
+        Task<IEnumerable<PositionItem>> RequestPositionsAsync();        
     }
 }

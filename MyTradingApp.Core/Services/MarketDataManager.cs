@@ -1,4 +1,6 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
@@ -6,24 +8,26 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public class MarketDataManager : IMarketDataManager
     {
         public const int TICK_ID_BASE = 10000000;
-        public const int TICK_ID_BASE_ONE_OFF = TICK_ID_BASE + 10000;
 
         private readonly Dictionary<int, Tuple<Contract, bool>> _activeRequests = new Dictionary<int, Tuple<Contract, bool>>();
         private readonly IBClient _iBClient;
+        private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly Dictionary<string, Domain.Bar> _prices = new Dictionary<string, Domain.Bar>();
         private int _currentTicker = 1;
-        private int _latestPriceTicker = 1;
+        private TickPriceEventArgs _tickPriceEventArgs;
 
-        public MarketDataManager(IBClient iBClient)
+        public MarketDataManager(IBClient iBClient, ITwsObjectFactory twsObjectFactory)
         {
             iBClient.TickPrice += OnTickPrice;
             _iBClient = iBClient;
+            _twsObjectFactory = twsObjectFactory;
         }
 
         protected void OnTickPrice(TickPriceMessage msg)
@@ -131,11 +135,23 @@ namespace MyTradingApp.Services
             }
         }
 
-        public void RequestLatestPrice(Contract contract)
+        public async Task<double> RequestLatestPriceAsync(Contract contract)
         {
-            var nextRequestId = TICK_ID_BASE_ONE_OFF + _latestPriceTicker++;
-            _iBClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, true, false, new List<TagValue>());
-            _activeRequests.Add(nextRequestId, new Tuple<Contract, bool>(contract, false));
+            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
+            var marketDataResult = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
+            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent -= OnTickPriceEvent;
+            if (_tickPriceEventArgs != null)
+            {
+                return _tickPriceEventArgs.Price;
+            }
+
+            Log.Warning("Couldn't get price for {0}", contract.Symbol);
+            return 0;
+        }
+
+        private void OnTickPriceEvent(object sender, TickPriceEventArgs args)
+        {
+            _tickPriceEventArgs = args;
         }
     }
 }

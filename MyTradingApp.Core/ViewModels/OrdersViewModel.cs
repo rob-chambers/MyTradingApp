@@ -1,11 +1,11 @@
-﻿using GalaSoft.MvvmLight;
+﻿using AutoFinance.Broker.InteractiveBrokers.Constants;
+using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
@@ -15,13 +15,17 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.ViewModels
 {
     public class OrdersViewModel : ObservableObject
     {
         #region Fields
+
+        private const string YearMonthDayPattern = "yyyyMMdd";
 
         private readonly IContractManager _contractManager;
         private readonly IHistoricalDataManager _historicalDataManager;
@@ -32,12 +36,12 @@ namespace MyTradingApp.ViewModels
         private string _accountId;
         private RelayCommand _addCommand;
         private RelayCommand<OrderItem> _deleteCommand;
-        private RelayCommand<OrderItem> _findCommand;
+        private AsyncCommand<OrderItem> _findCommand;
         private bool _isStreaming;
         private RelayCommand _startStopStreamingCommand;
         private RelayCommand _deleteAllCommand;
         private string _streamingButtonCaption;
-        private RelayCommand<OrderItem> _submitCommand;
+        private AsyncCommand<OrderItem> _submitCommand;
         private OrderItem _selectedOrder;
         #endregion
 
@@ -62,7 +66,6 @@ namespace MyTradingApp.ViewModels
             _orderManager = orderManager;
             _tradeRepository = tradeRepository;
             Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
-            Messenger.Default.Register<HistoricalDataCompletedMessage>(this, OnHistoricalDataManagerDataCompleted);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
@@ -136,12 +139,12 @@ namespace MyTradingApp.ViewModels
 
         public ObservableCollection<Exchange> ExchangeList { get; private set; }
 
-        public RelayCommand<OrderItem> FindCommand
+        public AsyncCommand<OrderItem> FindCommand
         {
             get
             {
-                return _findCommand ?? (_findCommand = new RelayCommand<OrderItem>(order =>
-                    IssueFindSymbolRequest(order), order => CanFindOrder(order)));
+                return _findCommand ?? (_findCommand = new AsyncCommand<OrderItem>(order =>
+                    IssueFindSymbolRequestAsync(order), order => CanFindOrder(order)));
             }
         }
 
@@ -193,14 +196,11 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _streamingButtonCaption, value);
         }
 
-        public RelayCommand<OrderItem> SubmitCommand
+        public AsyncCommand<OrderItem> SubmitCommand
         {
             get
             {
-                return _submitCommand ?? (_submitCommand = new RelayCommand<OrderItem>(order =>
-                {
-                    SubmitOrder(order);
-                }, order => CanSubmitOrder(order)));
+                return _submitCommand ?? (_submitCommand = new AsyncCommand<OrderItem>(SubmitOrderAsync, order => CanSubmitOrder(order)));
             }
         }
 
@@ -372,7 +372,7 @@ namespace MyTradingApp.ViewModels
             order.Symbol.Name = message.Details.LongName;
         }
 
-        private void HandleTickPriceMessage(TickPrice tickPrice)
+        private async void HandleTickPriceMessage(TickPrice tickPrice)
         {
             if (tickPrice.Type != TickType.LAST)
             {
@@ -392,7 +392,7 @@ namespace MyTradingApp.ViewModels
             CalculateRisk(tickPrice.Symbol);
 
             order.Symbol.IsFound = true;
-            IssueHistoricalDataRequest(order);
+            await GetHistoricalDataAsyncAsync(order);
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();                
 
@@ -402,7 +402,7 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void IssueFindSymbolRequest(OrderItem order)
+        private async Task IssueFindSymbolRequestAsync(OrderItem order)
         {
             var symbol = order.Symbol.Code;
             if (Orders.Any(x => x != order && x.Symbol.Code == symbol))
@@ -413,16 +413,45 @@ namespace MyTradingApp.ViewModels
 
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
-            RequestLatestPrice(order);
+            await RequestLatestPriceAsync(order);
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
             _contractManager.RequestDetails(MapOrderToContract(order));
         }
 
-        private void IssueHistoricalDataRequest(OrderItem order)
+        private async Task GetHistoricalDataAsyncAsync(OrderItem order)
         {
             Log.Debug($"Issuing historical data request for {order.Symbol.Code}");
-            var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
-            _historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
+            //var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
+            //_historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
+
+            var results = await _historicalDataManager.GetHistoricalDataAsync(
+                MapOrderToContract(order), DateTime.UtcNow, TwsDuration.OneMonth, TwsBarSizeSetting.OneDay, TwsHistoricalDataRequestType.Midpoint);
+
+            //var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
+            //if (order == null)
+            //{
+            //    return;
+            //}
+            if (results.Any())
+            {
+                order.HasHistory = true;                               
+
+                var bars = new BarCollection();
+                foreach (var item in results.Select(x => new Domain.Bar
+                {
+                    Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
+                    Open = x.Open,
+                    High = x.High,
+                    Low = x.Low,
+                    Close = x.Close
+                }).OrderByDescending(x => x.Date))
+                {
+                    bars.Add(item.Date, item);
+                }
+
+                _orderCalculationService.SetHistoricalData(order.Symbol.Code, bars);
+                CalculateRisk(order.Symbol.Code);
+            }
         }
 
         private void OnContractManagerFundamentalData(FundamentalDataMessage message)
@@ -449,20 +478,20 @@ namespace MyTradingApp.ViewModels
             //}
         }
 
-        private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
-        {
-            var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
-            if (order == null)
-            {
-                return;
-            }
+        //private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
+        //{
+        //    var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
+        //    if (order == null)
+        //    {
+        //        return;
+        //    }
 
-            order.HasHistory = true;
-            _orderCalculationService.SetHistoricalData(order.Symbol.Code, message.Bars);
-            CalculateRisk(order.Symbol.Code);
-        }
+        //    order.HasHistory = true;
+        //    _orderCalculationService.SetHistoricalData(order.Symbol.Code, message.Bars);
+        //    CalculateRisk(order.Symbol.Code);
+        //}
 
-        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
         {
             // Find corresponding order
             var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
@@ -476,7 +505,7 @@ namespace MyTradingApp.ViewModels
             if (order.Status == OrderStatus.Filled)
             {
                 AddTrade(order, message.Message.AvgFillPrice);
-                SubmitStopOrder(order, message.Message);
+                await SubmitStopOrderAsync(order, message.Message);
             }
         }
 
@@ -492,12 +521,12 @@ namespace MyTradingApp.ViewModels
             });
         }
 
-        private void SubmitStopOrder(OrderItem order, OrderStatusMessage message)
+        private async Task SubmitStopOrderAsync(OrderItem order, OrderStatusEventArgs args)
         {
             var stopOrder = GetTrailingStopOrder(order);
-            stopOrder.TotalQuantity = message.Filled;
+            stopOrder.TotalQuantity = args.Filled;
             var contract = MapOrderToContract(order);
-            _orderManager.PlaceNewOrder(contract, stopOrder);
+            await _orderManager.PlaceNewOrderAsync(contract, stopOrder);
         }
 
         private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -543,10 +572,24 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void RequestLatestPrice(OrderItem order)
+        private async Task RequestLatestPriceAsync(OrderItem order)
         {
             var contract = MapOrderToContract(order);
-            _marketDataManager.RequestLatestPrice(contract);
+            var price = await _marketDataManager.RequestLatestPriceAsync(contract);
+
+            order.Symbol.LatestPrice = price;
+            _orderCalculationService.SetLatestPrice(order.Symbol.Code, price);
+            CalculateRisk(order.Symbol.Code);
+
+            order.Symbol.IsFound = true;
+            await GetHistoricalDataAsyncAsync(order);
+            StartStopStreamingCommand.RaiseCanExecuteChanged();
+            SubmitCommand.RaiseCanExecuteChanged();
+
+            if (IsStreaming)
+            {
+                StreamSymbol(order);
+            }
         }
 
         private void SetStreamingButtonCaption()
@@ -569,13 +612,13 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void SubmitOrder(OrderItem orderItem)
+        private async Task SubmitOrderAsync(OrderItem orderItem)
         {
             var contract = MapOrderToContract(orderItem);
             contract.LocalSymbol = orderItem.Symbol.Code;
 
             var order = GetPrimaryOrder(orderItem);            
-            _orderManager.PlaceNewOrder(contract, order);
+            await _orderManager.PlaceNewOrderAsync(contract, order);
             orderItem.Id = order.OrderId;
 
             //// Attach stop order

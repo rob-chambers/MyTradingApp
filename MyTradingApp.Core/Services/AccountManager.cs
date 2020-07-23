@@ -1,120 +1,68 @@
-﻿using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.Domain;
+﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Messages;
 using MyTradingApp.ViewModels;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public class AccountManager : IAccountManager
     {
-        private const int ACCOUNT_ID_BASE = 50000000;
-        private const int ACCOUNT_SUMMARY_ID = ACCOUNT_ID_BASE + 1;
-
-        private const string ACCOUNT_SUMMARY_TAGS = "AccountType,NetLiquidation,TotalCashValue,SettledCash,AccruedCash,BuyingPower,EquityWithLoanValue,PreviousEquityWithLoanValue,"
-             + "GrossPositionValue,ReqTEquity,ReqTMargin,SMA,InitMarginReq,MaintMarginReq,AvailableFunds,ExcessLiquidity,Cushion,FullInitMarginReq,FullMaintMarginReq,FullAvailableFunds,"
-             + "FullExcessLiquidity,LookAheadNextChange,LookAheadInitMarginReq ,LookAheadMaintMarginReq,LookAheadAvailableFunds,LookAheadExcessLiquidity,HighestSeverity,DayTradesRemaining,Leverage";
+        // TODO: Move this to appsettings
+        private const string AccountId = "DU1070034";
 
         public static class AccountSummaryTags
         {
             public const string BuyingPower = "BuyingPower";
-            public const string NetLiquidation = "NetLiquidation";
+            public const string NetLiquidation = "NetLiquidation-S";
         }
 
-        private readonly IBClient _iBClient;
-        private bool _accountSummaryRequestActive;
-        private int _dataCount = 0;
-        private Dictionary<string, string> _accountData = new Dictionary<string, string>();
-        private List<PositionItem> _positions;
+        private readonly ITwsObjectFactory _twsObjectFactory;
 
-        public AccountManager(IBClient iBClient)
+        public AccountManager(ITwsObjectFactory twsObjectFactory)
         {
-            _iBClient = iBClient;
-            _iBClient.Position += HandlePositionMessage;
-            _iBClient.PositionEnd += OnClientPositionEnd;
+            _twsObjectFactory = twsObjectFactory;
         }
 
-        public void RequestAccountSummary()
+        public async Task<AccountSummaryCompletedMessage> RequestAccountSummaryAsync()
         {
-            if (!_accountSummaryRequestActive)
-            {
-                _dataCount = 0;
-                _accountData.Clear();
-                _accountSummaryRequestActive = true;
-                var tags = AccountSummaryTags.BuyingPower + "," + AccountSummaryTags.NetLiquidation;
-                _iBClient.ClientSocket.reqAccountSummary(ACCOUNT_SUMMARY_ID, "All", tags);
-            }
-            else
-            {
-                _iBClient.ClientSocket.cancelAccountSummary(ACCOUNT_SUMMARY_ID);
-            }
-        }
+            var details = await _twsObjectFactory.TwsControllerBase.GetAccountDetailsAsync(AccountId);
 
-        public void HandleAccountSummary(AccountSummaryMessage msg)
-        {
-            if (_accountData.ContainsKey(msg.Tag))
-            {
-                return;
-            }
-
-            _accountData.Add(msg.Tag, msg.Value);
-            _dataCount++;
-            if (_dataCount <= 1)
-            {
-                return;
-            }
-
-            // We have both data fields - raise event now
             var message = new AccountSummaryCompletedMessage();
-            if (_accountData.ContainsKey(AccountSummaryTags.NetLiquidation))
+            if (details.ContainsKey(AccountSummaryTags.NetLiquidation))
             {
-                message.NetLiquidation = double.Parse(_accountData[AccountSummaryTags.NetLiquidation]);
+                message.NetLiquidation = double.Parse(details[AccountSummaryTags.NetLiquidation]);
             }
 
-            if (_accountData.ContainsKey(AccountSummaryTags.BuyingPower))
+            if (details.ContainsKey(AccountSummaryTags.BuyingPower))
             {
-                message.BuyingPower = double.Parse(_accountData[AccountSummaryTags.BuyingPower]);
+                message.BuyingPower = double.Parse(details[AccountSummaryTags.BuyingPower]);
             }
 
-            message.AccountId = msg.Account;
+            message.AccountId = AccountId;
 
-            Messenger.Default.Send(message);
+            return message;
         }
 
-        public void HandleAccountSummaryEnd()
-        {
-            _accountSummaryRequestActive = false;
-        }
-
-        public void RequestPositions()
-        {
-            _positions = new List<PositionItem>();
-            _iBClient.ClientSocket.reqPositions();
-        }
-
-        private void OnClientPositionEnd()
-        {
-            Messenger.Default.Send(new ExistingPositionsMessage(_positions));
-        }
-
-        public void HandlePositionMessage(PositionMessage positionMessage)
-        {
-            if (positionMessage.Contract.SecType != BrokerConstants.Stock)
+        public async Task<IEnumerable<PositionItem>> RequestPositionsAsync()
+        {           
+            var positions = await _twsObjectFactory.TwsControllerBase.RequestPositions();
+            var items = new List<PositionItem>();
+            foreach (var item in positions)
             {
-                return;
-            }
-
-            _positions.Add(new PositionItem
-            {
-                Contract = positionMessage.Contract,
-                AvgPrice = positionMessage.AverageCost,
-                Quantity = positionMessage.Position,
-                Symbol = new Symbol
+                items.Add(new PositionItem
                 {
-                    Code = positionMessage.Contract.Symbol
-                }
-            });           
+                    Contract = item.Contract,
+                    AvgPrice = item.AverageCost,
+                    Quantity = item.Position,
+                    Symbol = new Symbol
+                    {
+                        Code = item.Contract.Symbol
+                    }
+                });
+            }
+
+            return items;
         }
     }
 }

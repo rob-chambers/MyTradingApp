@@ -1,9 +1,10 @@
 ﻿using IBApi;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
     public interface IOrderManager
     {
-        void PlaceNewOrder(Contract contract, Order order);
+        Task PlaceNewOrderAsync(Contract contract, Order order);
     }
 }

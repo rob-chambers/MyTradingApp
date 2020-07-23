@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
@@ -8,6 +9,7 @@ using MyTradingApp.Utils;
 using ObjectDumper;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -25,15 +27,12 @@ namespace MyTradingApp.ViewModels
         public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
 
         public PositionsViewModel(
-            IMarketDataManager marketDataManager, 
+            IMarketDataManager marketDataManager,
             IAccountManager accountManager,
             IPositionManager positionManager,
             IContractManager contractManager)
-        {            
+        {
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
-            Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
-            Messenger.Default.Register<ExistingPositionsMessage>(this, HandlePositionsMessage);
-            Messenger.Default.Register<OpenOrdersMessage>(this, HandleOpenOrdersMessage);
             Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
@@ -59,7 +58,7 @@ namespace MyTradingApp.ViewModels
             }
 
             Log.Debug("Order status has changed for an existing position, so refreshing all positions.");
-            _accountManager.RequestPositions();
+            GetPositions();
 
             //Log.Information("Order id {0} against existing position [{1}] was filled.", position.Order.OrderId, position.Symbol.Code);
             ////Log.Debug(message.Message.DumpToString("Order Status"));
@@ -87,44 +86,12 @@ namespace MyTradingApp.ViewModels
             StopStreaming();
         }
 
-        private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
-        {
-            if (!message.IsConnected)
-            {
-                return;
-            }
-
-            _accountManager.RequestPositions();
-        }
-
         private void StopStreaming()
         {
             foreach (var item in Positions.Where(p => p.IsOpen))
             {
                 _marketDataManager.StopPriceStreaming(item.Symbol.Code);
             }
-        }
-
-        private void HandlePositionsMessage(ExistingPositionsMessage message)
-        {
-            StopStreaming();
-            Positions.Clear();
-            foreach (var item in message.Positions)
-            {
-                Positions.Add(item);
-                if (item.IsOpen && item.Contract != null)
-                {
-                    Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
-                    //                    ModifyContractForRequest(item.Contract);                    
-                    var newContract = MapContractToNewContract(item.Contract);
-                    _marketDataManager.RequestStreamingPrice(newContract, true);
-
-                    // positionsStopService.Manage(item);
-                }
-            }
-
-            // Get associated stop orders
-            _positionManager.RequestOpenOrders();
         }
 
         private void HandleBarPriceMessage(BarPriceMessage message)
@@ -142,7 +109,7 @@ namespace MyTradingApp.ViewModels
 
             var position = positions.First();
 
-            Log.Debug(message.Bar.DumpToString("{0} Bar"), message.Symbol);
+            //Log.Debug(message.Bar.DumpToString("{0} Bar"), message.Symbol);
             position.Symbol.LatestPrice = message.Bar.Close;
             position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
 
@@ -162,15 +129,15 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void HandleOpenOrdersMessage(OpenOrdersMessage message)
+        private void ProcessOpenOrders(IEnumerable<OpenOrderEventArgs> orders)
         {
-            foreach (var order in message.Orders.Where(o => o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
+            foreach (var order in orders.Where(o => o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
                 o.Order.OrderType == BrokerConstants.OrderTypes.Trail))
             {
                 if (order.OrderId == 0)
                 {
                     // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
-                    Log.Warning(message.DumpToString("Order without an id"));
+                    Log.Warning(order.DumpToString("Order without an id"));
                     continue;
                 }
 
@@ -306,6 +273,31 @@ namespace MyTradingApp.ViewModels
             };
 
             return contract;
+        }
+
+        public async void GetPositions()
+        {
+            var positions = await _accountManager.RequestPositionsAsync();
+
+            StopStreaming();
+            Positions.Clear();
+            foreach (var item in positions)
+            {
+                Positions.Add(item);
+                if (item.IsOpen && item.Contract != null)
+                {
+                    Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
+                    //                    ModifyContractForRequest(item.Contract);                    
+                    var newContract = MapContractToNewContract(item.Contract);
+                    _marketDataManager.RequestStreamingPrice(newContract, true);
+
+                    // positionsStopService.Manage(item);
+                }
+            }
+
+            // Get associated stop orders
+            var orders = await _positionManager.RequestOpenOrdersAsync();
+            ProcessOpenOrders(orders);
         }
     }
 }

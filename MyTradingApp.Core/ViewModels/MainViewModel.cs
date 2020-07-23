@@ -30,7 +30,6 @@ namespace MyTradingApp.ViewModels
         private readonly IAccountManager _accountManager;
         private readonly IConnectionService _connectionService;
         private readonly IExchangeRateService _exchangeRateService;
-        private readonly IHistoricalDataManager _historicalDataManager;
         private readonly IBClient _iBClient;
         private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
         private readonly IOrderCalculationService _orderCalculationService;
@@ -64,7 +63,6 @@ namespace MyTradingApp.ViewModels
             IAccountManager accountManager,
             OrdersViewModel ordersViewModel,
             StatusBarViewModel statusBarViewModel,
-            IHistoricalDataManager historicalDataManager,
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
@@ -83,16 +81,9 @@ namespace MyTradingApp.ViewModels
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
             _statusBarViewModel = statusBarViewModel;
-            _historicalDataManager = historicalDataManager;
             _exchangeRateService = exchangeRateService;
             _orderCalculationService = orderCalculationService;
-            _iBClient.HistoricalData += _historicalDataManager.HandleMessage;
-            _iBClient.HistoricalDataUpdate += _historicalDataManager.HandleMessage;
-            _iBClient.HistoricalDataEnd += _historicalDataManager.HandleMessage;
-            _iBClient.AccountSummary += accountManager.HandleAccountSummary;
-            _iBClient.AccountSummaryEnd += HandleAccountSummaryEndMessage;
 
-            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
             Messenger.Default.Register<DetailsPanelClosedMessage>(this, HandleDetailsPanelClosed);
 
@@ -249,31 +240,9 @@ namespace MyTradingApp.ViewModels
                 ? message + "\n"
                 : message;
         }
-
-        private void GetAccountSummary()
-        {
-            _accountManager.RequestAccountSummary();
-        }
-
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage message)
-        {
-            _netLiquidation = message.NetLiquidation;
-            CalculateRiskPerTrade();
-        }
-
-        private void HandleAccountSummaryEndMessage(AccountSummaryEndMessage message)
-        {
-            _accountManager.HandleAccountSummaryEnd();
-        }
-
+       
         private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
         {
-            var isConnected = message.IsConnected;
-            if (isConnected)
-            {
-                GetAccountSummary();
-            }
-
             SetConnectionStatus();
         }
 
@@ -351,7 +320,7 @@ namespace MyTradingApp.ViewModels
             // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
             OrdersViewModel.Orders.Remove(item);
 
-            _accountManager.RequestPositions();
+            PositionsViewModel.GetPositions();
         }
 
         private void OnOrdersViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -416,9 +385,7 @@ namespace MyTradingApp.ViewModels
                 {
                     _connectionService.Connect();
                     await _connectionService.ConnectAsync();
-                    var rate = await _exchangeRateService.GetExchangeRateAsync();
-                    _exchangeRate = rate;
-                    CalculateRiskPerTrade();
+                    await InitOnceConnectedAsync();
                 }
             }
             catch (Exception ex)
@@ -426,6 +393,18 @@ namespace MyTradingApp.ViewModels
                 ShowMessageOnPanel(ex.Message);
             }
         }
-#endregion
+
+        private async Task InitOnceConnectedAsync()
+        {
+            var rate = await _exchangeRateService.GetExchangeRateAsync();
+            _exchangeRate = rate;
+            PositionsViewModel.GetPositions();
+
+            var summary = await _accountManager.RequestAccountSummaryAsync();
+            Messenger.Default.Send(summary);
+            _netLiquidation = summary.NetLiquidation;
+            CalculateRiskPerTrade();
+        }
+        #endregion
     }
 }

@@ -14,17 +14,20 @@ namespace MyTradingApp.Tests
     {
         private const string Symbol = "MSFT";
 
+        private IAccountManager _accountManager;
+        private IPositionManager _positionsManager;
+
         private PositionsViewModel GetVm(IMarketDataManager marketDataManager = null)
         {
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
-            var accountManager = Substitute.For<IAccountManager>();
-            var positionsManager = Substitute.For<IPositionManager>();
+            _accountManager = Substitute.For<IAccountManager>();
+            _positionsManager = Substitute.For<IPositionManager>();
             var contractManager = Substitute.For<IContractManager>();
-            return new PositionsViewModel(manager, accountManager, positionsManager, contractManager);
+            return new PositionsViewModel(manager, _accountManager, _positionsManager, contractManager);
         }
 
         [Fact]
-        public void WhenMessageReceivedPositionsAddedToCollection()
+        public void WhenPositionsReturnedFromRequestThenPositionsAddedToCollection()
         {
             // Arrange
             var vm = GetVm();
@@ -42,7 +45,8 @@ namespace MyTradingApp.Tests
             };
 
             // Act
-            Messenger.Default.Send(new ExistingPositionsMessage(positions));
+            _accountManager.RequestPositionsAsync().Returns(positions);
+            vm.GetPositions();
 
             // Assert
             Assert.Single(vm.Positions);
@@ -53,7 +57,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void NewMessageClearsExistingCollection()
+        public void GettingPositionsClearsExistingCollection()
         {
             // Arrange
             var vm = GetVm();
@@ -68,9 +72,10 @@ namespace MyTradingApp.Tests
             };
 
             vm.Positions.Add(position);
+            _accountManager.RequestPositionsAsync().Returns(new List<PositionItem>());
 
             // Act
-            Messenger.Default.Send(new ExistingPositionsMessage(new List<PositionItem>()));
+            vm.GetPositions();
 
             // Assert
             Assert.Empty(vm.Positions);
@@ -186,8 +191,16 @@ namespace MyTradingApp.Tests
                 Quantity = 0
             };
 
+            var positions = new List<PositionItem>
+            {
+                position1,
+                position2,
+                closedPosition
+            };
+            _accountManager.RequestPositionsAsync().Returns(positions);
+
             // Act
-            Messenger.Default.Send(new ExistingPositionsMessage(new List<PositionItem> { position1, position2, closedPosition }));
+            vm.GetPositions();
 
             // Assert
             manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == Symbol && 
@@ -241,6 +254,32 @@ namespace MyTradingApp.Tests
             // Assert
             manager.Received().StopPriceStreaming(Symbol);
             manager.DidNotReceive().StopPriceStreaming(ClosedSymbol);
+        }
+
+        [Fact]
+        public void RequestingPositionsGetAssociatedOrders()
+        {
+            // Arrange
+            var vm = GetVm();
+            var position = new PositionItem
+            {
+                Contract = new Contract
+                {
+                    Symbol = Symbol,
+                    Exchange = Exchange.NYSE.ToString()
+                },
+                Symbol = new Symbol { Code = Symbol },
+                Quantity = 100
+            };
+
+            var positions = new List<PositionItem> { position };
+            _accountManager.RequestPositionsAsync().Returns(positions);
+
+            // Act
+            vm.GetPositions();
+
+            // Assert
+            _positionsManager.Received().RequestOpenOrdersAsync();
         }
     }
 }

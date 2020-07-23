@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
@@ -10,6 +11,7 @@ using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -85,8 +87,8 @@ namespace MyTradingApp.Tests
             order.Id = OrderId;
 
             // Act
-            var message = new OrderStatusMessage(OrderId, status.ToString(), 0, 0, 0, 0, 0, 0, 0, null, 0);
-            Messenger.Default.Send(new OrderStatusChangedMessage(order.Symbol.Code, message));
+            var args = new OrderStatusEventArgs(OrderId, status.ToString(), 0, 0, 0, 0, 0, 0, 0, null);
+            Messenger.Default.Send(new OrderStatusChangedMessage(order.Symbol.Code, args));
 
             // Assert
             Assert.True(findCommandCanExecuteChangedFired);
@@ -158,7 +160,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void FindCommandRequestsFundamentalData()
+        public async Task FindCommandRequestsFundamentalData()
         {
             var builder = new OrdersViewModelBuilder();
             var vm = builder
@@ -166,7 +168,7 @@ namespace MyTradingApp.Tests
                 .Build();
 
             var order = vm.Orders[0];
-            vm.FindCommand.Execute(order);
+            await vm.FindCommand.ExecuteAsync(order);
 
             // Assert
             builder.ContractManager.Received()
@@ -178,7 +180,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void NasdaqOrdersRoutedThroughIsland()
+        public async Task NasdaqOrdersRoutedThroughIsland()
         {
             // Arrange
             var builder = new OrdersViewModelBuilder();
@@ -189,7 +191,7 @@ namespace MyTradingApp.Tests
             order.Symbol.Exchange = Exchange.Nasdaq;
 
             // Act
-            vm.FindCommand.Execute(order);
+            await vm.FindCommand.ExecuteAsync(order);
 
             // Assert
             builder.ContractManager.Received()
@@ -216,7 +218,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void CanOnlyStartStreamingWhenAtLeastOneOrder()
+        public async Task CanOnlyStartStreamingWhenAtLeastOneOrder()
         {
             // Arrange            
             var fired = false;
@@ -226,13 +228,13 @@ namespace MyTradingApp.Tests
                 .Build();
             var order = vm.Orders[0];
 
-            vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true; ;
-            builder.MarketDataManager
-                .When(x => x.RequestLatestPrice(Arg.Any<Contract>()))
-                .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, 0)));
+            vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true;
+            //builder.MarketDataManager
+            //    .When(x => x.RequestLatestPriceAsync(Arg.Any<Contract>()))
+            //    .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, 0)));
 
             // Act
-            vm.FindCommand.Execute(order);
+            await vm.FindCommand.ExecuteAsync(order);
 
             // Assert
             Assert.True(order.Symbol.IsFound);
@@ -355,7 +357,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void SubmittingOrderSendsToBroker()
+        public async Task SubmittingOrderSendsToBrokerAsync()
         {
             // Arrange            
             const int OrderId = 123;
@@ -367,7 +369,7 @@ namespace MyTradingApp.Tests
 
             var builder = new OrdersViewModelBuilder();
             builder.OrderManager
-                .When(x => x.PlaceNewOrder(Arg.Any<Contract>(), Arg.Any<Order>()))
+                .When(x => x.PlaceNewOrderAsync(Arg.Any<Contract>(), Arg.Any<Order>()))
                 .Do(x => x.Arg<Order>().OrderId = OrderId);
 
             var vm = builder
@@ -385,11 +387,11 @@ namespace MyTradingApp.Tests
             order.InitialStopLossPrice = Stop;
 
             // Act
-            vm.SubmitCommand.Execute(vm.Orders[0]);
+            await vm.SubmitCommand.ExecuteAsync(vm.Orders[0]);
 
             // Assert primary order
-            builder.OrderManager.Received()
-                .PlaceNewOrder(Arg.Is<Contract>(x => x.Symbol == DefaultSymbol &&
+            await builder.OrderManager.Received()
+                .PlaceNewOrderAsync(Arg.Is<Contract>(x => x.Symbol == DefaultSymbol &&
                     x.SecType == BrokerConstants.Stock &&
                     x.LocalSymbol == DefaultSymbol &&
                     x.Currency == BrokerConstants.UsCurrency &&
@@ -508,8 +510,8 @@ namespace MyTradingApp.Tests
             vm.Orders[0].Quantity = Quantity;
 
             // Act
-            var message = new OrderStatusMessage(0, OrderStatus.Filled.ToString(), 0, 0, FillPrice, 0, 0, 0, 0, null, 0);
-            Messenger.Default.Send(new OrderStatusChangedMessage(DefaultSymbol, message));
+            var args = new OrderStatusEventArgs(0, OrderStatus.Filled.ToString(), 0, 0, FillPrice, 0, 0, 0, 0, null);
+            Messenger.Default.Send(new OrderStatusChangedMessage(DefaultSymbol, args));
 
             // Assert
             builder.TradeRepository.Received().AddTrade(Arg.Is<Trade>(x =>
@@ -519,6 +521,33 @@ namespace MyTradingApp.Tests
                 x.ExitPrice == null &&
                 x.ExitTimeStamp == null &&
                 x.ProfitLoss == null));
+        }
+
+        [Fact]
+        public async Task WhenSymbolAlreadyExistsAndEnteredAgainThenNotificationMessageAsync()
+        {
+            // Arrange
+            var fired = false;
+            var type = NotificationType.Error;
+
+            var builder = new OrdersViewModelBuilder()
+                .AddSingleOrder(DefaultSymbol, true)
+                .AddSingleOrder(DefaultSymbol, false);
+
+            var vm = builder.Build();
+            var order = vm.Orders[1];            
+            Messenger.Default.Register<NotificationMessage<NotificationType>>(this, msg => 
+            {
+                fired = true;
+                type = msg.Content;
+            });
+
+            // Act
+            await vm.FindCommand.ExecuteAsync(order);
+
+            // Assert
+            Assert.True(fired);
+            Assert.Equal(NotificationType.Warning, type);
         }
     }
 }

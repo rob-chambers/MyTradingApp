@@ -1,4 +1,5 @@
 ﻿using IBApi;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
@@ -8,7 +9,7 @@ namespace MyTradingApp.Services
 
         void StopActivePriceStreaming();
 
-        void RequestLatestPrice(Contract contract);
+        Task<double> RequestLatestPriceAsync(Contract contract);
 
         void StopPriceStreaming(string symbol);
     }

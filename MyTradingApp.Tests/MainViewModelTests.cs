@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core.Repositories;
 using MyTradingApp.Domain;
@@ -79,7 +80,7 @@ namespace MyTradingApp.Tests
             var detailsViewModel = new DetailsViewModel();
             _settingsViewModel = new SettingsViewModel(_settingsRepository);
 
-            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _historicalDataManager, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel, _settingsViewModel);
+            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel, _settingsViewModel);
         }
 
         [Fact]
@@ -162,13 +163,11 @@ namespace MyTradingApp.Tests
                     _connectionService.IsConnected.Returns(true);
                     Messenger.Default.Send(new ConnectionChangedMessage(true));
                 });
-
-            _accountManager
-                .When(x => x.RequestAccountSummary())
-                .Do(x => Messenger.Default.Send(new AccountSummaryCompletedMessage
-                {
-                    NetLiquidation = netLiquidationValue
-                }));
+            
+            _accountManager.RequestAccountSummaryAsync().Returns(Task.FromResult(new AccountSummaryCompletedMessage
+            {
+                NetLiquidation = netLiquidationValue
+            }));
 
             _exchangeRateService.GetExchangeRateAsync().Returns(Task.FromResult(exchangeRate));
         }
@@ -199,7 +198,7 @@ namespace MyTradingApp.Tests
             vm.ConnectCommand.Execute(null);
 
             // Assert
-            _accountManager.Received().RequestPositions();
+            _accountManager.Received().RequestPositionsAsync();
         }
 
         [Fact]
@@ -216,10 +215,10 @@ namespace MyTradingApp.Tests
             order.Id = OrderId;
 
             // Act            
-            Messenger.Default.Send(new OrderStatusChangedMessage(string.Empty, new OrderStatusMessage(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, 0, 0, 0, 0, 0, null, 0)));
+            Messenger.Default.Send(new OrderStatusChangedMessage(string.Empty, new OrderStatusEventArgs(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, 0, 0, 0, 0, 0, null)));
 
             // Assert
-            _accountManager.Received(2).RequestPositions(); // 2 requests - one initially and a second once filled
+            _accountManager.Received(2).RequestPositionsAsync(); // 2 requests - one initially and a second once filled
             Assert.Empty(vm.OrdersViewModel.Orders);
         }
 

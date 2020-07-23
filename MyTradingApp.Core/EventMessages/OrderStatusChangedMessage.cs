@@ -1,15 +1,15 @@
-﻿using MyTradingApp.Messages;
+﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 
 namespace MyTradingApp.EventMessages
 {
     public class OrderStatusChangedMessage : SymbolMessage
     {
-        public OrderStatusChangedMessage(string symbol, OrderStatusMessage message)
+        public OrderStatusChangedMessage(string symbol, OrderStatusEventArgs message)
             : base(symbol)
         {
             Message = message;
         }
 
-        public OrderStatusMessage Message { get; }
+        public OrderStatusEventArgs Message { get; }
     }
 }

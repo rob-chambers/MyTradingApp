@@ -15,7 +15,7 @@ namespace MyTradingApp.Desktop.Views
             InitializeComponent();
         }
 
-        private void OnSymbolTextBoxKeyUp(object sender, KeyEventArgs e)
+        private async void OnSymbolTextBoxKeyUp(object sender, KeyEventArgs e)
         {
             if (!(sender is TextBox textBox) || textBox.Text.Length == 0)
             {
@@ -33,7 +33,7 @@ namespace MyTradingApp.Desktop.Views
                 {
                     // The command parameter is the binding of the element
                     var orderItem = item.DataContext;
-                    vm.FindCommand.Execute(orderItem);
+                    await vm.FindCommand.ExecuteAsync(orderItem as OrderItem);
                 }
             }
         }
