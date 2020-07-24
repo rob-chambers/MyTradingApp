@@ -6,6 +6,7 @@ using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -16,14 +17,15 @@ namespace MyTradingApp.Tests
 
         private IAccountManager _accountManager;
         private IPositionManager _positionsManager;
+        private IContractManager _contractManager;
 
         private PositionsViewModel GetVm(IMarketDataManager marketDataManager = null)
         {
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
             _accountManager = Substitute.For<IAccountManager>();
             _positionsManager = Substitute.For<IPositionManager>();
-            var contractManager = Substitute.For<IContractManager>();
-            return new PositionsViewModel(manager, _accountManager, _positionsManager, contractManager);
+            _contractManager = Substitute.For<IContractManager>();
+            return new PositionsViewModel(manager, _accountManager, _positionsManager, _contractManager);
         }
 
         [Fact]
@@ -153,7 +155,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void AfterRetrievingPositionsStreamLatestPrice()
+        public async Task AfterRetrievingPositionsStreamLatestPrice()
         {
             // Arrange
             var manager = Substitute.For<IMarketDataManager>();
@@ -203,19 +205,19 @@ namespace MyTradingApp.Tests
             vm.GetPositions();
 
             // Assert
-            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == Symbol && 
+            await manager.Received().RequestStreamingPriceAsync(Arg.Is<Contract>(x => x.Symbol == Symbol && 
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
                 x.PrimaryExch == Exchange.NYSE.ToString() &&
-                x.SecType == BrokerConstants.Stock), true);
+                x.SecType == BrokerConstants.Stock));
             
-            manager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == position2.Symbol.Code &&
+            await manager.Received().RequestStreamingPriceAsync(Arg.Is<Contract>(x => x.Symbol == position2.Symbol.Code &&
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
                 x.PrimaryExch == BrokerConstants.Routers.Island &&
-                x.SecType == BrokerConstants.Stock), true);
+                x.SecType == BrokerConstants.Stock));
 
-            manager.DidNotReceive().RequestStreamingPrice(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code), true);
+            await manager.DidNotReceive().RequestStreamingPriceAsync(Arg.Is<Contract>(x => x.Symbol == closedPosition.Symbol.Code));
         }
 
         [Fact]
@@ -280,6 +282,49 @@ namespace MyTradingApp.Tests
 
             // Assert
             _positionsManager.Received().RequestOpenOrdersAsync();
+        }
+
+        [Fact]
+        public void RequestingPositionsGetsCompanyNames()
+        {
+            // Arrange
+            const string CompanyName = "Microsoft";
+
+            var vm = GetVm();
+            var position = new PositionItem
+            {
+                Contract = new Contract
+                {
+                    Symbol = Symbol,
+                    Exchange = Exchange.NYSE.ToString()
+                },
+                Symbol = new Symbol { Code = Symbol },
+                Quantity = 100
+            };
+
+            var positions = new List<PositionItem> { position };
+            _accountManager.RequestPositionsAsync().Returns(positions);
+
+            var detail = new ContractDetails
+            {
+                Contract = position.Contract,
+                LongName = CompanyName
+            };
+
+            _contractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(new List<ContractDetails> { detail }  );
+
+            // Act
+            vm.GetPositions();
+
+            // Assert
+            _contractManager.Received().RequestDetailsAsync(Arg.Is<Contract>(x => x.Symbol == position.Contract.Symbol &&
+                x.Exchange == BrokerConstants.Routers.Smart &&
+                x.PrimaryExch == position.Contract.Exchange &&
+                x.SecType == BrokerConstants.Stock &&
+                x.Currency == BrokerConstants.UsCurrency));
+
+            Assert.Equal(CompanyName, position.Symbol.Name);
+            Assert.Equal(detail, position.ContractDetails);
         }
     }
 }

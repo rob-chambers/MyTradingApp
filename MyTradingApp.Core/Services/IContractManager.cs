@@ -1,4 +1,6 @@
 ﻿using IBApi;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
@@ -6,6 +8,6 @@ namespace MyTradingApp.Services
     {
         void RequestFundamentals(Contract contract, string reportType);
 
-        void RequestDetails(Contract contract);
+        Task<IList<ContractDetails>> RequestDetailsAsync(Contract contract);
     }
 }

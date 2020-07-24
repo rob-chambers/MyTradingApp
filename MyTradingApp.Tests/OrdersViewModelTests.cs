@@ -9,6 +9,7 @@ using MyTradingApp.Tests.Orders;
 using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -180,6 +181,29 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
+        public async Task FindCommandRequestsContractDetails()
+        {
+            // Arrange
+            var builder = new OrdersViewModelBuilder();
+            var vm = builder
+                .AddSingleOrder(DefaultSymbol, false)
+                .Build();
+
+            var order = vm.Orders[0];
+
+            // Act
+            await vm.FindCommand.ExecuteAsync(order);
+
+            // Assert
+            await builder.ContractManager.Received()
+                .RequestDetailsAsync(Arg.Is<Contract>(x => x.Symbol == order.Symbol.Code &&
+                x.Exchange == BrokerConstants.Routers.Smart &&
+                x.Currency == BrokerConstants.UsCurrency &&
+                x.SecType == BrokerConstants.Stock &&
+                x.PrimaryExch == order.Symbol.Exchange.ToString()));
+        }
+
+        [Fact]
         public async Task NasdaqOrdersRoutedThroughIsland()
         {
             // Arrange
@@ -214,7 +238,7 @@ namespace MyTradingApp.Tests
         public void StreamingInitiallyDisabled()
         {
             var vm = GetVm();
-            Assert.False(vm.StartStopStreamingCommand.CanExecute(null));
+            Assert.False(vm.StartStopStreamingCommand.CanExecute());
         }
 
         [Fact]
@@ -229,21 +253,18 @@ namespace MyTradingApp.Tests
             var order = vm.Orders[0];
 
             vm.StartStopStreamingCommand.CanExecuteChanged += (s, e) => fired = true;
-            //builder.MarketDataManager
-            //    .When(x => x.RequestLatestPriceAsync(Arg.Any<Contract>()))
-            //    .Do(x => Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, 0)));
 
             // Act
             await vm.FindCommand.ExecuteAsync(order);
 
             // Assert
             Assert.True(order.Symbol.IsFound);
-            Assert.True(vm.StartStopStreamingCommand.CanExecute(null));
+            Assert.True(vm.StartStopStreamingCommand.CanExecute());
             Assert.True(fired);
         }
 
         [Fact]
-        public void StreamingRequestsMarketDataForSymbol()
+        public async Task StreamingRequestsMarketDataForSymbol()
         {
             // Arrange           
             var builder = new OrdersViewModelBuilder();
@@ -252,10 +273,10 @@ namespace MyTradingApp.Tests
                 .Build();
 
             // Act
-            vm.StartStopStreamingCommand.Execute(null);
+            await vm.StartStopStreamingCommand.ExecuteAsync();
 
             // Assert
-            builder.MarketDataManager.Received().RequestStreamingPrice(Arg.Is<Contract>(x => 
+            await builder.MarketDataManager.Received().RequestStreamingPriceAsync(Arg.Is<Contract>(x => 
                 x.Symbol == DefaultSymbol &&
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
@@ -263,24 +284,24 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void StoppingStreamingStopsMarketDataStreaming()
+        public async Task StoppingStreamingStopsMarketDataStreaming()
         {
             // Arrange           
             var builder = new OrdersViewModelBuilder();
             var vm = builder
                 .AddSingleOrder(DefaultSymbol, true)
                 .Build();            
-            vm.StartStopStreamingCommand.Execute(null);
+            await vm.StartStopStreamingCommand.ExecuteAsync();
 
             // Act
-            vm.StartStopStreamingCommand.Execute(null);
+            await vm.StartStopStreamingCommand.ExecuteAsync();
 
             // Assert
             builder.MarketDataManager.Received().StopActivePriceStreaming();
         }
 
         [Fact]
-        public void WhenAlreadyStreamingAndOrderDeletedStopStreamingSymbol()
+        public async Task WhenAlreadyStreamingAndOrderDeletedStopStreamingSymbol()
         { 
             // Arrange
             var builder = new OrdersViewModelBuilder();
@@ -292,7 +313,7 @@ namespace MyTradingApp.Tests
 
             Messenger.Default.Register<OrderRemovedMessage>(this, msg => symbols.Add(msg.Order.Symbol.Code));
 
-            vm.StartStopStreamingCommand.Execute(null);
+            await vm.StartStopStreamingCommand.ExecuteAsync();
 
             // Act
             vm.DeleteCommand.Execute(vm.Orders.First());
@@ -444,7 +465,7 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void LatestTickPriceUpdatesOrderDetails()
+        public async Task LatestPriceUpdatesOrderDetailsAsync()
         {
             // Arrange
             const double LatestPrice = 10;
@@ -459,15 +480,19 @@ namespace MyTradingApp.Tests
             calculationService.GetCalculatedQuantity(DefaultSymbol, Direction.Buy).Returns(Quantity);
             calculationService.GetEntryPrice(DefaultSymbol, Direction.Buy).Returns(EntryPrice);
 
+            builder.MarketDataManager.RequestLatestPriceAsync(Arg.Any<Contract>()).Returns(Task.FromResult(LatestPrice));
+
             var vm = builder
                 .AddSingleOrder(DefaultSymbol, true)
                 .Build();
 
-            // Act
-            Messenger.Default.Send(new TickPrice(DefaultSymbol, TickType.LAST, LatestPrice));
-
-            // Assert
             var order = vm.Orders[0];
+
+            // Act
+            //Messenger.Default.Send(new BarPriceMessage(DefaultSymbol, new Domain.Bar(DateTime.UtcNow, 0, 0, 0, LatestPrice)));
+            await vm.FindCommand.ExecuteAsync(order);
+
+            // Assert            
             Assert.Equal(LatestPrice, order.Symbol.LatestPrice);
 
             var service = builder.OrderCalculationService.Received();

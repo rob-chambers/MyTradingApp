@@ -3,7 +3,6 @@ using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Messages;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -20,138 +19,158 @@ namespace MyTradingApp.Services
         private readonly IBClient _iBClient;
         private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly Dictionary<string, Domain.Bar> _prices = new Dictionary<string, Domain.Bar>();
-        private int _currentTicker = 1;
+        private readonly Dictionary<string, double> _oneOffPrices = new Dictionary<string, double>();
         private TickPriceEventArgs _tickPriceEventArgs;
+        private bool _tickHandlerAttached;
 
         public MarketDataManager(IBClient iBClient, ITwsObjectFactory twsObjectFactory)
         {
-            iBClient.TickPrice += OnTickPrice;
             _iBClient = iBClient;
             _twsObjectFactory = twsObjectFactory;
         }
 
-        protected void OnTickPrice(TickPriceMessage msg)
+        public async Task<int> RequestStreamingPriceAsync(Contract contract)
         {
-            if (msg.Price == -1) return;  // Market is probably closed
+            Log.Debug("Requesting streaming price for {0}", contract.Symbol);
 
-            if (!_activeRequests.ContainsKey(msg.RequestId))
-            {
-                Log.Warning("Get price for an unexpected request id of {0}", msg.RequestId);
-                return;
+            if (!_tickHandlerAttached)
+            { 
+                // TODO: When do we remove event handler?
+                _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
             }
 
-            var tuple = _activeRequests[msg.RequestId];
-            var symbol = tuple.Item1.Symbol;
-            if (!tuple.Item2)
-            {
-                switch (msg.Field)
-                {
-                    case TickType.LAST:
-                    // Fall-through
+            var tick = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, "233", false, false, null);
+            Log.Debug("Ticker id for {0}: {1}", contract.Symbol, tick.TickerId);
 
-                    // Don't include Ask price any more
-                    //case TickType.ASK:
-                        Messenger.Default.Send(new TickPrice(symbol, msg.Field, msg.Price));
-                        break;
-                }
-            }
-            else
-            {
-                HandleTickPriceForOhlcRequest(msg, symbol);
-            }
-        }
+            _activeRequests.Add(tick.TickerId, new Tuple<Contract, bool>(contract, true));
 
-        private void HandleTickPriceForOhlcRequest(TickPriceMessage msg, string symbol)
-        {
-            var type = string.Empty;
-
-            if (!_prices.ContainsKey(symbol))
-            {
-                _prices.Add(symbol, new Domain.Bar
-                {
-                    Date = DateTime.UtcNow
-                });
-            }
-            var bar = _prices[symbol];
-
-            switch (msg.Field)
-            {
-                case TickType.OPEN:
-                    type = "O";
-                    bar.Open = msg.Price;
-                    break;
-                case TickType.HIGH:
-                    type = "H";
-                    bar.High = msg.Price;
-                    break;
-                case TickType.LOW:
-                    type = "L";
-                    bar.Low = msg.Price;
-                    break;
-                case TickType.CLOSE:
-                    type = "C";
-                    bar.Close = msg.Price;
-                    break;
-            }
-
-            if (type != string.Empty && bar.Open != 0 && bar.Close != 0 && bar.High != 0 && bar.Low != 0)
-            {
-                //Log.Debug(msg.DumpToString($"New {type} price for {symbol}"));
-                Messenger.Default.Send(new BarPriceMessage(symbol, bar));
-            }
-        }
-
-        public void RequestStreamingPrice(Contract contract, bool ohlc = false)
-        {
-            Log.Debug("RequestStreamingPrice for contract {0}", contract.Symbol);
-            var nextRequestId = TICK_ID_BASE + _currentTicker++;
-            RequestMarketData(contract, nextRequestId);
-            _activeRequests.Add(nextRequestId, new Tuple<Contract, bool>(contract, ohlc));
-        }
-
-        protected virtual void RequestMarketData(Contract contract, int nextRequestId)
-        {
-            _iBClient.ClientSocket.reqMktData(nextRequestId, contract, string.Empty, false, false, new List<TagValue>());
+            return tick.TickerId;
         }
 
         public void StopActivePriceStreaming()
         {
-            for (var i = 1; i < _currentTicker; i++)
+            Log.Debug("Stopping active price streaming");
+            foreach (var request in _activeRequests)
             {
-                _iBClient.ClientSocket.cancelMktData(i + TICK_ID_BASE);
+                _twsObjectFactory.TwsController.CancelMarketData(request.Key);
             }
+
+            _activeRequests.Clear();
         }
 
         public void StopPriceStreaming(string symbol)
         {
+            Log.Debug("Stopping streaming for {0}", symbol);
+
             var request = _activeRequests
-                .Where(x => x.Value.Item1.Symbol == symbol)
+                .Where(x => x.Value.Item2 && x.Value.Item1.Symbol == symbol)
                 .Select(x => new { x.Key, x.Value })
                 .FirstOrDefault();
 
             if (request != null)
             {
-                _iBClient.ClientSocket.cancelMktData(request.Key);
+                _twsObjectFactory.TwsController.CancelMarketData(request.Key);
+                _activeRequests.Remove(request.Key);
             }
         }
 
         public async Task<double> RequestLatestPriceAsync(Contract contract)
         {
-            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
-            var marketDataResult = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
-            _twsObjectFactory.TwsCallbackHandler.TickPriceEvent -= OnTickPriceEvent;
-            if (_tickPriceEventArgs != null)
+            Log.Debug("Requesting Latest Price");
+            if (!_tickHandlerAttached)
+            {
+                _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
+                _tickHandlerAttached = true;
+            }
+            
+            var result = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
+            Log.Debug("Ticker assigned to {0} = {1}", contract.Symbol, result.TickerId);
+            _activeRequests.Add(result.TickerId, new Tuple<Contract, bool>(contract, false));
+
+            if (_oneOffPrices.ContainsKey(contract.Symbol))
+            {
+                return _oneOffPrices[contract.Symbol];
+            }
+
+            if (_tickPriceEventArgs != null && _tickPriceEventArgs.TickerId == result.TickerId)
             {
                 return _tickPriceEventArgs.Price;
             }
 
-            Log.Warning("Couldn't get price for {0}", contract.Symbol);
             return 0;
+
+            // TODO: Remove handler on disconnection?
+            //_twsObjectFactory.TwsCallbackHandler.TickPriceEvent -= OnTickPriceEvent;
+            //if (_tickPriceEventArgs != null)
+            //{
+            //    return _tickPriceEventArgs.Price;
+            //}
+
+            //Log.Warning("Couldn't get price for {0}", contract.Symbol);
+            //return 0;
         }
 
         private void OnTickPriceEvent(object sender, TickPriceEventArgs args)
-        {
-            _tickPriceEventArgs = args;
+        {            
+            _tickPriceEventArgs = args;          
+            if (!_activeRequests.ContainsKey(args.TickerId))
+            {
+                // Request latest price (not streaming)
+                return;
+            }
+
+            var request = _activeRequests[args.TickerId];
+            var symbol = request.Item1.Symbol;
+
+            if (request.Item2)
+            {
+                // Streaming request
+                if (!_prices.ContainsKey(symbol))
+                {
+                    _prices.Add(symbol, new Domain.Bar
+                    {
+                        Date = DateTime.UtcNow
+                    });
+                }
+                var bar = _prices[symbol];
+
+                switch (args.Field)
+                {
+                    case TickType.OPEN:
+                        bar.Open = args.Price;
+                        break;
+                    case TickType.HIGH:
+                        bar.High = args.Price;
+                        break;
+                    case TickType.LOW:
+                        bar.Low = args.Price;
+                        break;
+                    case TickType.CLOSE:
+                        bar.Close = args.Price;
+                        break;
+
+                    case TickType.LAST:
+                        // Send new messages out whenever a trade was made - i.e. type = Last
+                        bar.Close = args.Price;
+                        Messenger.Default.Send(new BarPriceMessage(symbol, bar));
+
+                        // Flag for creation of a new bar on next tick
+                        _prices.Remove(symbol);
+                        break;
+                }
+            }
+            else
+            {
+                if (args.Field == TickType.LAST)
+                {
+                    if (_oneOffPrices.ContainsKey(symbol))
+                    {
+                        _oneOffPrices.Remove(symbol);
+                    }
+
+                    _oneOffPrices.Add(symbol, args.Price);
+                }                       
+            }
         }
     }
 }

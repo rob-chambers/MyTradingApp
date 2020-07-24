@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.ViewModels
 {
@@ -33,7 +34,6 @@ namespace MyTradingApp.ViewModels
             IContractManager contractManager)
         {
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
-            Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
 
@@ -129,7 +129,7 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        private void ProcessOpenOrders(IEnumerable<OpenOrderEventArgs> orders)
+        private async Task ProcessOpenOrdersAsync(IEnumerable<OpenOrderEventArgs> orders)
         {
             foreach (var order in orders.Where(o => o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
                 o.Order.OrderType == BrokerConstants.OrderTypes.Trail))
@@ -165,17 +165,30 @@ namespace MyTradingApp.ViewModels
             // Request contract details for all positions
             foreach (var item in Positions.Where(p => p.Contract != null))
             {
-                _contractManager.RequestDetails(item.Contract);
+                var details = await _contractManager.RequestDetailsAsync(MapContractToNewContract(item.Contract));
+                HandleContractDetails(details);
             }
         }
 
-        private void HandleContractDetailsEventMessage(ContractDetailsEventMessage message)
+        private void HandleContractDetails(IList<ContractDetails> details)
         {
-            var symbol = message.Details.Contract.Symbol;
+            if (!details.Any())
+            {
+                Log.Warning("In Positions VM - No contract details returned");
+                return;
+            }
+
+            if (details.Count > 1)
+            {
+                Log.Warning("In Positions VM - Found multiple contract detail items - taking the first");
+            }
+
+            var detail = details.First();
+            var symbol = detail.Contract.Symbol;
             var positions = Positions.Where(p => p.Symbol.Code == symbol).ToList();
             if (!positions.Any())
             {
-                // This is OK - this event may have been raised for orders
+                Log.Warning("No positions found matching {0}", symbol);
                 return;
             }
 
@@ -185,8 +198,8 @@ namespace MyTradingApp.ViewModels
             }
 
             var position = positions.First();
-            position.Symbol.Name = message.Details.LongName;
-            position.ContractDetails = message.Details;
+            position.Symbol.Name = detail.LongName;
+            position.ContractDetails = detail;
         }
 
         //public AsyncCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new AsyncCommand<PositionItem>(DoTempCommand));
@@ -289,7 +302,7 @@ namespace MyTradingApp.ViewModels
                     Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
                     //                    ModifyContractForRequest(item.Contract);                    
                     var newContract = MapContractToNewContract(item.Contract);
-                    _marketDataManager.RequestStreamingPrice(newContract, true);
+                    // DON'T STREAM POSITIONS YET UNTIL ORDERS WORKING await _marketDataManager.RequestStreamingPriceAsync(newContract);
 
                     // positionsStopService.Manage(item);
                 }
@@ -297,7 +310,7 @@ namespace MyTradingApp.ViewModels
 
             // Get associated stop orders
             var orders = await _positionManager.RequestOpenOrdersAsync();
-            ProcessOpenOrders(orders);
+            await ProcessOpenOrdersAsync(orders);
         }
     }
 }

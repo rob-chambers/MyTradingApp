@@ -1,11 +1,11 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Models;
-using Serilog;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Services
 {
@@ -13,36 +13,17 @@ namespace MyTradingApp.Services
     {
         public const int CONTRACT_ID_BASE = 60000000;        
         public const int FUNDAMENTALS_ID = CONTRACT_ID_BASE + 1;
-        public const int CONTRACT_DETAILS_ID = CONTRACT_ID_BASE + 1000;
 
         private readonly IBClient _iBClient;
-        private readonly Dictionary<int, ContractDetailsMessage> _contractDetailsMessage = new Dictionary<int, ContractDetailsMessage>();
+        private readonly ITwsObjectFactory _twsObjectFactory;
         private bool _fundamentalsRequestActive = false;
         private string _symbol;
-        private int _latestRequestId;
 
-        public ContractManager(IBClient iBClient)
+        public ContractManager(IBClient iBClient, ITwsObjectFactory twsObjectFactory)
         {
             _iBClient = iBClient;
-            _iBClient.FundamentalData += OnClientFundamentalData;
-            _iBClient.ContractDetails += OnContractDetails;
-            _iBClient.ContractDetailsEnd += OnContractDetailsEnd;
-        }
-
-        private void OnContractDetails(ContractDetailsMessage message)
-        {
-            _contractDetailsMessage.Add(message.RequestId, message);
-        }
-
-        private void OnContractDetailsEnd(int requestId)
-        {
-            if (!_contractDetailsMessage.ContainsKey(requestId))
-            {
-                Log.Debug("Unexpected scenario in {0}, requestId = {1}", nameof(OnContractDetailsEnd), requestId);
-                return;
-            }
-
-            Messenger.Default.Send(new ContractDetailsEventMessage(_contractDetailsMessage[requestId].ContractDetails));
+            _twsObjectFactory = twsObjectFactory;
+            _iBClient.FundamentalData += OnClientFundamentalData;            
         }
 
         private void OnClientFundamentalData(FundamentalsMessage message)
@@ -66,10 +47,9 @@ namespace MyTradingApp.Services
             }
         }
 
-        public void RequestDetails(Contract contract)
+        public async Task<IList<ContractDetails>> RequestDetailsAsync(Contract contract)
         {
-            var nextRequestId = CONTRACT_DETAILS_ID + _latestRequestId++;
-            _iBClient.ClientSocket.reqContractDetails(nextRequestId, contract);
+            return await _twsObjectFactory.TwsController.GetContractAsync(contract);
         }
     }
 }

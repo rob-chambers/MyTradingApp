@@ -5,7 +5,7 @@ namespace MyTradingApp.Services
 {
     public interface IMarketDataManager
     {
-        void RequestStreamingPrice(Contract contract, bool ohlc = false);
+        Task<int> RequestStreamingPriceAsync(Contract contract);
 
         void StopActivePriceStreaming();
 

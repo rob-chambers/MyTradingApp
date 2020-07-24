@@ -143,10 +143,6 @@
       <Project>{65fc7a4d-0df8-4119-8614-9c31167af51f}</Project>
       <Name>MyTradingApp.Domain</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MyTradingApp.Stops\MyTradingApp.Stops.csproj">
-      <Project>{80071e3f-af24-4c6f-b20c-bb6977f77842}</Project>
-      <Name>MyTradingApp.Stops</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

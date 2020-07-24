@@ -9,6 +9,7 @@ using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
+using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
@@ -38,7 +39,7 @@ namespace MyTradingApp.ViewModels
         private RelayCommand<OrderItem> _deleteCommand;
         private AsyncCommand<OrderItem> _findCommand;
         private bool _isStreaming;
-        private RelayCommand _startStopStreamingCommand;
+        private AsyncCommand _startStopStreamingCommand;
         private RelayCommand _deleteAllCommand;
         private string _streamingButtonCaption;
         private AsyncCommand<OrderItem> _submitCommand;
@@ -68,10 +69,35 @@ namespace MyTradingApp.ViewModels
             Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
-            Messenger.Default.Register<TickPrice>(this, HandleTickPriceMessage);
-            Messenger.Default.Register<ContractDetailsEventMessage>(this, HandleContractDetailsEventMessage);
+            Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
 
             SetStreamingButtonCaption();
+        }
+
+        private void HandleBarPriceMessage(BarPriceMessage message)
+        {
+            if (!IsStreaming)
+            {
+                // It wasn't us that triggered the event
+                return;
+            }
+
+            Log.Debug(message.DumpToString("Handling streaming bar price"));
+            var orders = Orders.Where(o => o.Symbol.Code == message.Symbol).ToList();
+            if (!orders.Any())
+            {
+                return;
+            }
+
+            if (orders.Count > 1)
+            {
+                Log.Warning("Found more than one order for {0} - taking the first", message.Symbol);
+            }
+
+            var order = orders.First();
+            order.Symbol.LatestPrice = message.Bar.Close;
+            _orderCalculationService.SetLatestPrice(message.Symbol, message.Bar.Close);
+            CalculateRisk(message.Symbol);
         }
 
         private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -165,12 +191,12 @@ namespace MyTradingApp.ViewModels
             private set;
         }
 
-        public RelayCommand StartStopStreamingCommand
+        public AsyncCommand StartStopStreamingCommand
         {
             get
             {
                 return _startStopStreamingCommand ??
-                    (_startStopStreamingCommand = new RelayCommand(StartStopStreaming, CanStartStopStreaming));
+                    (_startStopStreamingCommand = new AsyncCommand(StartStopStreamingAsync, CanStartStopStreaming));
             }
         }
 
@@ -282,18 +308,19 @@ namespace MyTradingApp.ViewModels
             return order.Symbol.IsFound && !order.IsLocked;
         }
 
-        private void GetMarketData()
+        private async Task GetMarketDataAsync()
         {
             foreach (var item in Orders)
             {
-                StreamSymbol(item);
+                await StreamSymbolAsync(item);
             }
         }
 
-        private void StreamSymbol(OrderItem item)
+        private async Task StreamSymbolAsync(OrderItem item)
         {
             var contract = MapOrderToContract(item);
-            _marketDataManager.RequestStreamingPrice(contract);
+            //_marketDataManager.RequestStreamingPrice(contract);
+            await _marketDataManager.RequestStreamingPriceAsync(contract);
         }
 
         private Order GetPrimaryOrder(OrderItem orderItem)
@@ -360,48 +387,6 @@ namespace MyTradingApp.ViewModels
             _accountId = message.AccountId;
         }
 
-        private void HandleContractDetailsEventMessage(ContractDetailsEventMessage message)
-        {
-            var order = Orders.SingleOrDefault(o => o.Symbol.Code == message.Details.Contract.Symbol);
-            if (order == null)
-            {
-                return;
-            }
-
-            order.Symbol.MinTick = message.Details.MinTick;
-            order.Symbol.Name = message.Details.LongName;
-        }
-
-        private async void HandleTickPriceMessage(TickPrice tickPrice)
-        {
-            if (tickPrice.Type != TickType.LAST)
-            {
-                return;
-            }
-
-            var order = Orders.SingleOrDefault(o => o.Symbol.Code == tickPrice.Symbol);
-            if (order == null)
-            {
-                return;
-            }
-
-            //Log.Debug(tickPrice.DumpToString("Tick Price"));
-
-            order.Symbol.LatestPrice = tickPrice.Price;
-            _orderCalculationService.SetLatestPrice(tickPrice.Symbol, tickPrice.Price);
-            CalculateRisk(tickPrice.Symbol);
-
-            order.Symbol.IsFound = true;
-            await GetHistoricalDataAsyncAsync(order);
-            StartStopStreamingCommand.RaiseCanExecuteChanged();
-            SubmitCommand.RaiseCanExecuteChanged();                
-
-            if (IsStreaming)
-            {
-                StreamSymbol(order);
-            }
-        }
-
         private async Task IssueFindSymbolRequestAsync(OrderItem order)
         {
             var symbol = order.Symbol.Code;
@@ -415,7 +400,20 @@ namespace MyTradingApp.ViewModels
             order.Symbol.Name = string.Empty;
             await RequestLatestPriceAsync(order);
             _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
-            _contractManager.RequestDetails(MapOrderToContract(order));
+            //_contractManager.RequestDetails(MapOrderToContract(order));
+            var details = await _contractManager.RequestDetailsAsync(MapOrderToContract(order));
+
+            if (!details.Any())
+            {
+                Log.Warning("No contract details returned for {0}", symbol);
+            }
+            else if (details.Count > 1)
+            {
+                Log.Warning("Found multiple contract detail items for {0} - taking the first", symbol);
+                var detail = details.First();
+                order.Symbol.MinTick = detail.MinTick;
+                order.Symbol.Name = detail.LongName;
+            }
         }
 
         private async Task GetHistoricalDataAsyncAsync(OrderItem order)
@@ -588,7 +586,7 @@ namespace MyTradingApp.ViewModels
 
             if (IsStreaming)
             {
-                StreamSymbol(order);
+                await StreamSymbolAsync(order);
             }
         }
 
@@ -599,12 +597,12 @@ namespace MyTradingApp.ViewModels
                 : "Start Streaming";
         }
 
-        private void StartStopStreaming()
+        private async Task StartStopStreamingAsync()
         {
             IsStreaming = !IsStreaming;
             if (IsStreaming)
             {
-                GetMarketData();
+                await GetMarketDataAsync();
             }
             else
             {
