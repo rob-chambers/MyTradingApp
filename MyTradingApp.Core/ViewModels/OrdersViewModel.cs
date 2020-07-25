@@ -4,6 +4,8 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core.Utils;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
@@ -22,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace MyTradingApp.ViewModels
 {
-    public class OrdersViewModel : ObservableObject
+    public class OrdersViewModel : DispatcherViewModel
     {
         #region Fields
 
@@ -35,8 +37,8 @@ namespace MyTradingApp.ViewModels
         private readonly IOrderManager _orderManager;
         private readonly ITradeRepository _tradeRepository;
         private string _accountId;
-        private RelayCommand _addCommand;
-        private RelayCommand<OrderItem> _deleteCommand;
+        private CommandBase _addCommand;
+        private CommandBase<OrderItem> _deleteCommand;
         private AsyncCommand<OrderItem> _findCommand;
         private bool _isStreaming;
         private AsyncCommand _startStopStreamingCommand;
@@ -49,12 +51,14 @@ namespace MyTradingApp.ViewModels
         #region Constructors
 
         public OrdersViewModel(
+            IDispatcherHelper dispatcherHelper,
             IContractManager contractManager, 
             IMarketDataManager marketDataManager,
             IHistoricalDataManager historicalDataManager,
             IOrderCalculationService orderCalculationService,
             IOrderManager orderManager,
-            ITradeRepository tradeRepository)
+            ITradeRepository tradeRepository) 
+            : base(dispatcherHelper)
         {
             Orders = new ObservableCollectionNoReset<OrderItem>();
             Orders.CollectionChanged += OnOrdersCollectionChanged;
@@ -124,11 +128,11 @@ namespace MyTradingApp.ViewModels
 
         #region Properties
 
-        public RelayCommand AddCommand
+        public CommandBase AddCommand
         {
             get
             {
-                return _addCommand ?? (_addCommand = new RelayCommand(() =>
+                return _addCommand ?? (_addCommand = new CommandBase(DispatcherHelper, () =>
                 {
                     var order = new OrderItem();
                     order.PropertyChanged += OnItemPropertyChanged;
@@ -138,11 +142,11 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-        public RelayCommand<OrderItem> DeleteCommand
+        public CommandBase<OrderItem> DeleteCommand
         {
             get
             {
-                return _deleteCommand ?? (_deleteCommand = new RelayCommand<OrderItem>(
+                return _deleteCommand ?? (_deleteCommand = new CommandBase<OrderItem>(DispatcherHelper,
                     order =>
                     {
                         if (Orders.Contains(order))
@@ -169,7 +173,7 @@ namespace MyTradingApp.ViewModels
         {
             get
             {
-                return _findCommand ?? (_findCommand = new AsyncCommand<OrderItem>(order =>
+                return _findCommand ?? (_findCommand = new AsyncCommand<OrderItem>(DispatcherHelper, order =>
                     IssueFindSymbolRequestAsync(order), order => CanFindOrder(order)));
             }
         }
@@ -196,7 +200,7 @@ namespace MyTradingApp.ViewModels
             get
             {
                 return _startStopStreamingCommand ??
-                    (_startStopStreamingCommand = new AsyncCommand(StartStopStreamingAsync, CanStartStopStreaming));
+                    (_startStopStreamingCommand = new AsyncCommand(DispatcherHelper, StartStopStreamingAsync, CanStartStopStreaming));
             }
         }
 
@@ -226,7 +230,7 @@ namespace MyTradingApp.ViewModels
         {
             get
             {
-                return _submitCommand ?? (_submitCommand = new AsyncCommand<OrderItem>(SubmitOrderAsync, order => CanSubmitOrder(order)));
+                return _submitCommand ?? (_submitCommand = new AsyncCommand<OrderItem>(DispatcherHelper, SubmitOrderAsync, order => CanSubmitOrder(order)));
             }
         }
 

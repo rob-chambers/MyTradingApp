@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.Utils;
+using MyTradingApp.Desktop.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.Persistence;
 using MyTradingApp.Repositories;
@@ -81,6 +83,8 @@ namespace MyTradingApp.Desktop
 
             // Treat requests sent via the new TwsObjectFactory as if they are from a different client
             services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId + 1));
+
+            services.AddScoped<IDispatcherHelper, DispatcherHelper>();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyTradingApp.Core.Utils;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -9,15 +10,18 @@ namespace MyTradingApp.Utils
         public event EventHandler CanExecuteChanged;
 
         private bool _isExecuting;
+        private readonly IDispatcherHelper _dispatcherHelper;
         private readonly Func<Task> _execute;
         private readonly Func<bool> _canExecute;
         private readonly IErrorHandler _errorHandler;
 
         public AsyncCommand(
+            IDispatcherHelper dispatcherHelper,
             Func<Task> execute,
             Func<bool> canExecute = null,
             IErrorHandler errorHandler = null)
         {
+            _dispatcherHelper = dispatcherHelper;
             _execute = execute;
             _canExecute = canExecute;
             _errorHandler = errorHandler;
@@ -48,7 +52,7 @@ namespace MyTradingApp.Utils
 
         public void RaiseCanExecuteChanged()
         {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            _dispatcherHelper.InvokeOnUiThread(() => CanExecuteChanged?.Invoke(this, EventArgs.Empty));
         }
 
         #region Explicit implementations
@@ -69,12 +73,14 @@ namespace MyTradingApp.Utils
         public event EventHandler CanExecuteChanged;
 
         private bool _isExecuting;
+        private readonly IDispatcherHelper _dispatcherHelper;
         private readonly Func<T, Task> _execute;
         private readonly Func<T, bool> _canExecute;
         private readonly IErrorHandler _errorHandler;
 
-        public AsyncCommand(Func<T, Task> execute, Func<T, bool> canExecute = null, IErrorHandler errorHandler = null)
+        public AsyncCommand(IDispatcherHelper dispatcherHelper, Func<T, Task> execute, Func<T, bool> canExecute = null, IErrorHandler errorHandler = null)
         {
+            _dispatcherHelper = dispatcherHelper;
             _execute = execute;
             _canExecute = canExecute;
             _errorHandler = errorHandler;
@@ -105,7 +111,7 @@ namespace MyTradingApp.Utils
 
         public void RaiseCanExecuteChanged()
         {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            _dispatcherHelper.InvokeOnUiThread(() => CanExecuteChanged?.Invoke(this, EventArgs.Empty));
         }
 
         #region Explicit implementations

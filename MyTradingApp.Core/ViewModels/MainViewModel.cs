@@ -2,6 +2,8 @@
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.IconPacks;
+using MyTradingApp.Core.Utils;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
@@ -18,7 +20,7 @@ using System.Windows.Input;
 
 namespace MyTradingApp.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : DispatcherViewModel
     {
         #region Fields
         public static bool IsUnitTesting = false;
@@ -57,6 +59,7 @@ namespace MyTradingApp.ViewModels
         #region Constructors
 
         public MainViewModel(
+            IDispatcherHelper dispatcherHelper,
             IBClient iBClient,
             IConnectionService connectionService,
             IOrderManager orderManager,
@@ -68,6 +71,7 @@ namespace MyTradingApp.ViewModels
             PositionsViewModel positionsViewModel,
             DetailsViewModel detailsViewModel,
             SettingsViewModel settingsViewModel)
+            : base(dispatcherHelper)
         {           
             _iBClient = iBClient;
             _connectionService = connectionService;
@@ -103,7 +107,7 @@ namespace MyTradingApp.ViewModels
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
 
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(ToggleConnectionAsync));
+        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(DispatcherHelper, ToggleConnectionAsync));
 
 #endregion
 

@@ -14,11 +14,11 @@ namespace MyTradingApp.Services
     {
         private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly Dictionary<int, string> _orders = new Dictionary<int, string>();
+        private bool _isEventHandlerRegistered = false;
 
         public OrderManager(ITwsObjectFactory twsObjectFactory)
         {
-            _twsObjectFactory = twsObjectFactory;
-            _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatus;
+            _twsObjectFactory = twsObjectFactory;            
         }
 
         private void HandleOrderStatus(object sender, OrderStatusEventArgs args)
@@ -34,11 +34,18 @@ namespace MyTradingApp.Services
 
         public async Task PlaceNewOrderAsync(Contract contract, Order order)
         {
+            if (!_isEventHandlerRegistered)
+            {
+                _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatus;
+                _isEventHandlerRegistered = true;
+            }
+            
             var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync();
 
             // TODO: Change to single client id
             order.ClientId = BrokerConstants.ClientId + 1;
             order.OrderId = id;
+            _orders.Add(id, contract.Symbol);
             var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order);
             if (!acknowledged)
             {
