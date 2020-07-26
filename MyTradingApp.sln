@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp", "MyTradingAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAPI", "MyTradingApp\client\CSharpAPI.csproj", "{8EDE0744-96C2-40B0-A8DC-37DF79370203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{6F22A39A-07E4-4829-A5ED-ABD506EAD099}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{39A46FAF-1603-44FF-A766-CFFB6A60127B}"
 	ProjectSection(SolutionItems) = preProject
 		ef-core-commands.txt = ef-core-commands.txt
@@ -30,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Tests", "MyTra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFinance.Broker", "AutoFinance.Broker\AutoFinance.Broker.csproj", "{F71C7820-EA70-4AE3-B5FD-5AC11A4FDDE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{7CF66A9E-FA07-446F-854D-C8A4C3350319}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,10 +44,6 @@ Global
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F22A39A-07E4-4829-A5ED-ABD506EAD099}.Release|Any CPU.Build.0 = Release|Any CPU
 		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59FE62D8-C26A-44E4-BB57-3538F0263106}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -76,6 +72,10 @@ Global
 		{F71C7820-EA70-4AE3-B5FD-5AC11A4FDDE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F71C7820-EA70-4AE3-B5FD-5AC11A4FDDE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F71C7820-EA70-4AE3-B5FD-5AC11A4FDDE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

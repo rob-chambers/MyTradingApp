@@ -231,7 +231,7 @@ namespace MyTradingApp.ViewModels
                 {
                     Log.Debug("Tightening trailing stop on {0} from {1}% to {2}%", position.Symbol.Code, order.TrailingPercent, newStopPercentage);
                     order.TrailingPercent = newStopPercentage;
-                    _positionManager.UpdateStopOrder(position.Contract, order);
+                    _positionManager.UpdateStopOrderAsync(MapContractToNewContract(position.Contract), order);
                 }
             }
         }

@@ -16,13 +16,11 @@ namespace MyTradingApp.Services
 {
     public class PositionManager : IPositionManager
     {
-        private readonly IBClient _ibClient;
         private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly List<OpenOrderMessage> _orderMessages = new List<OpenOrderMessage>();
 
-        public PositionManager(IBClient ibClient, ITwsObjectFactory twsObjectFactory)
+        public PositionManager(ITwsObjectFactory twsObjectFactory)
         {
-            _ibClient = ibClient;
             _twsObjectFactory = twsObjectFactory;
             _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatus;
         }
@@ -60,7 +58,7 @@ namespace MyTradingApp.Services
             return list;
         }
 
-        public void UpdateStopOrder(Contract contract, Order order)
+        public async Task UpdateStopOrderAsync(Contract contract, Order order)
         {
             //var newOrder = GetOrder(order);
             //var newOrderType = BrokerConstants.OrderTypes.Stop;
@@ -78,14 +76,29 @@ namespace MyTradingApp.Services
             // I want to call placeOrder with the existing order id so that it get's modified
             //var newOrder = order; //GetOrder(order);
             //newOrder.AuxPrice = newStopPrice;
-            
+
             // We rely on the order's orderid and parentid being set
-            order.ClientId = BrokerConstants.ClientId;
-            
+            // order.ClientId = BrokerConstants.ClientId;
+
+            Log.Debug("In UpdateStopOrderAsync");
+
             // Specifically set Transmit flag to ensure we send the order
             order.Transmit = true;
 
-            _ibClient.ClientSocket.placeOrder(order.OrderId, contract, order);
+            //_ibClient.ClientSocket.placeOrder(order.OrderId, contract, order);
+            var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync();
+
+            // TODO: Change to single client id
+            order.ClientId = BrokerConstants.ClientId + 1;
+            order.OrderId = id;
+
+            Log.Debug("Updating stop order for {0}.  Order id = {1}", contract.Symbol, id);
+
+            var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order);
+            if (!acknowledged)
+            {
+                Log.Warning("New order ({0}) not acknowledged", id);
+            }
         }
 
         //private Order GetOrder(Order originalOrder)

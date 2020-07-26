@@ -97,7 +97,10 @@
                 <lvc:Axis Title="Price" LabelFormatter="{Binding YFormatter}" />
             </lvc:CartesianChart.AxisY>
             <lvc:CartesianChart.AxisX>
-                <lvc:Axis Title="Date" Labels="{Binding Labels}" ShowLabels="True" />
+                <lvc:Axis
+                    Title="Date"
+                    Labels="{Binding Labels}"
+                    ShowLabels="True" />
             </lvc:CartesianChart.AxisX>
         </lvc:CartesianChart>
     </Grid>

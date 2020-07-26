@@ -9,6 +9,6 @@ namespace MyTradingApp.Services
     {
         Task<IEnumerable<OpenOrderEventArgs>> RequestOpenOrdersAsync();
         
-        void UpdateStopOrder(Contract contract, Order order);
+        Task UpdateStopOrderAsync(Contract contract, Order order);
     }
 }

@@ -16,16 +16,14 @@ namespace MyTradingApp.Services
         public const int TICK_ID_BASE = 10000000;
 
         private readonly Dictionary<int, Tuple<Contract, bool>> _activeRequests = new Dictionary<int, Tuple<Contract, bool>>();
-        private readonly IBClient _iBClient;
         private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly Dictionary<string, Domain.Bar> _prices = new Dictionary<string, Domain.Bar>();
         private readonly Dictionary<string, double> _oneOffPrices = new Dictionary<string, double>();
         private TickPriceEventArgs _tickPriceEventArgs;
         private bool _tickHandlerAttached;
 
-        public MarketDataManager(IBClient iBClient, ITwsObjectFactory twsObjectFactory)
+        public MarketDataManager(ITwsObjectFactory twsObjectFactory)
         {
-            _iBClient = iBClient;
             _twsObjectFactory = twsObjectFactory;
         }
 
