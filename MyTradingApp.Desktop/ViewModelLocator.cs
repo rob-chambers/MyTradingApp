@@ -68,7 +68,6 @@ namespace MyTradingApp.Desktop
             services.AddScoped<SettingsViewModel>();
             services.AddScoped<StatusBarViewModel>();
             services.AddScoped<DetailsViewModel>();
-            services.AddScoped<IBClient>();
             services.AddScoped<IAccountManager, AccountManager>();
             services.AddScoped<IConnectionService, ConnectionService>();
             services.AddScoped<IOrderManager, OrderManager>();

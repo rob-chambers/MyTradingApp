@@ -10,10 +10,6 @@ namespace MyTradingApp.Services
 
         bool IsConnected { get; }
 
-        void Connect();
-
-        void Disconnect();
-
         Task ConnectAsync();
 
         Task DisconnectAsync();

@@ -179,7 +179,6 @@ namespace MyTradingApp.ViewModels
         {
             if (_connectionService.IsConnected)
             {
-                _connectionService.Disconnect();
                 await _connectionService.DisconnectAsync();                
             }
 
@@ -252,20 +251,15 @@ namespace MyTradingApp.ViewModels
             IsDetailsPanelVisible = false;
         }
 
-        private void HandleErrorMessage(ErrorMessage message)
+        private void HandleErrorMessage(ErrorMessage error)
         {
-            ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
-            Log.Error(message.ErrorCode + " - " + message.Message);
+            var message = $"Request {error.RequestId}, Code: {error.ErrorCode} - {error.Message}";
+            ShowMessageOnPanel(message);
+            Log.Error(message);
         }
 
         private void HandleClientError(object sender, ClientError e)
         {
-            if (e.Exception != null)
-            {
-                AddTextToMessagePanel("Error: " + e.Exception);
-                return;
-            }
-
             if (e.Id == 0 || e.ErrorCode == 0)
             {
                 AddTextToMessagePanel("Error: " + e.ErrorMessage + "\n");
@@ -379,12 +373,10 @@ namespace MyTradingApp.ViewModels
             {                
                 if (_connectionService.IsConnected)
                 {
-                    _connectionService.Disconnect();
                     await _connectionService.DisconnectAsync();
                 }
                 else
                 {
-                    _connectionService.Connect();
                     await _connectionService.ConnectAsync();
                     await InitOnceConnectedAsync();
                 }

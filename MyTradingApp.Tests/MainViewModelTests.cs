@@ -19,7 +19,6 @@ namespace MyTradingApp.Tests
 {
     public class MainViewModelTests
     {
-        private IBClient _ibClient;
         private IConnectionService _connectionService;
         private IOrderManager _orderManager;
         private IAccountManager _accountManager;
@@ -37,7 +36,6 @@ namespace MyTradingApp.Tests
         private MainViewModel GetVm(ISettingsRepository settingsRepository = null)
         {
             MainViewModel.IsUnitTesting = true;
-            _ibClient = new IBClient(new EReaderMonitorSignal());
             _connectionService = Substitute.For<IConnectionService>();
             _orderManager = Substitute.For<IOrderManager>();
             _accountManager = Substitute.For<IAccountManager>();
@@ -99,8 +97,8 @@ namespace MyTradingApp.Tests
         {
             var vm = GetVm();
             _connectionService
-                .When(x => x.Connect())
-                .Do(x => Raise.Event<ClientError>(this, new ClientError(1, 1, "Error", new OutOfMemoryException())));
+                .When(x => x.ConnectAsync())
+                .Do(x => Raise.Event<ClientError>(this, new ClientError(1, 1, "Error")));
 
             vm.ConnectCommand.Execute(null);
             Assert.False(string.IsNullOrEmpty(vm.ErrorText));
@@ -159,7 +157,7 @@ namespace MyTradingApp.Tests
         private void ConnectionTest(double netLiquidationValue, double exchangeRate)
         {
             _connectionService
-                .When(x => x.Connect())
+                .When(x => x.ConnectAsync())
                 .Do(x =>
                 {                    
                     _connectionService.IsConnected.Returns(true);
@@ -186,7 +184,7 @@ namespace MyTradingApp.Tests
             vm.AppIsClosing();
 
             // Assert
-            _connectionService.Received().Disconnect();
+            _connectionService.Received().DisconnectAsync();
         }
 
         [Fact]
