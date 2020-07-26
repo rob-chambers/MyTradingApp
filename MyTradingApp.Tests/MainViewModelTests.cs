@@ -2,6 +2,7 @@
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
@@ -71,16 +72,17 @@ namespace MyTradingApp.Tests
 
             var orderManager = Substitute.For<IOrderManager>();
 
-            _ordersViewModel = new OrdersViewModel(_contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager, _tradeRepository);
+            var dispatcherHelper = Substitute.For<IDispatcherHelper>();
+            _ordersViewModel = new OrdersViewModel(dispatcherHelper, _contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager, _tradeRepository);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
             var positionsManager = Substitute.For<IPositionManager>();
             var contractManager = Substitute.For<IContractManager>();
             var positionsViewModel = new PositionsViewModel(_marketDataManager, _accountManager, positionsManager, contractManager);
             var detailsViewModel = new DetailsViewModel();
-            _settingsViewModel = new SettingsViewModel(_settingsRepository);
+            _settingsViewModel = new SettingsViewModel(_settingsRepository);            
 
-            return new MainViewModel(_ibClient, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel, _settingsViewModel);
+            return new MainViewModel(dispatcherHelper, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, detailsViewModel, _settingsViewModel);
         }
 
         [Fact]

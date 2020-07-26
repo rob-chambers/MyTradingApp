@@ -55,6 +55,11 @@ namespace MyTradingApp.Utils
             _dispatcherHelper.InvokeOnUiThread(() => CanExecuteChanged?.Invoke(this, EventArgs.Empty));
         }
 
+        private void RaiseCanExecuteChangedEvent()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         #region Explicit implementations
         bool ICommand.CanExecute(object parameter)
         {

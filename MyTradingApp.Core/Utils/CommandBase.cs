@@ -34,7 +34,11 @@ namespace MyTradingApp.Core.Utils
 
         public void RaiseCanExecuteChanged()
         {
-            _dispatcherHelper.InvokeOnUiThread(() => _command.RaiseCanExecuteChanged());
+            _dispatcherHelper.InvokeOnUiThread(() =>
+            {
+                _command.RaiseCanExecuteChanged();
+                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            });
         }
     }
 
@@ -68,7 +72,11 @@ namespace MyTradingApp.Core.Utils
 
         public void RaiseCanExecuteChanged()
         {
-            _dispatcherHelper.InvokeOnUiThread(() => _command.RaiseCanExecuteChanged());
+            _dispatcherHelper.InvokeOnUiThread(() => 
+            {
+                _command.RaiseCanExecuteChanged();
+                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            });
         }
     }
 }

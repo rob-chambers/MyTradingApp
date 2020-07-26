@@ -302,14 +302,14 @@ namespace MyTradingApp.ViewModels
                     Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
                     //                    ModifyContractForRequest(item.Contract);                    
                     var newContract = MapContractToNewContract(item.Contract);
-                    // DON'T STREAM POSITIONS YET UNTIL ORDERS WORKING await _marketDataManager.RequestStreamingPriceAsync(newContract);
+                    await _marketDataManager.RequestStreamingPriceAsync(newContract);
 
-                    // positionsStopService.Manage(item);
+                    //positionsStopService.Manage(item);
                 }
             }
 
             // Get associated stop orders
-            var orders = await _positionManager.RequestOpenOrdersAsync();
+            var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
             await ProcessOpenOrdersAsync(orders);
         }
     }

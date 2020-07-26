@@ -2,9 +2,9 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
@@ -25,6 +25,7 @@ namespace MyTradingApp.Tests.Orders
         private AccountSummaryCompletedMessage _accountSummaryCompletedMessage;
         private ITradeRepository _tradeRepository;
         private IHistoricalDataManager _historicalDataManager;
+        private IDispatcherHelper _dispatcherHelper;
 
         public IOrderCalculationService OrderCalculationService
         {
@@ -74,6 +75,25 @@ namespace MyTradingApp.Tests.Orders
             }
         }
 
+        public IDispatcherHelper DispatcherHelper
+        {
+            get
+            {
+                if (_dispatcherHelper == null)
+                {
+                    _dispatcherHelper = Substitute.For<IDispatcherHelper>();
+                    _dispatcherHelper.When(x => x.InvokeOnUiThread(Arg.Any<Action>()))
+                        .Do(x => 
+                        {
+                            var action = x.Arg<Action>();
+                            action.Invoke();
+                        });
+                }
+
+                return _dispatcherHelper;
+            }
+        }
+
         public OrdersViewModelBuilder AddSingleOrder(string symbol, bool found)
         {
             var builder = new OrderBuilder();
@@ -96,8 +116,8 @@ namespace MyTradingApp.Tests.Orders
                 Arg.Any<Contract>(), Arg.Any<DateTime>(), Arg.Any<TwsDuration>(),
                 Arg.Any<TwsBarSizeSetting>(), Arg.Any<TwsHistoricalDataRequestType>(), Arg.Any<bool>(), Arg.Any<bool>())
                 .Returns(Task.FromResult(new List<HistoricalDataEventArgs>()));
-            
-            var vm = new OrdersViewModel(ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository);
+
+            var vm = new OrdersViewModel(DispatcherHelper, ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository);
 
             foreach (var item in _orderItems)
             {

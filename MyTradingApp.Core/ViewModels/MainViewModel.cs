@@ -32,7 +32,6 @@ namespace MyTradingApp.ViewModels
         private readonly IAccountManager _accountManager;
         private readonly IConnectionService _connectionService;
         private readonly IExchangeRateService _exchangeRateService;
-        private readonly IBClient _iBClient;
         private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IOrderManager _orderManager;
@@ -60,7 +59,6 @@ namespace MyTradingApp.ViewModels
 
         public MainViewModel(
             IDispatcherHelper dispatcherHelper,
-            IBClient iBClient,
             IConnectionService connectionService,
             IOrderManager orderManager,
             IAccountManager accountManager,
@@ -73,7 +71,6 @@ namespace MyTradingApp.ViewModels
             SettingsViewModel settingsViewModel)
             : base(dispatcherHelper)
         {           
-            _iBClient = iBClient;
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
