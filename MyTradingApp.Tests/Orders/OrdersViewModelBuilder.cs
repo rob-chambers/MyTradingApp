@@ -26,6 +26,7 @@ namespace MyTradingApp.Tests.Orders
         private ITradeRepository _tradeRepository;
         private IHistoricalDataManager _historicalDataManager;
         private IDispatcherHelper _dispatcherHelper;
+        private List<ContractDetails> _contractDetails = new List<ContractDetails>();
 
         public IOrderCalculationService OrderCalculationService
         {
@@ -110,12 +111,20 @@ namespace MyTradingApp.Tests.Orders
             return this;
         }
 
+        public OrdersViewModelBuilder ReturnsContractDetails(List<ContractDetails> details)
+        {
+            _contractDetails = details;
+            return this;
+        }
+
         public OrdersViewModel Build()
         {
             HistoricalDataManager.GetHistoricalDataAsync(
                 Arg.Any<Contract>(), Arg.Any<DateTime>(), Arg.Any<TwsDuration>(),
                 Arg.Any<TwsBarSizeSetting>(), Arg.Any<TwsHistoricalDataRequestType>(), Arg.Any<bool>(), Arg.Any<bool>())
                 .Returns(Task.FromResult(new List<HistoricalDataEventArgs>()));
+
+            ContractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(_contractDetails);
 
             var vm = new OrdersViewModel(DispatcherHelper, ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository);
 

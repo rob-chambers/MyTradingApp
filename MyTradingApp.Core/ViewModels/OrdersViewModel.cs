@@ -70,7 +70,6 @@ namespace MyTradingApp.ViewModels
             _orderCalculationService = orderCalculationService;
             _orderManager = orderManager;
             _tradeRepository = tradeRepository;
-            Messenger.Default.Register<FundamentalDataMessage>(this, OnContractManagerFundamentalData);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
@@ -403,21 +402,23 @@ namespace MyTradingApp.ViewModels
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
             await RequestLatestPriceAsync(order);
-            _contractManager.RequestFundamentals(MapOrderToContract(order), "ReportSnapshot");
-            //_contractManager.RequestDetails(MapOrderToContract(order));
             var details = await _contractManager.RequestDetailsAsync(MapOrderToContract(order));
 
             if (!details.Any())
             {
                 Log.Warning("No contract details returned for {0}", symbol);
+                return;
             }
-            else if (details.Count > 1)
+
+            if (details.Count > 1)
             {
                 Log.Warning("Found multiple contract detail items for {0} - taking the first", symbol);
-                var detail = details.First();
-                order.Symbol.MinTick = detail.MinTick;
-                order.Symbol.Name = detail.LongName;
             }
+
+            var detail = details.First();
+            order.Symbol.IsFound = true;
+            order.Symbol.MinTick = detail.MinTick;
+            order.Symbol.Name = detail.LongName;
         }
 
         private async Task GetHistoricalDataAsyncAsync(OrderItem order)
@@ -454,30 +455,6 @@ namespace MyTradingApp.ViewModels
                 _orderCalculationService.SetHistoricalData(order.Symbol.Code, bars);
                 CalculateRisk(order.Symbol.Code);
             }
-        }
-
-        private void OnContractManagerFundamentalData(FundamentalDataMessage message)
-        {
-            var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
-            if (order == null)
-            {
-                return;
-            }
-
-            Log.Debug($"Found fundamental data for {order.Symbol.Code}");
-            order.Symbol.IsFound = true;
-            order.Symbol.Name = message.Data.CompanyName;
-            order.Symbol.CompanyDescription = message.Data.CompanyDescription;
-            //IssueHistoricalDataRequest(order);
-            //StartStopStreamingCommand.RaiseCanExecuteChanged();
-            //SubmitCommand.RaiseCanExecuteChanged();
-
-            //RequestLatestPrice(order);
-
-            //if (IsStreaming)
-            //{
-            //    StreamSymbol(order);
-            //}
         }
 
         //private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
@@ -583,7 +560,6 @@ namespace MyTradingApp.ViewModels
             _orderCalculationService.SetLatestPrice(order.Symbol.Code, price);
             CalculateRisk(order.Symbol.Code);
 
-            order.Symbol.IsFound = true;
             await GetHistoricalDataAsyncAsync(order);
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();

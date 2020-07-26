@@ -3,13 +3,10 @@ using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Messages;
-using MyTradingApp.Models;
 using MyTradingApp.Tests.Orders;
 using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -161,26 +158,6 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public async Task FindCommandRequestsFundamentalData()
-        {
-            var builder = new OrdersViewModelBuilder();
-            var vm = builder
-                .AddSingleOrder(DefaultSymbol, false)
-                .Build();
-
-            var order = vm.Orders[0];
-            await vm.FindCommand.ExecuteAsync(order);
-
-            // Assert
-            builder.ContractManager.Received()
-                .RequestFundamentals(Arg.Is<Contract>(x => x.Symbol == order.Symbol.Code &&
-                x.Exchange == BrokerConstants.Routers.Smart &&
-                x.Currency == BrokerConstants.UsCurrency &&
-                x.SecType == BrokerConstants.Stock &&
-                x.PrimaryExch == order.Symbol.Exchange.ToString()), Arg.Is("ReportSnapshot"));
-        }
-
-        [Fact]
         public async Task FindCommandRequestsContractDetails()
         {
             // Arrange
@@ -201,29 +178,6 @@ namespace MyTradingApp.Tests
                 x.Currency == BrokerConstants.UsCurrency &&
                 x.SecType == BrokerConstants.Stock &&
                 x.PrimaryExch == order.Symbol.Exchange.ToString()));
-        }
-
-        [Fact]
-        public async Task NasdaqOrdersRoutedThroughIsland()
-        {
-            // Arrange
-            var builder = new OrdersViewModelBuilder();
-            var vm = builder
-                .AddSingleOrder(DefaultSymbol, false)
-                .Build();
-            var order = vm.Orders[0];
-            order.Symbol.Exchange = Exchange.Nasdaq;
-
-            // Act
-            await vm.FindCommand.ExecuteAsync(order);
-
-            // Assert
-            builder.ContractManager.Received()
-                .RequestFundamentals(Arg.Is<Contract>(x => x.Symbol == order.Symbol.Code &&
-                x.Exchange == BrokerConstants.Routers.Smart &&
-                x.Currency == BrokerConstants.UsCurrency &&
-                x.SecType == BrokerConstants.Stock &&
-                x.PrimaryExch == BrokerConstants.Routers.Island), Arg.Is("ReportSnapshot"));
         }
 
         [Fact]
@@ -249,6 +203,13 @@ namespace MyTradingApp.Tests
             var builder = new OrdersViewModelBuilder();
             var vm = builder
                 .AddSingleOrder(DefaultSymbol, false)
+                .ReturnsContractDetails(new List<ContractDetails>
+                {
+                    new ContractDetails
+                    {
+                        LongName = "Microsoft"
+                    }
+                })
                 .Build();
             var order = vm.Orders[0];
 
@@ -258,7 +219,6 @@ namespace MyTradingApp.Tests
             await vm.FindCommand.ExecuteAsync(order);
 
             // Assert
-            Assert.True(order.Symbol.IsFound);
             Assert.True(vm.StartStopStreamingCommand.CanExecute());
             Assert.True(fired);
         }
@@ -346,7 +306,6 @@ namespace MyTradingApp.Tests
             Assert.Equal(OrderStatus.Pending, order.Status);
             Assert.Null(order.Symbol.Code);
             Assert.Null(order.Symbol.Name);
-            Assert.Null(order.Symbol.CompanyDescription);
             Assert.False(order.Symbol.IsFound);
         }
 
