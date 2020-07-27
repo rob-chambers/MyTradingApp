@@ -21,7 +21,7 @@ namespace MyTradingApp.Services
 
         public async Task<List<HistoricalDataEventArgs>> GetHistoricalDataAsync(Contract contract, DateTime endDateTime, TwsDuration duration, TwsBarSizeSetting barSizeSetting, TwsHistoricalDataRequestType whatToShow, bool useRegularTradingHours = true, bool formatDate = true)
         {
-            var historicalDataEvents = await _twsObjectFactory.TwsController.GetHistoricalDataAsync(contract, endDateTime, TwsDuration.OneMonth, TwsBarSizeSetting.OneDay, TwsHistoricalDataRequestType.Midpoint);
+            var historicalDataEvents = await _twsObjectFactory.TwsController.GetHistoricalDataAsync(contract, endDateTime, duration, barSizeSetting, whatToShow, useRegularTradingHours, formatDate);
             return historicalDataEvents;
         }
     }

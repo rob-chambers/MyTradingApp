@@ -417,6 +417,7 @@ namespace MyTradingApp.ViewModels
 
             var detail = details.First();
             order.Symbol.IsFound = true;
+            SubmitCommand.RaiseCanExecuteChanged();
             order.Symbol.MinTick = detail.MinTick;
             order.Symbol.Name = detail.LongName;
         }
@@ -454,6 +455,10 @@ namespace MyTradingApp.ViewModels
 
                 _orderCalculationService.SetHistoricalData(order.Symbol.Code, bars);
                 CalculateRisk(order.Symbol.Code);
+            }
+            else
+            {
+                Log.Debug("No hostorical data found");
             }
         }
 
