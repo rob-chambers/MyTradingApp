@@ -2,9 +2,9 @@
 
 namespace MyTradingApp.EventMessages
 {
-    public class OrderRemovedMessage
+    public class OrderSelectionChangedMessage
     {
-        public OrderRemovedMessage(OrderItem order)
+        public OrderSelectionChangedMessage(OrderItem order)
         {
             Order = order;
         }

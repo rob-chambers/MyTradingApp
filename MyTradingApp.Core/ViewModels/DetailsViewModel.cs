@@ -2,7 +2,6 @@
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Models;
 
 namespace MyTradingApp.ViewModels
 {
@@ -10,6 +9,11 @@ namespace MyTradingApp.ViewModels
     {
         private RelayCommand _closeDetailsCommand;
         private OrderItem _selection;
+
+        public DetailsViewModel()
+        {
+            Messenger.Default.Register<OrderSelectionChangedMessage>(this, msg => Selection = msg.Order);
+        }
 
         public RelayCommand CloseDetailsCommand => _closeDetailsCommand ?? (_closeDetailsCommand = new RelayCommand(CloseDetails));
 

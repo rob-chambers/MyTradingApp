@@ -533,5 +533,23 @@ namespace MyTradingApp.Tests
             Assert.True(fired);
             Assert.Equal(NotificationType.Warning, type);
         }
+
+        [Fact]
+        public void WhenSelectionChangedSendMessage()
+        {
+            var builder = new OrdersViewModelBuilder()
+                .AddSingleOrder("1", true)
+                .AddSingleOrder("2", false);
+
+            var vm = builder.Build();
+            var fired = false;
+            Messenger.Default.Register<OrderSelectionChangedMessage>(this, x => fired = true);
+
+            // Act
+            var order = vm.SelectedOrder = vm.Orders[1];
+
+            // Assert
+            Assert.True(fired);
+        }
     }
 }

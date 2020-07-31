@@ -69,7 +69,6 @@ namespace MyTradingApp.ViewModels
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
-            DetailsViewModel detailsViewModel,
             SettingsViewModel settingsViewModel,
             IQueueProcessor queueProcessor)
             : base(dispatcherHelper, queueProcessor)
@@ -79,9 +78,7 @@ namespace MyTradingApp.ViewModels
             _accountManager = accountManager;
             OrdersViewModel = ordersViewModel;
             OrdersViewModel.Orders.CollectionChanged += OnOrdersCollectionChanged;
-            OrdersViewModel.PropertyChanged += OnOrdersViewModelPropertyChanged;
             PositionsViewModel = positionsViewModel;
-            DetailsViewModel = detailsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
             _statusBarViewModel = statusBarViewModel;
@@ -173,8 +170,6 @@ namespace MyTradingApp.ViewModels
         public OrdersViewModel OrdersViewModel { get; private set; }
 
         public PositionsViewModel PositionsViewModel { get; private set; }
-
-        public DetailsViewModel DetailsViewModel { get; }
 
         public double RiskMultiplier
         {
@@ -353,16 +348,6 @@ namespace MyTradingApp.ViewModels
                     await PositionsViewModel.GetPositionsAsync();
                 });
             });       
-        }
-
-        private void OnOrdersViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(OrdersViewModel.SelectedOrder))
-            {
-                return;
-            }
-
-            DetailsViewModel.Selection = OrdersViewModel.SelectedOrder;
         }
 
         private void OnSettingsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)

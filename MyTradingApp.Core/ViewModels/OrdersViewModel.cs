@@ -237,7 +237,11 @@ namespace MyTradingApp.ViewModels
         public OrderItem SelectedOrder
         {
             get => _selectedOrder;
-            set => Set(ref _selectedOrder, value);
+            set
+            {
+                Set(ref _selectedOrder, value);
+                Messenger.Default.Send(new OrderSelectionChangedMessage(value));
+            }
         }
 
         #endregion
