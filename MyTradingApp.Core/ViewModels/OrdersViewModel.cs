@@ -14,6 +14,7 @@ using MyTradingApp.Utils;
 using ObjectDumper;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -173,8 +174,82 @@ namespace MyTradingApp.ViewModels
         {
             get
             {
-                return _findCommand ?? (_findCommand = new AsyncCommand<OrderItem>(DispatcherHelper, order =>
-                    IssueFindSymbolRequestAsync(order), order => CanFindOrder(order)));
+                return _findCommand ?? (_findCommand = new AsyncCommand<OrderItem>(
+                    DispatcherHelper, 
+                    order => FindSymbolAndProcessAsync(order), 
+                    order => CanFindOrder(order)));
+            }
+        }
+
+        private async Task FindSymbolAndProcessAsync(OrderItem order)
+        {
+            var results = await IssueFindSymbolRequestAsync(order).ConfigureAwait(false);
+            if (results == null)
+            {
+                return;
+            }
+
+            var details = results.Details;
+            var symbol = order.Symbol.Code;
+            if (!details.Any())
+            {
+                Log.Warning("No contract details returned for {0}", symbol);
+                return;
+            }
+
+            if (details.Count > 1)
+            {
+                Log.Warning("Found multiple contract detail items for {0} - taking the first", symbol);
+            }
+
+            var detail = details.First();
+            order.Symbol.IsFound = true;
+
+            order.Symbol.LatestPrice = results.LatestPrice;
+            _orderCalculationService.SetLatestPrice(order.Symbol.Code, results.LatestPrice);
+            CalculateRisk(order.Symbol.Code);
+            ProcessHistory(order, results.PriceHistory);
+
+            if (IsStreaming)
+            {
+                await StreamSymbolAsync(order).ConfigureAwait(false);
+            }
+
+            DispatcherHelper.InvokeOnUiThread(() =>
+            {
+                StartStopStreamingCommand.RaiseCanExecuteChanged();
+                SubmitCommand.RaiseCanExecuteChanged();
+            });
+
+            order.Symbol.MinTick = detail.MinTick;
+            order.Symbol.Name = detail.LongName;
+        }
+
+        private void ProcessHistory(OrderItem order, List<HistoricalDataEventArgs> results)
+        {
+            if (results.Any())
+            {
+                order.HasHistory = true;
+
+                var bars = new BarCollection();
+                foreach (var item in results.Select(x => new Domain.Bar
+                {
+                    Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
+                    Open = x.Open,
+                    High = x.High,
+                    Low = x.Low,
+                    Close = x.Close
+                }).OrderByDescending(x => x.Date))
+                {
+                    bars.Add(item.Date, item);
+                }
+
+                _orderCalculationService.SetHistoricalData(order.Symbol.Code, bars);
+                CalculateRisk(order.Symbol.Code);
+            }
+            else
+            {
+                Log.Debug("No hostorical data found");
             }
         }
 
@@ -395,90 +470,34 @@ namespace MyTradingApp.ViewModels
             _accountId = message.AccountId;
         }
 
-        private async Task IssueFindSymbolRequestAsync(OrderItem order)
+        private async Task<FindCommandResultsModel> IssueFindSymbolRequestAsync(OrderItem order)
         {
             var symbol = order.Symbol.Code;
             if (Orders.Any(x => x != order && x.Symbol.Code == symbol))
             {
                 Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Warning, $"There is already an order for {symbol}."));
-                return;
+                return null;
             }
 
             order.Symbol.IsFound = false;
             order.Symbol.Name = string.Empty;
-            await RequestLatestPriceAsync(order);
-            var details = await _contractManager.RequestDetailsAsync(MapOrderToContract(order));
 
-            if (!details.Any())
-            {
-                Log.Warning("No contract details returned for {0}", symbol);
-                return;
-            }
+            var model = new FindCommandResultsModel();            
 
-            if (details.Count > 1)
-            {
-                Log.Warning("Found multiple contract detail items for {0} - taking the first", symbol);
-            }
-
-            var detail = details.First();
-            order.Symbol.IsFound = true;
-            SubmitCommand.RaiseCanExecuteChanged();
-            order.Symbol.MinTick = detail.MinTick;
-            order.Symbol.Name = detail.LongName;
-        }
-
-        private async Task GetHistoricalDataAsync(OrderItem order)
-        {
-            Log.Debug($"Issuing historical data request for {order.Symbol.Code}");
-            //var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
-            //_historicalDataManager.AddRequest(MapOrderToContract(order), endTime, "25 D", "1 day", "MIDPOINT", 0, 1, false);
-
-            var results = await _historicalDataManager.GetHistoricalDataAsync(
+            var contract = MapOrderToContract(order);
+            var getLatestPriceTask = _marketDataManager.RequestLatestPriceAsync(contract);
+            var getHistoryTask = _historicalDataManager.GetHistoricalDataAsync(
                 MapOrderToContract(order), DateTime.UtcNow, TwsDuration.OneMonth, TwsBarSizeSetting.OneDay, TwsHistoricalDataRequestType.Midpoint);
+            var detailsTask = _contractManager.RequestDetailsAsync(contract);
 
-            //var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
-            //if (order == null)
-            //{
-            //    return;
-            //}
-            if (results.Any())
-            {
-                order.HasHistory = true;                               
+            await Task.WhenAll(getLatestPriceTask, getHistoryTask, detailsTask).ConfigureAwait(false);
 
-                var bars = new BarCollection();
-                foreach (var item in results.Select(x => new Domain.Bar
-                {
-                    Date = DateTime.ParseExact(x.Date, YearMonthDayPattern, new CultureInfo("en-US")),
-                    Open = x.Open,
-                    High = x.High,
-                    Low = x.Low,
-                    Close = x.Close
-                }).OrderByDescending(x => x.Date))
-                {
-                    bars.Add(item.Date, item);
-                }
+            model.LatestPrice = await getLatestPriceTask;
+            model.PriceHistory = await getHistoryTask;
+            model.Details = await detailsTask;
 
-                _orderCalculationService.SetHistoricalData(order.Symbol.Code, bars);
-                CalculateRisk(order.Symbol.Code);
-            }
-            else
-            {
-                Log.Debug("No hostorical data found");
-            }
+            return model;
         }
-
-        //private void OnHistoricalDataManagerDataCompleted(HistoricalDataCompletedMessage message)
-        //{
-        //    var order = Orders.SingleOrDefault(x => x.Symbol.Code == message.Symbol);
-        //    if (order == null)
-        //    {
-        //        return;
-        //    }
-
-        //    order.HasHistory = true;
-        //    _orderCalculationService.SetHistoricalData(order.Symbol.Code, message.Bars);
-        //    CalculateRisk(order.Symbol.Code);
-        //}
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
         {
@@ -569,26 +588,6 @@ namespace MyTradingApp.ViewModels
             foreach (var value in values)
             {
                 ExchangeList.Add((Exchange)value);
-            }
-        }
-
-        private async Task RequestLatestPriceAsync(OrderItem order)
-        {
-            var contract = MapOrderToContract(order);
-            var price = await _marketDataManager.RequestLatestPriceAsync(contract);
-
-            order.Symbol.LatestPrice = price;
-            _orderCalculationService.SetLatestPrice(order.Symbol.Code, price);
-            CalculateRisk(order.Symbol.Code);
-
-            // TODO: the following task can be performed in parallel with others
-            await GetHistoricalDataAsync(order);
-            StartStopStreamingCommand.RaiseCanExecuteChanged();
-            SubmitCommand.RaiseCanExecuteChanged();
-
-            if (IsStreaming)
-            {
-                await StreamSymbolAsync(order);
             }
         }
 

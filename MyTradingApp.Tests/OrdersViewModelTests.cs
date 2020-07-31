@@ -443,6 +443,13 @@ namespace MyTradingApp.Tests
 
             var vm = builder
                 .AddSingleOrder(DefaultSymbol, true)
+                .ReturnsContractDetails(new List<ContractDetails>
+                {
+                    new ContractDetails
+                    {
+                        LongName = "Microsoft"
+                    }
+                })
                 .Build();
 
             var order = vm.Orders[0];
