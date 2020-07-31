@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
+using MyTradingApp.Desktop.Utils;
 using Serilog;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -16,6 +18,7 @@ namespace MyTradingApp.Desktop
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            var sw = Stopwatch.StartNew();
             base.OnStartup(e);
             InitLogging();
             InitGlobalExceptionHandler();
@@ -28,14 +31,18 @@ namespace MyTradingApp.Desktop
 
             var mainWindow = new MainWindow();
             mainWindow.Show();
+            Log.Debug($"Starting up took {sw.ElapsedMilliseconds}ms");
         }
 
         private static void InitLogging()
         {
+            var template = "{Timestamp:HH:mm:ss.fff} [{Level:u3}] ({ThreadID}) {Message:lj}{NewLine}{Exception}";
+
             Log.Logger = new LoggerConfiguration()
+                .Enrich.With(new ThreadIdEnricher())
                 .MinimumLevel.Debug()
                 .WriteTo.Debug()
-                .WriteTo.File("logfile.txt", rollingInterval: RollingInterval.Month)
+                .WriteTo.File("logfile.txt", rollingInterval: RollingInterval.Month, outputTemplate: template)
                 .CreateLogger();
 
             Log.Information("Starting up");

@@ -2,6 +2,7 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
@@ -17,15 +18,23 @@ namespace MyTradingApp.Services
     public class PositionManager : IPositionManager
     {
         private readonly ITwsObjectFactory _twsObjectFactory;
+        private readonly IQueueProcessor _queueProcessor;
         private readonly List<OpenOrderMessage> _orderMessages = new List<OpenOrderMessage>();
 
-        public PositionManager(ITwsObjectFactory twsObjectFactory)
+        public PositionManager(ITwsObjectFactory twsObjectFactory, IQueueProcessor queueProcessor)
         {
             _twsObjectFactory = twsObjectFactory;
-            _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatus;
+            _queueProcessor = queueProcessor;
+            _twsObjectFactory.TwsCallbackHandler.OrderStatusEvent += HandleOrderStatusEvent;
         }
 
-        private void HandleOrderStatus(object sender, OrderStatusEventArgs args)
+        private void HandleOrderStatusEvent(object sender, OrderStatusEventArgs args)
+        {
+            // Hand off processing to the queue processor to improve perf of the API processing loop
+            _queueProcessor.Enqueue(() => HandleOrderStatus(args));
+        }
+
+        private void HandleOrderStatus(OrderStatusEventArgs args)
         {
             var orderId = args.OrderId;
 
@@ -35,8 +44,8 @@ namespace MyTradingApp.Services
 
             foreach (var openOrder in orders)
             {
-                LogOrder(openOrder);                
-                Messenger.Default.Send(new OrderStatusChangedMessage(openOrder.Contract.Symbol, args));
+                LogOrder(openOrder);
+                Messenger.Default.Send(new OrderStatusChangedMessage(openOrder.Contract.Symbol, args), OrderStatusChangedMessage.Tokens.Positions);
             }
         }
 

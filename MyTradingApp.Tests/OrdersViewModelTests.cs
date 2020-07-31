@@ -86,7 +86,7 @@ namespace MyTradingApp.Tests
 
             // Act
             var args = new OrderStatusEventArgs(OrderId, status.ToString(), 0, 0, 0, 0, 0, 0, 0, null);
-            Messenger.Default.Send(new OrderStatusChangedMessage(order.Symbol.Code, args));
+            Messenger.Default.Send(new OrderStatusChangedMessage(order.Symbol.Code, args), OrderStatusChangedMessage.Tokens.Orders);
 
             // Assert
             Assert.True(findCommandCanExecuteChangedFired);
@@ -495,10 +495,10 @@ namespace MyTradingApp.Tests
 
             // Act
             var args = new OrderStatusEventArgs(0, OrderStatus.Filled.ToString(), 0, 0, FillPrice, 0, 0, 0, 0, null);
-            Messenger.Default.Send(new OrderStatusChangedMessage(DefaultSymbol, args));
+            Messenger.Default.Send(new OrderStatusChangedMessage(DefaultSymbol, args), OrderStatusChangedMessage.Tokens.Orders);
 
             // Assert
-            builder.TradeRepository.Received().AddTrade(Arg.Is<Trade>(x =>
+            builder.TradeRepository.Received().AddTradeAsync(Arg.Is<Trade>(x =>
                 x.Direction == Direction.Buy &&
                 x.Quantity == Quantity &&
                 x.EntryPrice == FillPrice &&

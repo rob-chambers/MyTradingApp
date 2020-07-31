@@ -1,9 +1,10 @@
 ﻿using MyTradingApp.Domain;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Repositories
 {
     public interface ITradeRepository
     {
-        void AddTrade(Trade trade);
+        Task AddTradeAsync(Trade trade);
     }
 }

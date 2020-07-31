@@ -2,6 +2,7 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
@@ -125,8 +126,9 @@ namespace MyTradingApp.Tests.Orders
                 .Returns(Task.FromResult(new List<HistoricalDataEventArgs>()));
 
             ContractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(_contractDetails);
-
-            var vm = new OrdersViewModel(DispatcherHelper, ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository);
+            
+            var queueProcessor = Substitute.For<IQueueProcessor>();
+            var vm = new OrdersViewModel(DispatcherHelper, ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository, queueProcessor);
 
             foreach (var item in _orderItems)
             {

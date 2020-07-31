@@ -5,6 +5,7 @@ using IBApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyTradingApp.Core;
 using MyTradingApp.Core.Repositories;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Desktop.Utils;
@@ -84,6 +85,7 @@ namespace MyTradingApp.Desktop
             services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId + 1));
 
             services.AddScoped<IDispatcherHelper, DispatcherHelper>();
+            services.AddScoped<IQueueProcessor, BlockingCollectionQueue>();
         }
     }
 }

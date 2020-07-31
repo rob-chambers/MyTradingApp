@@ -65,6 +65,7 @@ namespace MyTradingApp.Services
 
         public async Task DisconnectAsync()
         {
+            Log.Information("Disconnecting from TWS");
             Messenger.Default.Send(new ConnectionChangingMessage(false));
             await _twsObjectFactory.TwsController.DisconnectAsync();
         }

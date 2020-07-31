@@ -1,9 +1,9 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Constants;
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
-using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
@@ -57,8 +57,9 @@ namespace MyTradingApp.ViewModels
             IHistoricalDataManager historicalDataManager,
             IOrderCalculationService orderCalculationService,
             IOrderManager orderManager,
-            ITradeRepository tradeRepository) 
-            : base(dispatcherHelper)
+            ITradeRepository tradeRepository,
+            IQueueProcessor queueProcessor) 
+            : base(dispatcherHelper, queueProcessor)
         {
             Orders = new ObservableCollectionNoReset<OrderItem>();
             Orders.CollectionChanged += OnOrdersCollectionChanged;
@@ -70,7 +71,7 @@ namespace MyTradingApp.ViewModels
             _orderCalculationService = orderCalculationService;
             _orderManager = orderManager;
             _tradeRepository = tradeRepository;
-            Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
 
@@ -422,7 +423,7 @@ namespace MyTradingApp.ViewModels
             order.Symbol.Name = detail.LongName;
         }
 
-        private async Task GetHistoricalDataAsyncAsync(OrderItem order)
+        private async Task GetHistoricalDataAsync(OrderItem order)
         {
             Log.Debug($"Issuing historical data request for {order.Symbol.Code}");
             //var endTime = DateTime.Now.ToString(HistoricalDataManager.FullDatePattern);
@@ -488,14 +489,24 @@ namespace MyTradingApp.ViewModels
             UpdateOrderStatus(order, message.Message.Status);
             if (order.Status == OrderStatus.Filled)
             {
-                AddTrade(order, message.Message.AvgFillPrice);
-                await SubmitStopOrderAsync(order, message.Message);
+                Log.Debug("A new order for {0} was filled", order.Symbol.Code);
+                var addTradeTask = AddTradeAsync(order, message.Message.AvgFillPrice);
+                var stopOrderTask = SubmitStopOrderAsync(order, message.Message);
+
+                await Task.WhenAll(addTradeTask, stopOrderTask).ConfigureAwait(false);
+
+                // This order can be removed now that it is dealt with - it will be added as a position
+                DispatcherHelper.InvokeOnUiThread(() => Orders.Remove(order));
+
+                // Pass this message on to the positions vm now that we have a stop order 
+                Messenger.Default.Send(message, OrderStatusChangedMessage.Tokens.Positions);
             }
         }
 
-        private void AddTrade(OrderItem order, double fillPrice)
+        private Task AddTradeAsync(OrderItem order, double fillPrice)
         {
-            _tradeRepository.AddTrade(new Trade
+            Log.Debug("Recording trade");
+            return _tradeRepository.AddTradeAsync(new Trade
             {
                 Symbol = order.Symbol.Code,
                 Direction = order.Direction,
@@ -505,12 +516,13 @@ namespace MyTradingApp.ViewModels
             });
         }
 
-        private async Task SubmitStopOrderAsync(OrderItem order, OrderStatusEventArgs args)
+        private Task SubmitStopOrderAsync(OrderItem order, OrderStatusEventArgs args)
         {
+            Log.Information("Submitting stop order");
             var stopOrder = GetTrailingStopOrder(order);
             stopOrder.TotalQuantity = args.Filled;
             var contract = MapOrderToContract(order);
-            await _orderManager.PlaceNewOrderAsync(contract, stopOrder);
+            return _orderManager.PlaceNewOrderAsync(contract, stopOrder);
         }
 
         private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -565,7 +577,8 @@ namespace MyTradingApp.ViewModels
             _orderCalculationService.SetLatestPrice(order.Symbol.Code, price);
             CalculateRisk(order.Symbol.Code);
 
-            await GetHistoricalDataAsyncAsync(order);
+            // TODO: the following task can be performed in parallel with others
+            await GetHistoricalDataAsync(order);
             StartStopStreamingCommand.RaiseCanExecuteChanged();
             SubmitCommand.RaiseCanExecuteChanged();
 
@@ -652,9 +665,12 @@ namespace MyTradingApp.ViewModels
                     break;
             }
 
-            FindCommand.RaiseCanExecuteChanged();
-            SubmitCommand.RaiseCanExecuteChanged();
-            DeleteCommand.RaiseCanExecuteChanged();
+            DispatcherHelper.InvokeOnUiThread(() =>
+            {
+                FindCommand.RaiseCanExecuteChanged();
+                SubmitCommand.RaiseCanExecuteChanged();
+                DeleteCommand.RaiseCanExecuteChanged();
+            });
         }
 
         #endregion

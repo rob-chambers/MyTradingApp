@@ -1,5 +1,6 @@
 ﻿using MyTradingApp.Domain;
 using MyTradingApp.Persistence;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Repositories
 {
@@ -9,10 +10,10 @@ namespace MyTradingApp.Repositories
         {
         }
 
-        public void AddTrade(Trade trade)
+        public async Task AddTradeAsync(Trade trade)
         {
             Context.Trades.Add(trade);
-            Context.SaveChanges();
+            await Context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

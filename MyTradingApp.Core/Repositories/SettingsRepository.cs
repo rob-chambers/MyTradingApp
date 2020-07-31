@@ -4,6 +4,7 @@ using MyTradingApp.Persistence;
 using MyTradingApp.Repositories;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Core.Repositories
 {
@@ -13,42 +14,35 @@ namespace MyTradingApp.Core.Repositories
         {
         }
 
-        public IEnumerable<Setting> GetAll()
+        public async Task<IEnumerable<Setting>> GetAllAsync()
         {
-            return Context.Settings
+            return await Context.Settings                
                 .AsNoTracking()
-                .ToList();
+                .ToListAsync();
         }
 
-        public void Save(IEnumerable<Setting> settings)
+        public async Task SaveAsync(IEnumerable<Setting> settings)
         {
-            //var item = Context.Settings.FirstOrDefault();
-            //if (item != null)
-            //{
-            //    Context.Settings.Remove(item);
-            //}
-
-            //Context.Settings.Add(setting);
-            //Context.SaveChanges();
-
             var toAdd = new List<Setting>();
-            var existingSettings = GetAll().ToList();
+            var getSettingsTask = GetAllAsync().ConfigureAwait(false);
+            var existingSettings = (await getSettingsTask).ToList();
             foreach (var setting in settings)
             {
                 var existingSetting = existingSettings.SingleOrDefault(x => x.Key == setting.Key);
                 if (existingSetting == null)
                 {
-                    toAdd.Add(setting);                    
+                    toAdd.Add(setting);
                 }
                 else
                 {
-                    var item = Context.Settings.Find(existingSetting.Key);
-                    item.Value = setting.Value;
-                }
+                    existingSetting = Context.Settings.Find(existingSetting.Key);
+                    existingSetting.Value = setting.Value;
+                    Context.Settings.Attach(existingSetting);
+                }                
             }
 
             Context.Settings.AddRange(toAdd);
-            Context.SaveChanges();
+            await Context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

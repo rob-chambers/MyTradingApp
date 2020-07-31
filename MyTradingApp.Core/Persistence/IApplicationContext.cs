@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyTradingApp.Domain;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Persistence
 {
@@ -9,6 +11,6 @@ namespace MyTradingApp.Persistence
         DbSet<Trade> Trades { get; set; }
         DbSet<Setting> Settings { get; set; }
 
-        int SaveChanges();
+        Task<int> SaveChangesAsync(CancellationToken token = default);
     }
 }

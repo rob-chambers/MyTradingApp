@@ -63,7 +63,13 @@ namespace MyTradingApp.Services
             var diff = Math.Abs(GetEntryPrice(symbol, direction) - CalculateInitialStopLoss(symbol, direction));
             var size = _riskPerTrade / diff;
 
-            return Convert.ToUInt16(Math.Round(size, 0));
+            var roundedSize = Math.Round(size, 0);
+            if (roundedSize > ushort.MaxValue)
+            {
+                roundedSize = ushort.MaxValue;
+            }
+
+            return Convert.ToUInt16(roundedSize);
         }
 
         public double GetEntryPrice(string symbol, Direction direction)

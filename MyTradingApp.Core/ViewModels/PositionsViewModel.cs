@@ -2,6 +2,9 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core;
+using MyTradingApp.Core.Utils;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
@@ -17,30 +20,56 @@ using System.Threading.Tasks;
 
 namespace MyTradingApp.ViewModels
 {
-    public class PositionsViewModel : ViewModelBase
+    public class PositionsViewModel : DispatcherViewModel
     {
         private readonly IMarketDataManager _marketDataManager;
         private readonly IAccountManager _accountManager;
         private readonly IPositionManager _positionManager;
         private readonly IContractManager _contractManager;
+        private readonly IQueueProcessor _queueProcessor;
+        private bool _isLoading;
+        private string _statusText;
+
         //private AsyncCommand<PositionItem> _tempCommand;
 
         public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
 
         public PositionsViewModel(
+            IDispatcherHelper dispatcherHelper,
             IMarketDataManager marketDataManager,
             IAccountManager accountManager,
             IPositionManager positionManager,
-            IContractManager contractManager)
+            IContractManager contractManager,
+            IQueueProcessor queueProcessor) 
+            : base(dispatcherHelper, queueProcessor)
         {
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
-            Messenger.Default.Register<OrderStatusChangedMessage>(this, OnOrderStatusChangedMessage);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Positions, OnOrderStatusChangedMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
 
             _marketDataManager = marketDataManager;
             _accountManager = accountManager;
             _positionManager = positionManager;
             _contractManager = contractManager;
+            _queueProcessor = queueProcessor;
+        }
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                Set(ref _isLoading, value);
+            }
+        }
+
+        public string StatusText
+        {
+            get => _statusText;
+            set
+            {
+                Set(ref _statusText, value);
+            }
         }
 
         private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -57,8 +86,15 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
-            Log.Debug("Order status has changed for an existing position, so refreshing all positions.");
-            GetPositions();
+            Log.Debug("An order was filled for a position");
+
+            GetPositionsAsync().FireAndForgetSafeAsync(new LoggingErrorHandler());
+
+            //_queueProcessor.Enqueue(async () =>
+            //{
+            //    Log.Debug("Order status has changed for an existing position, so refreshing all positions.");
+            //    await GetPositionsAsync();
+            //});
 
             //Log.Information("Order id {0} against existing position [{1}] was filled.", position.Order.OrderId, position.Symbol.Code);
             ////Log.Debug(message.Message.DumpToString("Order Status"));
@@ -96,37 +132,40 @@ namespace MyTradingApp.ViewModels
 
         private void HandleBarPriceMessage(BarPriceMessage message)
         {
-            var positions = Positions.Where(p => p.Symbol.Code == message.Symbol && p.IsOpen).ToList();
-            if (!positions.Any())
+            _queueProcessor.Enqueue(async () =>
             {
-                return;
-            }
+                var positions = Positions.Where(p => p.Symbol.Code == message.Symbol && p.IsOpen).ToList();
+                if (!positions.Any())
+                {
+                    return;
+                }
 
-            if (positions.Count > 1)
-            {
-                Log.Warning("More than one position found for {0}", message.Symbol);
-            }
+                //if (positions.Count > 1)
+                //{
+                //    Log.Warning("More than one position found for {0}", message.Symbol);
+                //}
 
-            var position = positions.First();
+                var position = positions.First();
 
-            //Log.Debug(message.Bar.DumpToString("{0} Bar"), message.Symbol);
-            position.Symbol.LatestPrice = message.Bar.Close;
-            position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
+                //Log.Debug(message.Bar.DumpToString("{0} Bar"), message.Symbol);
+                position.Symbol.LatestPrice = message.Bar.Close;
+                position.ProfitLoss = position.Quantity * (position.Symbol.LatestPrice - position.AvgPrice);
 
-            var value = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
-            if (position.Quantity < 0)
-            {
-                // For shorts, we profit when price falls
-                value = -value;
-            }
+                var value = Math.Round((position.Symbol.LatestPrice - position.AvgPrice) / position.AvgPrice * 100, 2);
+                if (position.Quantity < 0)
+                {
+                    // For shorts, we profit when price falls
+                    value = -value;
+                }
 
-            position.PercentageGainLoss = value;
+                position.PercentageGainLoss = value;
 
-            var stop = position.CheckToAdjustStop();
-            if (stop.HasValue)
-            {
-                MoveStop(position, stop.Value);
-            }
+                var stop = position.CheckToAdjustStop();
+                if (stop.HasValue)
+                {
+                    await MoveStopAsync(position, stop.Value).ConfigureAwait(false);
+                }
+            });            
         }
 
         private async Task ProcessOpenOrdersAsync(IEnumerable<OpenOrderEventArgs> orders)
@@ -162,12 +201,25 @@ namespace MyTradingApp.ViewModels
                 position.Order = order.Order;
             }
 
-            // Request contract details for all positions
+            // Request contract details for all positions in parallel
+
+            Log.Debug("Getting contract details for all positions in parallel");
+            var sw = Stopwatch.StartNew();
+
+            var getContractDetailTasks = new List<Task<IList<ContractDetails>>>();
             foreach (var item in Positions.Where(p => p.Contract != null))
             {
-                var details = await _contractManager.RequestDetailsAsync(MapContractToNewContract(item.Contract));
-                HandleContractDetails(details);
+                var newContract = MapContractToNewContract(item.Contract);
+                getContractDetailTasks.Add(_contractManager.RequestDetailsAsync(newContract));                
             }
+
+            var detailsList = await Task.WhenAll(getContractDetailTasks).ConfigureAwait(false);
+            foreach (var item in detailsList)
+            {
+                HandleContractDetails(item);
+            }
+
+            Log.Debug("Completed getting contract details in {0}ms", sw.ElapsedMilliseconds);
         }
 
         private void HandleContractDetails(IList<ContractDetails> details)
@@ -215,7 +267,7 @@ namespace MyTradingApp.ViewModels
         //    position.AvgPrice = result;
         //}
 
-        private void MoveStop(PositionItem position, double newStopPercentage)
+        private async Task MoveStopAsync(PositionItem position, double newStopPercentage)
         {
             //var order = GetOrder();
             //_positionManager.UpdateStopOrder(position.Contract, order);
@@ -231,7 +283,7 @@ namespace MyTradingApp.ViewModels
                 {
                     Log.Debug("Tightening trailing stop on {0} from {1}% to {2}%", position.Symbol.Code, order.TrailingPercent, newStopPercentage);
                     order.TrailingPercent = newStopPercentage;
-                    _positionManager.UpdateStopOrderAsync(MapContractToNewContract(position.Contract), order);
+                    await _positionManager.UpdateStopOrderAsync(MapContractToNewContract(position.Contract), order);
                 }
             }
         }
@@ -260,7 +312,33 @@ namespace MyTradingApp.ViewModels
 
         private static Contract MapContractToNewContract(Contract originalContract)
         {
-            var exchange = originalContract.Exchange;
+            Log.Debug("Mapping contract to new contract.  Symbol={0}, Exchange={1}, Primary Exchange={2}",
+                originalContract.Symbol, originalContract.Exchange, originalContract.PrimaryExch);
+
+            var primaryExchange = MapPrimaryExchange(originalContract.Exchange);
+            var contract = new Contract
+            {
+                Symbol = originalContract.Symbol,
+                SecType = BrokerConstants.Stock,
+                Exchange = BrokerConstants.Routers.Smart,
+                PrimaryExch = primaryExchange,
+                Currency = BrokerConstants.UsCurrency,
+                LastTradeDateOrContractMonth = string.Empty,
+                Strike = 0,
+                Multiplier = string.Empty,
+                LocalSymbol = string.Empty
+            };
+
+            return contract;
+        }
+
+        private static string MapPrimaryExchange(string exchange)
+        {            
+            if (exchange == null || exchange.Equals(BrokerConstants.Routers.Smart, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             if (!Enum.TryParse<Exchange>(exchange, true, out var exchangeEnum))
             {
                 Log.Warning("Couldn't find exchange enum value {0}", exchange);
@@ -272,45 +350,88 @@ namespace MyTradingApp.ViewModels
                 return null;
             }
 
-            var contract = new Contract
-            {
-                Symbol = originalContract.Symbol,
-                SecType = BrokerConstants.Stock,
-                Exchange = BrokerConstants.Routers.Smart,
-                PrimaryExch = IbClientRequestHelper.MapExchange(exchangeEnum),
-                Currency = BrokerConstants.UsCurrency,
-                LastTradeDateOrContractMonth = string.Empty,
-                Strike = 0,
-                Multiplier = string.Empty,
-                LocalSymbol = string.Empty
-            };
-
-            return contract;
+            return IbClientRequestHelper.MapExchange(exchangeEnum);
         }
 
-        public async void GetPositions()
+        //public async void GetPositions()
+        //{
+        //    StatusText = "Requesting positions from API";
+        //    var positions = await _accountManager.RequestPositionsAsync();
+
+        //    StatusText = "Stopping streaming";
+        //    StopStreaming();
+        //    DispatchOnUi(() => Positions.Clear());
+        //    foreach (var item in positions)
+        //    {
+        //        DispatchOnUi(() => Positions.Add(item));
+        //        if (item.IsOpen && item.Contract != null)
+        //        {
+        //            var symbol = item.Contract.Symbol;
+        //            Log.Debug("Requesting streaming price for position {0}", symbol);
+        //            //                    ModifyContractForRequest(item.Contract);                    
+        //            var newContract = MapContractToNewContract(item.Contract);
+
+        //            StatusText = $"Starting streaming for {symbol}";
+        //            await _marketDataManager.RequestStreamingPriceAsync(newContract);
+
+        //            //positionsStopService.Manage(item);
+        //        }
+        //    }
+
+        //    // Get associated stop orders
+
+        //    StatusText = "Getting associated stop orders";
+        //    var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+
+        //    StatusText = $"Processing stop orders";
+        //    await ProcessOpenOrdersAsync(orders);
+        //}
+
+        public async Task GetPositionsAsync()
         {
-            var positions = await _accountManager.RequestPositionsAsync();
+            IsLoading = true;
 
-            StopStreaming();
-            Positions.Clear();
-            foreach (var item in positions)
+            try
             {
-                Positions.Add(item);
-                if (item.IsOpen && item.Contract != null)
+                StatusText = "Requesting positions from API";
+                var positions = await _accountManager.RequestPositionsAsync();
+                StatusText = "Stopping streaming";
+                StopStreaming();
+                DispatcherHelper.InvokeOnUiThread(() => Positions.Clear());
+
+                foreach (var item in positions)
                 {
-                    Log.Debug("Requesting streaming price for position {0}", item.Contract.Symbol);
-                    //                    ModifyContractForRequest(item.Contract);                    
-                    var newContract = MapContractToNewContract(item.Contract);
-                    await _marketDataManager.RequestStreamingPriceAsync(newContract);
+                    DispatcherHelper.InvokeOnUiThread(() => Positions.Add(item));
+                    if (item.IsOpen && item.Contract != null)
+                    {
+                        var symbol = item.Contract.Symbol;
+                        Log.Debug("Requesting streaming price for position {0}", symbol);
+                        //                    ModifyContractForRequest(item.Contract);                    
+                        var newContract = MapContractToNewContract(item.Contract);
 
-                    //positionsStopService.Manage(item);
+                        StatusText = $"Starting streaming for {symbol}";
+                        await _marketDataManager.RequestStreamingPriceAsync(newContract);
+
+                        //positionsStopService.Manage(item);
+                    }
                 }
-            }
 
-            // Get associated stop orders
-            var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
-            await ProcessOpenOrdersAsync(orders);
+                // Get associated stop orders
+                StatusText = "Getting associated stop orders";
+                var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+
+                StatusText = $"Processing stop orders";
+                await ProcessOpenOrdersAsync(orders).ConfigureAwait(false);
+            }
+            catch
+            {
+                // TODO: Show error to user
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }

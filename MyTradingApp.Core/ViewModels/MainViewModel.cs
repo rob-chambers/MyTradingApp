@@ -1,7 +1,7 @@
-﻿using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
+﻿using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.IconPacks;
+using MyTradingApp.Core;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
@@ -38,7 +38,7 @@ namespace MyTradingApp.ViewModels
         private readonly StatusBarViewModel _statusBarViewModel;
         
         private ICommand _clearCommand;        
-        private ICommand _connectCommand;
+        private AsyncCommand _connectCommand;
         
         private string _connectButtonCaption;
         private string _errorText;
@@ -52,6 +52,8 @@ namespace MyTradingApp.ViewModels
         private ObservableCollection<MenuItemViewModel> _menuOptionItems;
         private bool _isDetailsPanelVisible;
         private SettingsViewModel _settingsViewModel;
+        private bool _isBusy;
+        private DefaultErrorHandler _defaultErrorHandler;
 
         #endregion
 
@@ -68,9 +70,10 @@ namespace MyTradingApp.ViewModels
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
             DetailsViewModel detailsViewModel,
-            SettingsViewModel settingsViewModel)
-            : base(dispatcherHelper)
-        {           
+            SettingsViewModel settingsViewModel,
+            IQueueProcessor queueProcessor)
+            : base(dispatcherHelper, queueProcessor)
+        {
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
@@ -90,10 +93,15 @@ namespace MyTradingApp.ViewModels
 
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
-
-            RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
-
             CreateMenuItems();
+
+            // Load settings on a different thread as it's slow and so that we can show the main window straight away
+            Task.Run(() => _settingsViewModel.LoadSettingsAsync())
+                .ContinueWith(t =>
+                {
+                    RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
+                })
+                .ConfigureAwait(false);
         }
 
         #endregion
@@ -104,9 +112,17 @@ namespace MyTradingApp.ViewModels
 
         public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
 
-        public ICommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(DispatcherHelper, ToggleConnectionAsync));
+        public AsyncCommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(DispatcherHelper, ToggleConnectionAsync, () => !IsBusy, DefaultErrorHandler));
 
-#endregion
+        #endregion
+
+        private IErrorHandler DefaultErrorHandler
+        {
+            get
+            {
+                return _defaultErrorHandler ?? (_defaultErrorHandler = new DefaultErrorHandler());
+            }
+        }
 
         public ObservableCollection<MenuItemViewModel> MenuItems
         {
@@ -136,6 +152,16 @@ namespace MyTradingApp.ViewModels
         {
             get => _errorText;
             private set => Set(ref _errorText, value);
+        }
+
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                Set(ref _isBusy, value);
+                ConnectCommand.RaiseCanExecuteChanged();
+            }
         }
 
         public bool IsEnabled
@@ -175,15 +201,16 @@ namespace MyTradingApp.ViewModels
 
         #region Methods
 
-        public async void AppIsClosing()
+        public void AppIsClosing()
         {
+            var errorHandler = new LoggingErrorHandler();
             if (_connectionService.IsConnected)
             {
-                await _connectionService.DisconnectAsync();                
+                _connectionService.DisconnectAsync().FireAndForgetSafeAsync(errorHandler);
             }
 
             _settingsViewModel.LastRiskMultiplier = RiskMultiplier;
-            _settingsViewModel?.Save();
+            _settingsViewModel?.SaveAsync().FireAndForgetSafeAsync(errorHandler);
         }
 
         private void AddTextToMessagePanel(string text)
@@ -310,12 +337,24 @@ namespace MyTradingApp.ViewModels
             if (status != OrderStatus.Filled)
             {
                 return;
-            }            
+            }
 
-            // Once the order has been filled, it is deleted and a request is made for the current positions, which will add it to the positions collection
-            OrdersViewModel.Orders.Remove(item);
-
-            PositionsViewModel.GetPositions();
+            /* Once the order has been filled, it is deleted and a request is made for the current positions, 
+             * which will add it to the positions collection
+             * 
+             * We are more than likely on the thread that processed the API controller's event handler.  
+             * Because we want to give back control to the API controller worker ASAP, we queue this processing on the queue processor
+             * However the job of removing the order needs to happen on the UI thread because the ObservableCollection is not thread-safe,
+             * so we use the DispatcherHelper to invoke the action
+             */
+            QueueProcessor.Enqueue(() =>
+            {
+                DispatcherHelper.InvokeOnUiThread(async () =>
+                {                    
+                    OrdersViewModel.Orders.Remove(item);
+                    await PositionsViewModel.GetPositionsAsync();
+                });
+            });       
         }
 
         private void OnOrdersViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -370,7 +409,10 @@ namespace MyTradingApp.ViewModels
         private async Task ToggleConnectionAsync()
         {
             try
-            {                
+            {
+                IsBusy = true;
+                ConnectButtonCaption = "Connecting...";
+
                 if (_connectionService.IsConnected)
                 {
                     await _connectionService.DisconnectAsync();
@@ -378,25 +420,43 @@ namespace MyTradingApp.ViewModels
                 else
                 {
                     await _connectionService.ConnectAsync();
-                    await InitOnceConnectedAsync();
+                    SetConnectionStatus();
+
+                    var result = await InitOnceConnectedAsync();
+                    
+                    _exchangeRate = result.ExchangeRate;
+                    Messenger.Default.Send(result.AccountSummary);
+                    _netLiquidation = result.AccountSummary.NetLiquidation;                    
+                    CalculateRiskPerTrade();
+
+                    await PositionsViewModel.GetPositionsAsync();
                 }
             }
             catch (Exception ex)
             {
+                Log.Error("Error in ToggleConnectionAsync:\n{0}", ex);
+                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Error, $"Error during initialisation upon connection:\n{ex.Message}"));
                 ShowMessageOnPanel(ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                SetConnectionStatus();
             }
         }
 
-        private async Task InitOnceConnectedAsync()
-        {
-            var rate = await _exchangeRateService.GetExchangeRateAsync();
-            _exchangeRate = rate;
-            PositionsViewModel.GetPositions();
+        private async Task<ApiInitialDataViewModel> InitOnceConnectedAsync()
+        {            
+            Log.Debug("Start of InitOnceConnectedAsync");
 
-            var summary = await _accountManager.RequestAccountSummaryAsync();
-            Messenger.Default.Send(summary);
-            _netLiquidation = summary.NetLiquidation;
-            CalculateRiskPerTrade();
+            var exchangeRateTask = _exchangeRateService.GetExchangeRateAsync();
+            var accountSummaryTask = _accountManager.RequestAccountSummaryAsync();
+
+            await Task.WhenAll(exchangeRateTask, accountSummaryTask).ConfigureAwait(false);
+            
+            var accountSummary = await accountSummaryTask.ConfigureAwait(false);
+            var exchangeRate = await exchangeRateTask.ConfigureAwait(false);
+            return new ApiInitialDataViewModel(exchangeRate, accountSummary);
         }
         #endregion
     }

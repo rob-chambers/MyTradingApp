@@ -1,11 +1,13 @@
 ﻿using MyTradingApp.Domain;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MyTradingApp.Core.Repositories
 {
     public interface ISettingsRepository
     {
-        IEnumerable<Setting> GetAll();
-        void Save(IEnumerable<Setting> settings);
+        Task<IEnumerable<Setting>> GetAllAsync();
+
+        Task SaveAsync(IEnumerable<Setting> settings);
     }
 }
