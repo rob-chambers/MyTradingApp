@@ -52,12 +52,12 @@ namespace MyTradingApp.Tests
                 {
                     new Setting
                     {
-                        Key = "RiskPercentOfAccountSize",
+                        Key = SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize,
                         Value = "1"
                     },
                     new Setting
                     {
-                        Key = "LastRiskMultiplier",
+                        Key = SettingsViewModel.SettingsKeys.RiskMultiplier,
                         Value = "1"
                     }
                 });
@@ -132,12 +132,12 @@ namespace MyTradingApp.Tests
                 {
                     new Setting
                     {
-                        Key = "RiskPercentOfAccountSize",
+                        Key = SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize,
                         Value = riskPercentOfAccountSize.ToString()
                     },
                     new Setting
                     {
-                        Key = "LastRiskMultiplier",
+                        Key = SettingsViewModel.SettingsKeys.RiskMultiplier,
                         Value = riskMultiplier.ToString()
                     }
                 });
@@ -211,6 +211,40 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
+        public async Task WhenUpdatingSettingThenPersistImmediately()
+        {
+            // Arrange
+            const double Multiplier = 1.234;
+
+            var vm = GetVm();            
+            var settings = new List<Setting>();
+            _settingsRepository.GetAllAsync().Returns(settings);
+
+            // HACK: Wait here to allow the viewmodel's background task to load the settings initially
+            await Task.Delay(100);
+
+            // Act
+            vm.RiskMultiplier = Multiplier;
+
+            // Assert
+            Assert.Equal(Multiplier, _settingsViewModel.LastRiskMultiplier);
+            _settingsRepository
+                .Received()
+                .Update(Arg.Is<Setting>(x => x.Key == SettingsViewModel.SettingsKeys.RiskMultiplier && x.Value == Multiplier.ToString()));
+            await _settingsRepository.Received().SaveAsync();
+        }
+
+        [Fact]
+        public async Task StartingAppLoadsSettingsFromRepository()
+        {
+            // Arrange
+            GetVm();            
+
+            // Assert
+            await _settingsRepository.Received().GetAllAsync();
+        }
+
+        [Fact]
         public async Task WhenConnectionMadePositionsRequestedAsync()
         {
             // Arrange
@@ -253,12 +287,12 @@ namespace MyTradingApp.Tests
                 {
                     new Setting
                     {
-                        Key = "RiskPercentOfAccountSize",
+                        Key = SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize,
                         Value = "0.1"                        
                     },
                     new Setting
                     {
-                        Key = "LastRiskMultiplier",
+                        Key = SettingsViewModel.SettingsKeys.RiskMultiplier,
                         Value = "1"
                     }
                 });

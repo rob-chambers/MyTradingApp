@@ -15,7 +15,7 @@ namespace MyTradingApp.Desktop
         public MainWindow()
         {
             Log.Debug("Loading main window");
-            InitializeComponent();
+            InitializeComponent();            
             Closing += OnMainWindowClosing;
             Messenger.Default.Register<NotificationMessage<NotificationType>>(this, HandleNotificationMessage);
         }

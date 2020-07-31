@@ -182,6 +182,7 @@ namespace MyTradingApp.ViewModels
             set
             {
                 Set(ref _riskMultiplier, value);
+                _settingsViewModel.LastRiskMultiplier = value;
                 CalculateRiskPerTrade();
             }
         }
@@ -208,9 +209,6 @@ namespace MyTradingApp.ViewModels
             {
                 _connectionService.DisconnectAsync().FireAndForgetSafeAsync(errorHandler);
             }
-
-            _settingsViewModel.LastRiskMultiplier = RiskMultiplier;
-            _settingsViewModel?.SaveAsync().FireAndForgetSafeAsync(errorHandler);
         }
 
         private void AddTextToMessagePanel(string text)

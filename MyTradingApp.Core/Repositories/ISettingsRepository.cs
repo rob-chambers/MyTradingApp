@@ -8,6 +8,10 @@ namespace MyTradingApp.Core.Repositories
     {
         Task<IEnumerable<Setting>> GetAllAsync();
 
-        Task SaveAsync(IEnumerable<Setting> settings);
+        public void Add(Setting setting);
+
+        void Update(Setting setting);
+
+        Task SaveAsync();
     }
 }
