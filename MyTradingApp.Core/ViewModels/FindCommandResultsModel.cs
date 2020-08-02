@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MyTradingApp.Core.ViewModels
 {
-    internal class FindCommandResultsModel
+    public class FindCommandResultsModel
     {
         public double LatestPrice { get; set; }
 
