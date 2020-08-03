@@ -1,8 +1,10 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
-using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Messaging;
+using IBApi;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
 using MyTradingApp.ViewModels;
@@ -19,8 +21,12 @@ namespace MyTradingApp.Core.ViewModels
 {
     public class NewOrderViewModel : DispatcherViewModel
     {
+        #region Fields
         public const string YearMonthDayPattern = "yyyyMMdd";
 
+        private readonly IFindSymbolService _findSymbolService;
+        private readonly IOrderCalculationService _orderCalculationService;
+        private readonly IOrderManager _orderManager;
         private Direction _direction;
         private ushort _quantity = 1;
         private OrderStatus _status;
@@ -33,39 +39,57 @@ namespace MyTradingApp.Core.ViewModels
         private AsyncCommand _submitCommand;
         private bool _hasHistory;
         private bool _canSubmit;
-        private readonly IFindSymbolService _findSymbolService;
-        private readonly IOrderCalculationService _orderCalculationService;
+        private double _entryPrice;
+        private string _accountId;
+        private double _initialStopLossPrice;
 
+        #endregion
+
+        #region Nested Classes
         public static class FindButtonCaptions
         {
             public const string Default = "Find";
             public const string Finding = "Finding...";
         }
 
+        #endregion
+
+        #region ctor
+
         public NewOrderViewModel(
             IDispatcherHelper dispatcherHelper, 
             IQueueProcessor queueProcessor,
             IFindSymbolService findSymbolService,
-            IOrderCalculationService orderCalculationService)
+            IOrderCalculationService orderCalculationService,
+            IOrderManager orderManager)
             : base(dispatcherHelper, queueProcessor)
         {
             PopulateDirectionList();
             Symbol.PropertyChanged += OnSymbolPropertyChanged;
             _findSymbolService = findSymbolService;
             _orderCalculationService = orderCalculationService;
+            _orderManager = orderManager;
+            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, msg => _accountId = msg.AccountId);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
         }
 
-        private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(Symbol.Code))
-            {
-                return;
-            }
+        #endregion
 
-            FindCommand.RaiseCanExecuteChanged();
-        }
+        #region Properties
 
         public Symbol Symbol { get; } = new Symbol();
+
+        public double EntryPrice
+        {
+            get => _entryPrice;
+            set => Set(ref _entryPrice, value);
+        }
+
+        public double InitialStopLossPrice
+        {
+            get => _initialStopLossPrice;
+            set => Set(ref _initialStopLossPrice, value);
+        }
 
         public double PriceIncrement
         {
@@ -76,7 +100,11 @@ namespace MyTradingApp.Core.ViewModels
         public Direction Direction
         {
             get => _direction;
-            set => Set(ref _direction, value);
+            set
+            {
+                Set(ref _direction, value);
+                CalculateOrderDetails();
+            }
         }
 
         public ushort Quantity
@@ -168,9 +196,51 @@ namespace MyTradingApp.Core.ViewModels
             }
         }
 
-        private Task SubmitOrderAsync()
+        #endregion
+
+        #region Methods
+
+        private async Task SubmitOrderAsync()
         {
-            throw new NotImplementedException();
+            var contract = MapOrderToContract();
+            contract.LocalSymbol = Symbol.Code;
+
+            var order = GetPrimaryOrder();
+            await _orderManager.PlaceNewOrderAsync(contract, order);
+        }
+
+        private Order GetPrimaryOrder()
+        {
+            return new Order
+            {
+                Action = Direction == Direction.Buy
+                    ? BrokerConstants.Actions.Buy
+                    : BrokerConstants.Actions.Sell,
+                OrderType = BrokerConstants.OrderTypes.Stop,
+                AuxPrice = Rounding.ValueAdjustedForMinTick(EntryPrice, Symbol.MinTick),
+                TotalQuantity = Quantity,
+                Account = _accountId,
+                ModelCode = string.Empty,
+                Tif = BrokerConstants.TimeInForce.Day
+            };
+        }
+
+        private Contract MapOrderToContract()
+        {
+            var contract = new Contract
+            {
+                Symbol = Symbol.Code,
+                SecType = BrokerConstants.Stock,
+                Exchange = BrokerConstants.Routers.Smart,
+                PrimaryExch = IbClientRequestHelper.MapExchange(Symbol.Exchange),
+                Currency = BrokerConstants.UsCurrency,
+                LastTradeDateOrContractMonth = string.Empty,
+                Strike = 0,
+                Multiplier = string.Empty,
+                LocalSymbol = string.Empty
+            };
+
+            return contract;
         }
 
         private async Task FindSymbolAndProcessAsync()
@@ -206,12 +276,28 @@ namespace MyTradingApp.Core.ViewModels
                 });
 
                 ProcessHistory(results.PriceHistory);
+                CalculateOrderDetails();
             }
             finally
             {
                 IsBusy = false;
                 FindCommandCaption = FindButtonCaptions.Default;
             }
+        }
+
+        private void CalculateOrderDetails()
+        {
+            var symbol = Symbol.Code;
+            if (!_orderCalculationService.CanCalculate(symbol))
+            {
+                return;
+            }
+
+            EntryPrice = _orderCalculationService.GetEntryPrice(symbol, Direction);
+            InitialStopLossPrice = _orderCalculationService.CalculateInitialStopLoss(symbol, Direction);
+            Quantity = _orderCalculationService.GetCalculatedQuantity(symbol, Direction);
+
+            //StandardDeviation = _orderCalculationService.CalculateStandardDeviation(symbol);
         }
 
         private void ProcessHistory(List<HistoricalDataEventArgs> results)
@@ -234,7 +320,6 @@ namespace MyTradingApp.Core.ViewModels
                 }
 
                 _orderCalculationService.SetHistoricalData(Symbol.Code, bars);
-                //CalculateRisk(Symbol.Code);
             }
             else
             {
@@ -255,5 +340,60 @@ namespace MyTradingApp.Core.ViewModels
         {
             return !string.IsNullOrEmpty(Symbol.Code) && !IsLocked;
         }
+
+        private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(Symbol.Code))
+            {
+                return;
+            }
+
+            FindCommand.RaiseCanExecuteChanged();
+        }
+
+        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        {
+            if (message.Symbol != Symbol.Code)
+            {
+                return;
+            }
+
+            UpdateOrderStatus(message.Message.Status);
+        }
+
+        private void UpdateOrderStatus(string status)
+        {
+            _canSubmit = false;
+            switch (status)
+            {
+                case BrokerConstants.OrderStatus.PreSubmitted:
+                    Status = OrderStatus.PreSubmitted;
+                    break;
+
+                case BrokerConstants.OrderStatus.Submitted:
+                    Status = OrderStatus.Submitted;
+                    break;
+
+                case BrokerConstants.OrderStatus.Cancelled:
+                    Status = OrderStatus.Cancelled;
+                    break;
+
+                case BrokerConstants.OrderStatus.Filled:
+                    Status = OrderStatus.Filled;
+                    break;
+
+                default:
+                    Log.Warning("Status that isn't handled: {0}", status);
+                    break;
+            }
+
+            DispatcherHelper.InvokeOnUiThread(() =>
+            {
+                FindCommand.RaiseCanExecuteChanged();
+                SubmitCommand.RaiseCanExecuteChanged();
+            });
+        }
+
+        #endregion
     }
 }

@@ -20,6 +20,8 @@ namespace MyTradingApp.Tests
 
             public IOrderCalculationService OrderCalculationService { get; private set; }
 
+            public IOrderManager OrderManager { get; private set; }
+
             public NewOrderViewModelBuilder WithDispatcherHelper(IDispatcherHelper dispatcherHelper = null)
             {
                 DispatcherHelper = dispatcherHelper;
@@ -44,6 +46,12 @@ namespace MyTradingApp.Tests
                 return this;
             }
 
+            public NewOrderViewModelBuilder WithOrderManager(IOrderManager orderManager)
+            {
+                OrderManager = orderManager;
+                return this;
+            }
+
             public NewOrderViewModel Build()
             {
                 var dispatcherHelper = DispatcherHelper ?? Substitute.For<IDispatcherHelper>();
@@ -55,7 +63,8 @@ namespace MyTradingApp.Tests
                     dispatcherHelper,
                     QueueProcessor ?? Substitute.For<IQueueProcessor>(),
                     FindSymbolService ?? Substitute.For<IFindSymbolService>(),
-                    OrderCalculationService ?? Substitute.For<IOrderCalculationService>());
+                    OrderCalculationService ?? Substitute.For<IOrderCalculationService>(),
+                    OrderManager ?? Substitute.For<IOrderManager>());
             }
         }
     }

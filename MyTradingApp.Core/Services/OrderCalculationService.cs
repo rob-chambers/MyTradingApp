@@ -16,7 +16,7 @@ namespace MyTradingApp.Services
         private readonly Dictionary<string, double> _latestPrice = new Dictionary<string, double>();
         private double _riskPerTrade;        
 
-        public bool CanCalculate(string symbol)  => _latestPrice.ContainsKey(symbol) &&
+        public bool CanCalculate(string symbol) => _latestPrice.ContainsKey(symbol) &&
             !double.IsNaN(_latestPrice[symbol]) &&
             _latestPrice[symbol] != 0 &&
             _bars != null &&

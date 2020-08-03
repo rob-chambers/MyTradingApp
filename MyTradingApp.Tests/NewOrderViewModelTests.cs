@@ -1,10 +1,13 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
+using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
 using NSubstitute;
+using NSubstitute.ReceivedExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -309,13 +312,18 @@ namespace MyTradingApp.Tests
             return vm;
         }
 
-        private static NewOrderViewModel GetStandardVm(IOrderCalculationService orderCalculationService, FindCommandResultsModel model, string symbol = "M")
+        private static NewOrderViewModel GetStandardVm(
+            IOrderCalculationService orderCalculationService, 
+            FindCommandResultsModel model, 
+            string symbol = "M",
+            IOrderManager orderManager = null)
         {
             // Arrange
             var findSymbolService = Substitute.For<IFindSymbolService>();
             var builder = new NewOrderViewModelBuilder()
                             .WithFindSymbolService(findSymbolService)
-                            .WithOrderCalculationService(orderCalculationService);
+                            .WithOrderCalculationService(orderCalculationService)
+                            .WithOrderManager(orderManager);
             var vm = builder.Build();
 
             vm.Symbol.Code = symbol;
@@ -346,6 +354,210 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.True(vm.SubmitCommand.CanExecute());
             Assert.True(fired);
+        }
+
+        [Fact]
+        public async Task WhenOrderSubmittedThenOrderPlacedWithCorrectDetails()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var orderManager = Substitute.For<IOrderManager>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol, orderManager);
+            vm.Quantity = 100;
+            vm.Direction = Direction.Buy;
+            vm.EntryPrice = 20;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+            await vm.SubmitCommand.ExecuteAsync();
+
+            // Assert
+            await orderManager.Received().PlaceNewOrderAsync(Arg.Is<Contract>(x => x.Symbol == Symbol &&
+                x.SecType == BrokerConstants.Stock &&
+                x.Exchange == BrokerConstants.Routers.Smart &&
+                x.Currency == BrokerConstants.UsCurrency &&
+                x.LastTradeDateOrContractMonth == string.Empty &&
+                x.Strike == 0 &&
+                x.Multiplier == string.Empty &&
+                x.LocalSymbol == Symbol), 
+                    Arg.Is<Order>(x => x.OrderId == 0 &&
+                        x.Action == BrokerConstants.Actions.Buy &&
+                        x.OrderType == BrokerConstants.OrderTypes.Stop &&
+                        x.AuxPrice == vm.EntryPrice &&
+                        x.TotalQuantity == vm.Quantity &&
+                        x.ModelCode == string.Empty &&
+                        x.Tif == BrokerConstants.TimeInForce.Day));
+        }
+
+        [Fact]
+        public async Task WhenSellOrderSubmittedThenActionIsSell()
+        {
+            // Arrange
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var orderManager = Substitute.For<IOrderManager>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), orderManager: orderManager);
+            vm.Quantity = 100;
+            vm.Direction = Direction.Sell;
+            vm.EntryPrice = 20;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+            await vm.SubmitCommand.ExecuteAsync();
+
+            // Assert
+            await orderManager.Received().PlaceNewOrderAsync(
+                Arg.Any<Contract>(),
+                Arg.Is<Order>(x => x.Action == BrokerConstants.Actions.Sell));
+        }
+
+        [Fact]
+        public async Task WhenOrderSubmittedPlacedWithAccountId()
+        {
+            // Arrange
+            const string AccountId = "1234";
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var orderManager = Substitute.For<IOrderManager>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), orderManager: orderManager);
+            vm.Quantity = 100;
+            vm.EntryPrice = 20;
+
+            // Act
+            Messenger.Default.Send(new AccountSummaryCompletedMessage
+            {
+                AccountId = AccountId
+            });
+            await vm.FindCommand.ExecuteAsync();
+            await vm.SubmitCommand.ExecuteAsync();
+
+            // Assert
+            await orderManager.Received().PlaceNewOrderAsync(
+                Arg.Any<Contract>(),
+                Arg.Is<Order>(x => x.Account == AccountId));
+        }
+
+        [Theory]
+        [InlineData("V", Direction.Buy)]
+        [InlineData("PLUG", Direction.Sell)]
+        public async Task QuantityEntryPriceAndStopLossCalculatedWhenOrderCalculationServiceCanCalculate(string symbol, Direction direction)
+        {
+            // Arrange
+            const double EntryPrice = 10.12;
+            const double StopLoss = 9.30;
+            const ushort Quantity = 1000;
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            orderCalculationService.CanCalculate(symbol).Returns(true);
+            orderCalculationService.GetEntryPrice(symbol, direction).Returns(EntryPrice);
+            orderCalculationService.CalculateInitialStopLoss(symbol, direction).Returns(StopLoss);
+            orderCalculationService.GetCalculatedQuantity(symbol, direction).Returns(Quantity);
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), symbol);
+            vm.Direction = direction;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert
+            Assert.Equal(Quantity, vm.Quantity);
+            Assert.Equal(EntryPrice, vm.EntryPrice);
+            Assert.Equal(StopLoss, vm.InitialStopLossPrice);
+        }
+
+        [Theory]
+        [InlineData("V", Direction.Buy)]
+        [InlineData("PLUG", Direction.Sell)]
+        public async Task QuantityEntryPriceAndStopLossNotCalculatedWhenOrderCalculationServiceCanNotCalculate(string symbol, Direction direction)
+        {
+            // Arrange
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            orderCalculationService.CanCalculate(symbol).Returns(false);
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), symbol);
+            vm.Direction = direction;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert
+            Assert.Equal(1, vm.Quantity);
+            Assert.Equal(0, vm.EntryPrice);
+            Assert.Equal(0, vm.InitialStopLossPrice);
+
+            orderCalculationService.DidNotReceive().GetEntryPrice(symbol, direction);
+            orderCalculationService.DidNotReceive().CalculateInitialStopLoss(symbol, direction);
+            orderCalculationService.DidNotReceive().GetCalculatedQuantity(symbol, direction);
+        }
+
+        [Fact]
+        public void WhenOrderCancelledViaTwsStatusIsUpdatedAndFindAndSubmitDisabled()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol);
+            var findCommandCanExecuteChangedFired = false;
+            var submitCommandCanExecuteChangedFired = false;
+            vm.SubmitCommand.CanExecuteChanged += (sender, e) => submitCommandCanExecuteChangedFired = true;
+            vm.FindCommand.CanExecuteChanged += (sender, e) => findCommandCanExecuteChangedFired = true;
+
+            // Act
+            var msg = new OrderStatusEventArgs(1, BrokerConstants.OrderStatus.Cancelled, 0, 0, 0, 1, 0, 0, 0, null);
+            Messenger.Default.Send(new OrderStatusChangedMessage(Symbol, msg), OrderStatusChangedMessage.Tokens.Orders);
+
+            // Assert
+            Assert.Equal(OrderStatus.Cancelled, vm.Status);
+            Assert.False(vm.SubmitCommand.CanExecute());
+            Assert.True(submitCommandCanExecuteChangedFired);
+
+            Assert.False(vm.FindCommand.CanExecute());
+            Assert.True(findCommandCanExecuteChangedFired);
+            Assert.True(vm.IsLocked);
+        }
+
+        [Fact]
+        public void WhenOrderCancelledForDifferentOrderStatusIsNotUpdated()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol + "different");
+
+            // Act
+            var msg = new OrderStatusEventArgs(1, BrokerConstants.OrderStatus.Cancelled, 0, 0, 0, 1, 0, 0, 0, null);
+            Messenger.Default.Send(new OrderStatusChangedMessage(Symbol, msg), OrderStatusChangedMessage.Tokens.Orders);
+
+            // Assert
+            Assert.Equal(OrderStatus.Pending, vm.Status);
+        }
+
+        [Fact]
+        public async Task WhenDirectionChangedPriceAndStopLossReCalculated()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            orderCalculationService.CanCalculate(Symbol).Returns(true);
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol);
+            vm.Direction = Direction.Buy;            
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+            vm.Direction = Direction.Sell;
+
+            // Assert
+            orderCalculationService.Received().GetEntryPrice(Symbol, Direction.Buy);
+            orderCalculationService.Received().CalculateInitialStopLoss(Symbol, Direction.Buy);
+            orderCalculationService.Received().GetCalculatedQuantity(Symbol, Direction.Buy);
+            orderCalculationService.Received().GetEntryPrice(Symbol, Direction.Sell);
+            orderCalculationService.Received().CalculateInitialStopLoss(Symbol, Direction.Sell);
+            orderCalculationService.Received().GetCalculatedQuantity(Symbol, Direction.Sell);
         }
     }
 }
