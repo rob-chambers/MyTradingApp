@@ -36,7 +36,7 @@ namespace MyTradingApp.Desktop
 
         private static void InitLogging()
         {
-            var template = "{Timestamp:HH:mm:ss.fff} [{Level:u3}] ({ThreadID}) {Message:lj}{NewLine}{Exception}";
+            var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] ({ThreadID}) {Message:lj}{NewLine}{Exception}";
 
             Log.Logger = new LoggerConfiguration()
                 .Enrich.With(new ThreadIdEnricher())
