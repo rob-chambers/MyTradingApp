@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyTradingApp.Core;
 using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Desktop.Utils;
 using MyTradingApp.Domain;
@@ -86,6 +87,7 @@ namespace MyTradingApp.Desktop
 
             services.AddScoped<IDispatcherHelper, DispatcherHelper>();
             services.AddScoped<IQueueProcessor, BlockingCollectionQueue>();
+            services.AddScoped<IFindSymbolService, FindSymbolService>();
         }
     }
 }

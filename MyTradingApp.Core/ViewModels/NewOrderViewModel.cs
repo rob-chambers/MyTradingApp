@@ -42,6 +42,7 @@ namespace MyTradingApp.Core.ViewModels
         private double _entryPrice;
         private string _accountId;
         private double _initialStopLossPrice;
+        private int _id;
 
         #endregion
 
@@ -78,6 +79,12 @@ namespace MyTradingApp.Core.ViewModels
         #region Properties
 
         public Symbol Symbol { get; } = new Symbol();
+
+        public int Id
+        {
+            get => _id;
+            set => Set(ref _id, value);
+        }
 
         public double EntryPrice
         {
@@ -207,6 +214,7 @@ namespace MyTradingApp.Core.ViewModels
 
             var order = GetPrimaryOrder();
             await _orderManager.PlaceNewOrderAsync(contract, order);
+            Id = order.OrderId;
         }
 
         private Order GetPrimaryOrder()
@@ -250,7 +258,8 @@ namespace MyTradingApp.Core.ViewModels
 
             try
             {
-                var results = await _findSymbolService.IssueFindSymbolRequestAsync(this).ConfigureAwait(false);
+                var contract = MapOrderToContract();
+                var results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
                 if (results.Details == null)
                 {
                     return;

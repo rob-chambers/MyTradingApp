@@ -6,6 +6,7 @@ using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
+using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System;
@@ -97,9 +98,19 @@ namespace MyTradingApp.Tests
              */
 
             var vm = GetVm();
+            var fired = false;
+            vm.Symbol.PropertyChanged += (sender, e) =>
+            {
+                if (e.PropertyName == nameof(Symbol.Code))
+                {
+                    fired = true;
+                }
+            };
+
             Assert.False(vm.FindCommand.CanExecute());
             vm.Symbol.Code = "M";
             Assert.True(vm.FindCommand.CanExecute());
+            Assert.True(fired);
         }
 
         [Fact]
@@ -125,7 +136,7 @@ namespace MyTradingApp.Tests
             var vm = builder.Build();
 
             vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(vm).Returns(Task.FromResult(
+            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
                 new FindCommandResultsModel
                 {
                     LatestPrice = LatestPrice,
@@ -156,7 +167,7 @@ namespace MyTradingApp.Tests
             var vm = builder.Build();
 
             vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(vm).Returns(Task.FromResult(
+            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
                 new FindCommandResultsModel
                 {
                     Details = null
@@ -210,7 +221,7 @@ namespace MyTradingApp.Tests
             };
 
             vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(vm).Returns(Task.FromResult(
+            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
                 new FindCommandResultsModel
                 {
                     Details = null
@@ -327,7 +338,7 @@ namespace MyTradingApp.Tests
             var vm = builder.Build();
 
             vm.Symbol.Code = symbol;
-            findSymbolService.IssueFindSymbolRequestAsync(vm).Returns(Task.FromResult(model));
+            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(model));
 
             return vm;
         }
@@ -364,6 +375,7 @@ namespace MyTradingApp.Tests
 
             var orderCalculationService = Substitute.For<IOrderCalculationService>();
             var orderManager = Substitute.For<IOrderManager>();
+
             var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol, orderManager);
             vm.Quantity = 100;
             vm.Direction = Direction.Buy;
@@ -389,6 +401,32 @@ namespace MyTradingApp.Tests
                         x.TotalQuantity == vm.Quantity &&
                         x.ModelCode == string.Empty &&
                         x.Tif == BrokerConstants.TimeInForce.Day));
+        }
+
+        [Fact]
+        public async Task WhenOrderSubmittedThenOrderIdSet()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+            const int OrderId = 123;
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var orderManager = Substitute.For<IOrderManager>();
+            orderManager
+                .When(x => x.PlaceNewOrderAsync(Arg.Any<Contract>(), Arg.Any<Order>()))
+                .Do(Callback.First(x => x.Arg<Order>().OrderId = OrderId));
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol, orderManager);
+            vm.Quantity = 100;
+            vm.Direction = Direction.Buy;
+            vm.EntryPrice = 20;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+            await vm.SubmitCommand.ExecuteAsync();
+
+            // Assert
+            Assert.Equal(OrderId, vm.Id);
         }
 
         [Fact]
