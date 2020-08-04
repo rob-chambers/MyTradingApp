@@ -11,7 +11,6 @@ using MyTradingApp.ViewModels;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -38,7 +37,6 @@ namespace MyTradingApp.Core.ViewModels
         private string _findCommandCaption = FindButtonCaptions.Default;
         private AsyncCommand _submitCommand;
         private bool _hasHistory;
-        private bool _canSubmit;
         private double _entryPrice;
         private string _accountId;
         private double _initialStopLossPrice;
@@ -65,7 +63,6 @@ namespace MyTradingApp.Core.ViewModels
             IOrderManager orderManager)
             : base(dispatcherHelper, queueProcessor)
         {
-            PopulateDirectionList();
             Symbol.PropertyChanged += OnSymbolPropertyChanged;
             _findSymbolService = findSymbolService;
             _orderCalculationService = orderCalculationService;
@@ -89,7 +86,11 @@ namespace MyTradingApp.Core.ViewModels
         public double EntryPrice
         {
             get => _entryPrice;
-            set => Set(ref _entryPrice, value);
+            set
+            {
+                Set(ref _entryPrice, value);
+                DispatcherHelper.InvokeOnUiThread(() => SubmitCommand.RaiseCanExecuteChanged());
+            }
         }
 
         public double InitialStopLossPrice
@@ -180,9 +181,7 @@ namespace MyTradingApp.Core.ViewModels
         {
             get => _hasHistory;
             set => Set(ref _hasHistory, value);
-        }
-
-        public ObservableCollection<Direction> DirectionList { get; private set; } = new ObservableCollection<Direction>();
+        }        
 
         public AsyncCommand FindCommand
         {
@@ -199,7 +198,10 @@ namespace MyTradingApp.Core.ViewModels
         {
             get
             {
-                return _submitCommand ?? (_submitCommand = new AsyncCommand(DispatcherHelper, SubmitOrderAsync, () => _canSubmit));
+                return _submitCommand ?? (_submitCommand = new AsyncCommand(
+                    DispatcherHelper, 
+                    SubmitOrderAsync, 
+                    () => Status == OrderStatus.Pending && EntryPrice > 0 && Quantity > 0));
             }
         }
 
@@ -277,15 +279,10 @@ namespace MyTradingApp.Core.ViewModels
                 Symbol.MinTick = details.MinTick;
 
                 _orderCalculationService.SetLatestPrice(Symbol.Code, results.LatestPrice);
-                _canSubmit = true;
-
-                DispatcherHelper.InvokeOnUiThread(() =>
-                {
-                    SubmitCommand.RaiseCanExecuteChanged();
-                });
 
                 ProcessHistory(results.PriceHistory);
                 CalculateOrderDetails();
+                DispatcherHelper.InvokeOnUiThread(() => SubmitCommand.RaiseCanExecuteChanged());
             }
             finally
             {
@@ -336,15 +333,6 @@ namespace MyTradingApp.Core.ViewModels
             }
         }
 
-        private void PopulateDirectionList()
-        {
-            var values = Enum.GetValues(typeof(Direction));
-            foreach (var value in values)
-            {
-                DirectionList.Add((Direction)value);
-            }
-        }
-
         private bool CanFindOrder()
         {
             return !string.IsNullOrEmpty(Symbol.Code) && !IsLocked;
@@ -357,7 +345,7 @@ namespace MyTradingApp.Core.ViewModels
                 return;
             }
 
-            FindCommand.RaiseCanExecuteChanged();
+            DispatcherHelper.InvokeOnUiThread(() => FindCommand.RaiseCanExecuteChanged());
         }
 
         private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -372,7 +360,6 @@ namespace MyTradingApp.Core.ViewModels
 
         private void UpdateOrderStatus(string status)
         {
-            _canSubmit = false;
             switch (status)
             {
                 case BrokerConstants.OrderStatus.PreSubmitted:

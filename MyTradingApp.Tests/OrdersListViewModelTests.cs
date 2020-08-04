@@ -48,6 +48,14 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
+        public void DirectionListSetCorrectly()
+        {
+            var vm = GetVm();
+            Assert.Equal(Direction.Buy, vm.DirectionList[0]);
+            Assert.Equal(Direction.Sell, vm.DirectionList[1]);
+        }
+
+        [Fact]
         public void ClickingAddAddsOrderToList()
         {
             var vm = GetVm();
@@ -135,6 +143,22 @@ namespace MyTradingApp.Tests
 
             // Assert
             Assert.True(vm.Orders.Single() == filledOrder);
+        }
+
+        [Fact]
+        public void DeletingAllOrdersRefreshesDeleteAllCommandStatus()
+        {
+            // Arrange
+            var vm = GetVm();
+            vm.AddCommand.Execute(null);
+            var fired = false;
+            vm.DeleteAllCommand.CanExecuteChanged += (sender, e) => fired = true;
+
+            // Act
+            vm.DeleteAllCommand.Execute(null);
+
+            // Assert
+            Assert.True(fired);
         }
 
         [Fact]

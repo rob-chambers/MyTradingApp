@@ -75,14 +75,6 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void DirectionListSetCorrectly()
-        {
-            var vm = GetVm();
-            Assert.Equal(Direction.Buy, vm.DirectionList[0]);
-            Assert.Equal(Direction.Sell, vm.DirectionList[1]);
-        }
-
-        [Fact]
         public void CannotFindUntilAtLeastOneCharacterTyped()
         {
             /*
@@ -351,23 +343,6 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public async Task CanSubmitWhenSymbolAndPriceFound()
-        {
-            // Arrange
-            var orderCalculationService = Substitute.For<IOrderCalculationService>();
-            var fired = false;
-            var vm = GetStandardVm(orderCalculationService, FindCommandResults());
-            vm.SubmitCommand.CanExecuteChanged += (sender, e) => fired = true;
-
-            // Act
-            await vm.FindCommand.ExecuteAsync();
-
-            // Assert
-            Assert.True(vm.SubmitCommand.CanExecute());
-            Assert.True(fired);
-        }
-
-        [Fact]
         public async Task WhenOrderSubmittedThenOrderPlacedWithCorrectDetails()
         {
             // Arrange
@@ -502,6 +477,71 @@ namespace MyTradingApp.Tests
             Assert.Equal(Quantity, vm.Quantity);
             Assert.Equal(EntryPrice, vm.EntryPrice);
             Assert.Equal(StopLoss, vm.InitialStopLossPrice);
+        }
+
+        [Fact]
+        public async Task CanNotSubmitWhenOrderDetailsNotCalculated()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+            const Direction Direction = Direction.Buy;
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            orderCalculationService.CanCalculate(Symbol).Returns(true);
+            orderCalculationService.GetEntryPrice(Symbol, Direction).Returns(0);
+            orderCalculationService.CalculateInitialStopLoss(Symbol, Direction).Returns(0);
+            orderCalculationService.GetCalculatedQuantity(Symbol, Direction).Returns(Convert.ToUInt16(0));
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol);
+            vm.Direction = Direction;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert
+            Assert.False(vm.SubmitCommand.CanExecute());
+        }
+
+        [Fact]
+        public async Task CanSubmitWhenOrderDetailsCalculated()
+        {
+            // Arrange
+            const string Symbol = "AMZN";
+            const Direction Direction = Direction.Buy;
+
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var fired = false;
+            orderCalculationService.CanCalculate(Symbol).Returns(true);
+            orderCalculationService.GetEntryPrice(Symbol, Direction).Returns(10);
+            orderCalculationService.CalculateInitialStopLoss(Symbol, Direction).Returns(9);
+            orderCalculationService.GetCalculatedQuantity(Symbol, Direction).Returns(Convert.ToUInt16(1000));
+
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults(), Symbol);
+            vm.Direction = Direction;
+            vm.SubmitCommand.CanExecuteChanged += (sender, e) => fired = true;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert            
+            Assert.True(fired);
+            Assert.True(vm.SubmitCommand.CanExecute());
+        }
+
+        [Fact]
+        public void ChangingEntryPriceReCalculatesSubmitCommandStatus()
+        {
+            // Arrange
+            var orderCalculationService = Substitute.For<IOrderCalculationService>();
+            var vm = GetStandardVm(orderCalculationService, FindCommandResults());
+            var fired = false;
+            vm.SubmitCommand.CanExecuteChanged += (sender, e) => fired = true;
+
+            // Act
+            vm.EntryPrice = 10;
+
+            // Assert
+            Assert.True(fired);
         }
 
         [Theory]

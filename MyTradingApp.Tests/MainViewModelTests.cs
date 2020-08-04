@@ -2,7 +2,9 @@
 using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.Core;
 using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
@@ -31,6 +33,7 @@ namespace MyTradingApp.Tests
         private OrdersViewModel _ordersViewModel;
         private StatusBarViewModel _statusBarViewModel;
         private SettingsViewModel _settingsViewModel;
+        private OrdersListViewModel _ordersListViewModel;
 
         private MainViewModel GetVm(ISettingsRepository settingsRepository = null)
         {
@@ -82,13 +85,17 @@ namespace MyTradingApp.Tests
             _ordersViewModel = new OrdersViewModel(dispatcherHelper, _contractManager, _marketDataManager, _historicalDataManager, _orderCalculationService, orderManager, _tradeRepository, queueProcessor);
             _statusBarViewModel = Substitute.For<StatusBarViewModel>();
 
+            var findSymbolService = Substitute.For<IFindSymbolService>();
+            var factory = new NewOrderViewModelFactory(dispatcherHelper, queueProcessor, findSymbolService, _orderCalculationService, _orderManager);
+            _ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, _tradeRepository);
+
             var positionsManager = Substitute.For<IPositionManager>();
             var contractManager = Substitute.For<IContractManager>();            
 
             var positionsViewModel = new PositionsViewModel(dispatcherHelper, _marketDataManager, _accountManager, positionsManager, contractManager, queueProcessor);
             _settingsViewModel = new SettingsViewModel(_settingsRepository);            
 
-            return new MainViewModel(dispatcherHelper, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, _settingsViewModel, queueProcessor);
+            return new MainViewModel(dispatcherHelper, _connectionService, _orderManager, _accountManager, _ordersViewModel, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, _settingsViewModel, queueProcessor, _ordersListViewModel);
         }
 
         [Fact]

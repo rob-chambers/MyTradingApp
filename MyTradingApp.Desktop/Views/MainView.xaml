@@ -73,7 +73,8 @@
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
                 <Expander Header="New Orders" IsExpanded="True">
-                    <views:OrdersView DataContext="{Binding OrdersViewModel}" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
+                    <!--<views:OrdersView DataContext="{Binding OrdersViewModel}" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />-->
+                    <views:OrdersListView DataContext="{Binding OrdersListViewModel}" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=mahapps:MetroWindow, Mode=FindAncestor}, Path=DataContext.IsEnabled}" />
                 </Expander>
 
                 <Expander Grid.Row="1" IsExpanded="True">

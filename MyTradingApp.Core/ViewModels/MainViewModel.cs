@@ -70,13 +70,15 @@ namespace MyTradingApp.ViewModels
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
             SettingsViewModel settingsViewModel,
-            IQueueProcessor queueProcessor)
+            IQueueProcessor queueProcessor,
+            OrdersListViewModel ordersListViewModel)
             : base(dispatcherHelper, queueProcessor)
         {
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
             OrdersViewModel = ordersViewModel;
+            OrdersListViewModel = ordersListViewModel;
             OrdersViewModel.Orders.CollectionChanged += OnOrdersCollectionChanged;
             PositionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
@@ -168,6 +170,8 @@ namespace MyTradingApp.ViewModels
         }
 
         public OrdersViewModel OrdersViewModel { get; private set; }
+
+        public OrdersListViewModel OrdersListViewModel { get; private set; }
 
         public PositionsViewModel PositionsViewModel { get; private set; }
 

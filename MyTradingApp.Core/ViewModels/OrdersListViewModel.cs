@@ -6,6 +6,7 @@ using MyTradingApp.Repositories;
 using MyTradingApp.Utils;
 using Serilog;
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,10 +15,10 @@ namespace MyTradingApp.Core.ViewModels
     public class OrdersListViewModel : DispatcherViewModel
     {
         private readonly INewOrderViewModelFactory _newOrderViewModelFactory;
+        private readonly ITradeRepository _tradeRepository;
         private CommandBase _addCommand;
         private CommandBase<NewOrderViewModel> _deleteCommand;
-        private CommandBase _deleteAllCommand;
-        private ITradeRepository _tradeRepository;
+        private CommandBase _deleteAllCommand;        
 
         public OrdersListViewModel(
             IDispatcherHelper dispatcherHelper, 
@@ -28,7 +29,59 @@ namespace MyTradingApp.Core.ViewModels
         {
             _newOrderViewModelFactory = newOrderViewModelFactory;
             _tradeRepository = tradeRepository;
+            PopulateDirectionList();
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
+        }
+
+        public ObservableCollection<Direction> DirectionList { get; private set; } = new ObservableCollection<Direction>();
+
+        public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; } = new ObservableCollectionNoReset<NewOrderViewModel>();
+
+        public CommandBase AddCommand
+        {
+            get
+            {
+                return _addCommand ?? (_addCommand = new CommandBase(DispatcherHelper, () =>
+                {
+                    var order = _newOrderViewModelFactory.Create();
+                    Orders.Add(order);
+                    DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
+                }));
+            }
+        }
+
+        public CommandBase<NewOrderViewModel> DeleteCommand
+        {
+            get
+            {
+                return _deleteCommand ?? (_deleteCommand = new CommandBase<NewOrderViewModel>(DispatcherHelper,
+                    order =>
+                    {
+                        if (Orders.Contains(order))
+                        {
+                            Orders.Remove(order);
+                            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
+                        }
+                    },
+                    order => CanDelete(order)));
+            }
+        }
+
+        public CommandBase DeleteAllCommand
+        {
+            get
+            {
+                return _deleteAllCommand ?? (_deleteAllCommand = new CommandBase(DispatcherHelper, DeleteAll, () => Orders.Any()));
+            }
+        }
+
+        private void PopulateDirectionList()
+        {
+            var values = Enum.GetValues(typeof(Direction));
+            foreach (var value in values)
+            {
+                DirectionList.Add((Direction)value);
+            }
         }
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -48,7 +101,7 @@ namespace MyTradingApp.Core.ViewModels
 
             Log.Debug("A new order for {0} was filled", order.Symbol.Code);
             var addTradeTask = AddTradeAsync(order, message.Message.AvgFillPrice);
-            
+
             await addTradeTask;
             //    var stopOrderTask = SubmitStopOrderAsync(order, message.Message);
 
@@ -75,56 +128,19 @@ namespace MyTradingApp.Core.ViewModels
             });
         }
 
-        public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; } = new ObservableCollectionNoReset<NewOrderViewModel>();
-
-        public CommandBase AddCommand
-        {
-            get
-            {
-                return _addCommand ?? (_addCommand = new CommandBase(DispatcherHelper, () =>
-                {
-                    var order = _newOrderViewModelFactory.Create();
-                    Orders.Add(order);
-                    DeleteAllCommand.RaiseCanExecuteChanged();
-                }));
-            }
-        }
-
-        public CommandBase<NewOrderViewModel> DeleteCommand
-        {
-            get
-            {
-                return _deleteCommand ?? (_deleteCommand = new CommandBase<NewOrderViewModel>(DispatcherHelper,
-                    order =>
-                    {
-                        if (Orders.Contains(order))
-                        {
-                            Orders.Remove(order);
-                        }
-                    },
-                    order => CanDelete(order)));
-            }
-        }
-
-        public CommandBase DeleteAllCommand
-        {
-            get
-            {
-                return _deleteAllCommand ?? (_deleteAllCommand = new CommandBase(DispatcherHelper, DeleteAll, () => Orders.Any()));
-            }
-        }
-
         private void DeleteAll()
         {
             foreach (var order in Orders.Where(o => CanDelete(o)).ToList())
             {
                 Orders.Remove(order);
             }
+
+            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
         }
 
         private bool CanDelete(NewOrderViewModel order)
         {
-            return Orders.Contains(order) && order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled;
+            return Orders.Contains(order) && (order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled);
         }
     }
 }
