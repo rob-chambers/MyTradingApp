@@ -4,6 +4,7 @@ using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
 using MyTradingApp.Utils;
+using MyTradingApp.ViewModels;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
@@ -82,6 +83,13 @@ namespace MyTradingApp.Core.ViewModels
             {
                 DirectionList.Add((Direction)value);
             }
+        }
+
+        public void AddOrder(Symbol symbol, FindCommandResultsModel results)
+        {
+            var order = _newOrderViewModelFactory.Create();
+            order.ProcessFindCommandResults(symbol, results);
+            DispatcherHelper.InvokeOnUiThread(() => Orders.Add(order));
         }
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)

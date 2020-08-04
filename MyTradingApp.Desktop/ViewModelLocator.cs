@@ -47,6 +47,8 @@ namespace MyTradingApp.Desktop
 
         public OrdersListViewModel OrdersList => _serviceProvider.GetService<OrdersListViewModel>();
 
+        public FindSymbolViewModel FindSymbol => _serviceProvider.GetService<FindSymbolViewModel>();
+
         public StatusBarViewModel StatusBar => _serviceProvider.GetService<StatusBarViewModel>();
 
         public PositionsViewModel Positions => _serviceProvider.GetService<PositionsViewModel>();
@@ -74,6 +76,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<SettingsViewModel>();
             services.AddScoped<StatusBarViewModel>();
             services.AddScoped<DetailsViewModel>();
+            services.AddScoped<FindSymbolViewModel>();
             services.AddScoped<IAccountManager, AccountManager>();
             services.AddScoped<IConnectionService, ConnectionService>();
             services.AddScoped<IOrderManager, OrderManager>();

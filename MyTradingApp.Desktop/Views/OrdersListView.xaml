@@ -5,12 +5,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:MyTradingApp.Desktop.Views"
     Name="ordersControl"
+    d:DataContext="{Binding OrdersList, Source={StaticResource Locator}}"
     d:DesignHeight="310"
     d:DesignWidth="1200"
-    mc:Ignorable="d"
-    d:DataContext="{Binding OrdersList, Source={StaticResource Locator}}"
-    >
+    mc:Ignorable="d">
     <StackPanel>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -18,8 +18,13 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
-            <!-- Space for streaming button -->
-            
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <views:FindSymbolView Margin="0,0,0,10" Padding="6,14" />
+
+            <!--  Space for streaming button  -->
             <Button
                 Grid.Column="1"
                 Margin="0,0,0,20"
@@ -73,13 +78,10 @@
                     <GridViewColumn Width="75" Header=" Symbol">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox
+                                <TextBlock
                                     Width="60"
                                     Padding="6,2"
-                                    IsReadOnly="{Binding IsLocked}"
-                                    KeyUp="OnSymbolTextBoxKeyUp"
-                                    MaxLength="6"
-                                    Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}" />
+                                    Text="{Binding Symbol.Code}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -87,9 +89,7 @@
                     <GridViewColumn Width="90">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button
-                                    Command="{Binding FindCommand}"
-                                    Content="{Binding FindCommandCaption}" />
+                                <Button Command="{Binding FindCommand}" Content="{Binding FindCommandCaption}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -168,9 +168,7 @@
                     <GridViewColumn Width="auto">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button
-                                    Command="{Binding SubmitCommand}"
-                                    Content="Submit" />
+                                <Button Command="{Binding SubmitCommand}" Content="Submit" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

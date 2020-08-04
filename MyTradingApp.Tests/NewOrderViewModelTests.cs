@@ -6,7 +6,6 @@ using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
-using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System;
@@ -75,158 +74,12 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void CannotFindUntilAtLeastOneCharacterTyped()
-        {
-            /*
-             * var symbol = order.Symbol.Code;
-            if (Orders.Any(x => x != order && x.Symbol.Code == symbol))
-            {
-                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Warning, $"There is already an order for {symbol}."));
-                return null;
-            }
-
-            order.Symbol.IsFound = false;
-            order.Symbol.Name = string.Empty;
-             */
-
-            var vm = GetVm();
-            var fired = false;
-            vm.Symbol.PropertyChanged += (sender, e) =>
-            {
-                if (e.PropertyName == nameof(Symbol.Code))
-                {
-                    fired = true;
-                }
-            };
-
-            Assert.False(vm.FindCommand.CanExecute());
-            vm.Symbol.Code = "M";
-            Assert.True(vm.FindCommand.CanExecute());
-            Assert.True(fired);
-        }
-
-        [Fact]
         public void CannotFindSymbolOnceLocked()
         {
             var vm = GetVm();
             vm.Symbol.Code = "M";
             vm.Status = OrderStatus.Filled;
             Assert.False(vm.FindCommand.CanExecute());
-        }
-
-        [Fact]
-        public async Task FindCommandUpdatesSymbolDetails()
-        {
-            // Arrange
-            const double LatestPrice = 1.23;
-            const string CompanyName = "Microsoft";
-            const double Tick = 4;
-
-            var findSymbolService = Substitute.For<IFindSymbolService>();
-            var builder = new NewOrderViewModelBuilder()
-                .WithFindSymbolService(findSymbolService);
-            var vm = builder.Build();
-
-            vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
-                new FindCommandResultsModel
-                {
-                    LatestPrice = LatestPrice,
-                    Details = new List<ContractDetails>
-                    {
-                        new ContractDetails { LongName = CompanyName, MinTick = Tick }
-                    },
-                    PriceHistory = new List<HistoricalDataEventArgs>()
-                }));
-
-            // Act
-            await vm.FindCommand.ExecuteAsync();
-
-            // Assert
-            Assert.True(vm.Symbol.IsFound);
-            Assert.Equal(LatestPrice, vm.Symbol.LatestPrice);
-            Assert.Equal(CompanyName, vm.Symbol.Name);
-            Assert.Equal(Tick, vm.Symbol.MinTick);
-        }
-
-        [Fact]
-        public async Task FindCommandDoesNotUpdateDetailsWhenSymbolNotFound()
-        {
-            // Arrange
-            var findSymbolService = Substitute.For<IFindSymbolService>();
-            var builder = new NewOrderViewModelBuilder()
-                .WithFindSymbolService(findSymbolService);
-            var vm = builder.Build();
-
-            vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
-                new FindCommandResultsModel
-                {
-                    Details = null
-                }));
-
-            // Act
-            await vm.FindCommand.ExecuteAsync();
-
-            // Assert
-            Assert.False(vm.Symbol.IsFound);
-            Assert.Null(vm.Symbol.Name);
-        }
-
-        [Fact]
-        public void FindCommandButtonCaptionInitiallyCorrect()
-        {
-            var vm = GetVm();
-            Assert.Equal(NewOrderViewModel.FindButtonCaptions.Default, vm.FindCommandCaption);
-        }
-
-        [Fact]
-        public void IsBusyFlagInitiallyCorrect()
-        {
-            var vm = GetVm();
-            Assert.False(vm.IsBusy);
-        }
-
-        [Fact]
-        public async Task WhenFindingThenFindCommandDisabledAndButtonCaptionChangedAsync()
-        {
-            var findSymbolService = Substitute.For<IFindSymbolService>();
-            var builder = new NewOrderViewModelBuilder()
-                .WithFindSymbolService(findSymbolService);
-            var vm = builder.Build();
-
-            var isBusyEvent = new List<bool>();
-            var findCommandCaption = new List<string>();
-
-            vm.PropertyChanged += (sender, e) =>
-            {
-                switch (e.PropertyName)
-                {
-                    case nameof(vm.IsBusy):
-                        isBusyEvent.Add(vm.IsBusy);
-                        break;
-
-                    case nameof(vm.FindCommandCaption):
-                        findCommandCaption.Add(vm.FindCommandCaption);
-                        break;
-                }
-            };
-
-            vm.Symbol.Code = "M";
-            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(
-                new FindCommandResultsModel
-                {
-                    Details = null
-                }));
-
-            // Act
-            await vm.FindCommand.ExecuteAsync();
-
-            // Assert
-            Assert.True(isBusyEvent[0]);
-            Assert.False(isBusyEvent[1]);
-            Assert.Equal(NewOrderViewModel.FindButtonCaptions.Finding, findCommandCaption[0]);
-            Assert.Equal(NewOrderViewModel.FindButtonCaptions.Default, findCommandCaption[1]);
         }
 
         [Fact]

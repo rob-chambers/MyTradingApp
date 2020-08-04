@@ -209,6 +209,22 @@ namespace MyTradingApp.Core.ViewModels
 
         #region Methods
 
+        public void ProcessFindCommandResults(Symbol symbol, FindCommandResultsModel results)
+        {
+            // TODO: Is there a better way of doing this?
+            Symbol.IsFound = true;
+            Symbol.Code = symbol.Code;
+            Symbol.Name = symbol.Name;
+            Symbol.LatestPrice = symbol.LatestPrice;            
+            Symbol.MinTick = symbol.MinTick;
+
+            _orderCalculationService.SetLatestPrice(Symbol.Code, results.LatestPrice);
+
+            ProcessHistory(results.PriceHistory);
+            CalculateOrderDetails();
+            DispatcherHelper.InvokeOnUiThread(() => SubmitCommand.RaiseCanExecuteChanged());
+        }
+
         private async Task SubmitOrderAsync()
         {
             var contract = MapOrderToContract();
@@ -235,6 +251,7 @@ namespace MyTradingApp.Core.ViewModels
             };
         }
 
+        // TODO: Move this to a shared helper
         private Contract MapOrderToContract()
         {
             var contract = new Contract
