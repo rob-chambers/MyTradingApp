@@ -91,6 +91,7 @@ namespace MyTradingApp.Core.ViewModels
             var order = _newOrderViewModelFactory.Create();
             order.ProcessFindCommandResults(symbol, results);
             Orders.Add(order);
+            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
         }
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)

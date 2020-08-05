@@ -8,9 +8,11 @@ using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
+using MyTradingApp.ViewModels;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -206,6 +208,24 @@ namespace MyTradingApp.Tests
                 x.EntryPrice == FillPrice &&
                 !x.ExitPrice.HasValue &&
                 !x.ExitTimeStamp.HasValue));
+        }
+
+        [Fact]
+        public void WhenOrderAddedThenDeleteAllCommandStatusChecked()
+        {
+            // Arrange
+            var vm = GetVm();
+            var fired = false;
+            vm.DeleteAllCommand.CanExecuteChanged += (sender, e) => fired = true;
+
+            // Act
+            vm.AddOrder(new Symbol { Code = "MSFT" }, new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+
+            // Assert
+            Assert.True(fired);
         }
     }
 }
