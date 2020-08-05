@@ -32,11 +32,12 @@ namespace MyTradingApp.Core.ViewModels
             _tradeRepository = tradeRepository;
             PopulateDirectionList();
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
+            Orders = new ObservableCollectionNoReset<NewOrderViewModel>(dispatcherHelper: DispatcherHelper);
         }
 
         public ObservableCollection<Direction> DirectionList { get; private set; } = new ObservableCollection<Direction>();
 
-        public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; } = new ObservableCollectionNoReset<NewOrderViewModel>();
+        public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; }
 
         public CommandBase AddCommand
         {
@@ -89,7 +90,7 @@ namespace MyTradingApp.Core.ViewModels
         {
             var order = _newOrderViewModelFactory.Create();
             order.ProcessFindCommandResults(symbol, results);
-            DispatcherHelper.InvokeOnUiThread(() => Orders.Add(order));
+            Orders.Add(order);
         }
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)

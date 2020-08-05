@@ -1,5 +1,4 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
-using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
@@ -13,7 +12,6 @@ using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +30,7 @@ namespace MyTradingApp.ViewModels
 
         //private AsyncCommand<PositionItem> _tempCommand;
 
-        public ObservableCollection<PositionItem> Positions { get; } = new ObservableCollection<PositionItem>();
+        public ObservableCollectionNoReset<PositionItem> Positions { get; }
 
         public PositionsViewModel(
             IDispatcherHelper dispatcherHelper,
@@ -43,6 +41,8 @@ namespace MyTradingApp.ViewModels
             IQueueProcessor queueProcessor) 
             : base(dispatcherHelper, queueProcessor)
         {
+            Positions = new ObservableCollectionNoReset<PositionItem>(dispatcherHelper: DispatcherHelper);
+
             Messenger.Default.Register<ConnectionChangingMessage>(this, HandleConnectionChangingMessage);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Positions, OnOrderStatusChangedMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
@@ -397,11 +397,11 @@ namespace MyTradingApp.ViewModels
                 var positions = await _accountManager.RequestPositionsAsync();
                 StatusText = "Stopping streaming";
                 StopStreaming();
-                DispatcherHelper.InvokeOnUiThread(() => Positions.Clear());
+                Positions.Clear();
 
                 foreach (var item in positions)
                 {
-                    DispatcherHelper.InvokeOnUiThread(() => Positions.Add(item));
+                    Positions.Add(item);
                     if (item.IsOpen && item.Contract != null)
                     {
                         var symbol = item.Contract.Symbol;

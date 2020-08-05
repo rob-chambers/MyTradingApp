@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MyTradingApp.Core.Utils;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
@@ -6,12 +8,15 @@ namespace MyTradingApp.Utils
 {
     public class ObservableCollectionNoReset<T> : ObservableCollection<T>
     {
+        private readonly IDispatcherHelper _dispatcherHelper;
+
         // Some CollectionChanged listeners don't support range actions.
         public bool RangeActionsSupported { get; }
 
-        public ObservableCollectionNoReset(bool rangeActionsSupported = false)
+        public ObservableCollectionNoReset(bool rangeActionsSupported = false, IDispatcherHelper dispatcherHelper = null)
         {
             RangeActionsSupported = rangeActionsSupported;
+            _dispatcherHelper = dispatcherHelper;
         }
 
         protected override void ClearItems()
@@ -19,8 +24,19 @@ namespace MyTradingApp.Utils
             if (RangeActionsSupported)
             {
                 var removed = new List<T>(this);
-                base.ClearItems();
-                base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removed));
+                Action action = () =>
+                {
+                    base.ClearItems();
+                    base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removed));
+                };
+
+                if (_dispatcherHelper != null)
+                {
+                    _dispatcherHelper.InvokeOnUiThread(() => action.Invoke());
+                    return;
+                }
+
+                action.Invoke();
             }
             else
             {
@@ -35,6 +51,12 @@ namespace MyTradingApp.Utils
         {
             if (e.Action != NotifyCollectionChangedAction.Reset)
             {
+                if (_dispatcherHelper != null)
+                {
+                    _dispatcherHelper.InvokeOnUiThread(() => base.OnCollectionChanged(e));
+                    return;
+                }
+
                 base.OnCollectionChanged(e);
             }
         }
