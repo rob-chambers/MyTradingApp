@@ -8,7 +8,6 @@ using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
-using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -176,7 +175,7 @@ namespace MyTradingApp.ViewModels
                 if (order.OrderId == 0)
                 {
                     // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
-                    Log.Warning(order.DumpToString("Order without an id"));
+                    Log.Warning(order.Dump("Order without an id"));
                     continue;
                 }
 

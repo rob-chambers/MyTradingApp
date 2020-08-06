@@ -3,10 +3,10 @@ using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
+using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace MyTradingApp.Services
         {
             try
             {
-                Log.Debug(openOrder.DumpToString("Open Order"));
+                Log.Debug(openOrder.Dump("Open Order"));
             }
             catch (Exception)
             {

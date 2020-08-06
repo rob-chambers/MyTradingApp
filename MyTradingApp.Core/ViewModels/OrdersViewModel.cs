@@ -11,7 +11,6 @@ using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.Utils;
-using ObjectDumper;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -87,7 +86,7 @@ namespace MyTradingApp.ViewModels
                 return;
             }
 
-            Log.Debug(message.DumpToString("Handling streaming bar price"));
+            Log.Debug(message.Dump("Handling streaming bar price"));
             var orders = Orders.Where(o => o.Symbol.Code == message.Symbol).ToList();
             if (!orders.Any())
             {
