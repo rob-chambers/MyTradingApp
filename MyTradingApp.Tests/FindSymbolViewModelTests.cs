@@ -40,8 +40,9 @@ namespace MyTradingApp.Tests
             factory.Create().Returns(new NewOrderViewModel(dispatcherHelper, queueProcessor, findSymbolService, orderCalculationService, orderManager));
 
             var tradeRepository = Substitute.For<ITradeRepository>();
+            var marketDataManager = Substitute.For<IMarketDataManager>();
 
-            var ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository);
+            var ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository, marketDataManager);
 
             return new FindSymbolViewModel(dispatcherHelper, queueProcessor, findSymbolService, ordersListViewModel);
         }

@@ -32,6 +32,13 @@
                 Command="{Binding DeleteAllCommand}"
                 Content="Delete All" />
         </Grid>
+
+        <Button
+            Margin="0,0,0,20"
+            HorizontalAlignment="Left"
+            Command="{Binding StartStopStreamingCommand}"
+            Content="{Binding StreamingButtonCaption}" />
+
         <ListView ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
@@ -191,12 +198,5 @@
                 </GridView>
             </ListView.View>
         </ListView>
-
-        <Button
-            Width="80"
-            Margin="0,20"
-            HorizontalAlignment="Left"
-            Command="{Binding AddCommand}"
-            Content="Add" />
     </StackPanel>
 </UserControl>

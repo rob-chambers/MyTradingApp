@@ -252,7 +252,7 @@ namespace MyTradingApp.Core.ViewModels
         }
 
         // TODO: Move this to a shared helper
-        private Contract MapOrderToContract()
+        public Contract MapOrderToContract()
         {
             var contract = new Contract
             {
@@ -293,12 +293,9 @@ namespace MyTradingApp.Core.ViewModels
                 Symbol.IsFound = true;
                 Symbol.LatestPrice = results.LatestPrice;
                 Symbol.Name = details.LongName;
-                Symbol.MinTick = details.MinTick;
-
-                _orderCalculationService.SetLatestPrice(Symbol.Code, results.LatestPrice);
-
+                Symbol.MinTick = details.MinTick;                
                 ProcessHistory(results.PriceHistory);
-                CalculateOrderDetails();
+                CalculateOrderDetails(results.LatestPrice);
                 DispatcherHelper.InvokeOnUiThread(() => SubmitCommand.RaiseCanExecuteChanged());
             }
             finally
@@ -308,9 +305,14 @@ namespace MyTradingApp.Core.ViewModels
             }
         }
 
-        private void CalculateOrderDetails()
+        public void CalculateOrderDetails(double? latestPrice = null)
         {
             var symbol = Symbol.Code;
+            if (latestPrice.HasValue)
+            {
+                _orderCalculationService.SetLatestPrice(symbol, latestPrice.Value);
+            }
+            
             if (!_orderCalculationService.CanCalculate(symbol))
             {
                 return;
@@ -325,7 +327,7 @@ namespace MyTradingApp.Core.ViewModels
 
         private void ProcessHistory(List<HistoricalDataEventArgs> results)
         {
-            if (results.Any())
+            if (results != null && results.Any())
             {
                 HasHistory = true;
 

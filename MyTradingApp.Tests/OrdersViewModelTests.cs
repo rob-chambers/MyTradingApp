@@ -257,7 +257,7 @@ namespace MyTradingApp.Tests
             await vm.StartStopStreamingCommand.ExecuteAsync();
 
             // Assert
-            builder.MarketDataManager.Received().StopActivePriceStreaming();
+            builder.MarketDataManager.Received().StopActivePriceStreaming(Arg.Any<IEnumerable<int>>());
         }
 
         [Fact]

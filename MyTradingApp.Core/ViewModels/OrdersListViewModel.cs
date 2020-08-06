@@ -3,10 +3,12 @@ using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
 using MyTradingApp.Repositories;
+using MyTradingApp.Services;
 using MyTradingApp.Utils;
 using MyTradingApp.ViewModels;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,40 +19,39 @@ namespace MyTradingApp.Core.ViewModels
     {
         private readonly INewOrderViewModelFactory _newOrderViewModelFactory;
         private readonly ITradeRepository _tradeRepository;
-        private CommandBase _addCommand;
+        private readonly IMarketDataManager _marketDataManager;
+        private readonly List<int> _tickerIds = new List<int>();
         private CommandBase<NewOrderViewModel> _deleteCommand;
-        private CommandBase _deleteAllCommand;        
+        private CommandBase _deleteAllCommand;
+        private bool _isStreaming;
+        private AsyncCommand _startStopStreamingCommand;        
+
+        public static class StreamingButtonCaptions
+        {
+            public const string StartStreaming = "Start Streaming";
+            public const string StopStreaming = "Stop Streaming";
+        }
 
         public OrdersListViewModel(
             IDispatcherHelper dispatcherHelper, 
             IQueueProcessor queueProcessor,
             INewOrderViewModelFactory newOrderViewModelFactory,
-            ITradeRepository tradeRepository)
+            ITradeRepository tradeRepository,
+            IMarketDataManager marketDataManager)
             : base(dispatcherHelper, queueProcessor)
         {
             _newOrderViewModelFactory = newOrderViewModelFactory;
             _tradeRepository = tradeRepository;
+            _marketDataManager = marketDataManager;
             PopulateDirectionList();
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
+            Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
             Orders = new ObservableCollectionNoReset<NewOrderViewModel>(dispatcherHelper: DispatcherHelper);
         }
 
         public ObservableCollection<Direction> DirectionList { get; private set; } = new ObservableCollection<Direction>();
 
         public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; }
-
-        public CommandBase AddCommand
-        {
-            get
-            {
-                return _addCommand ?? (_addCommand = new CommandBase(DispatcherHelper, () =>
-                {
-                    var order = _newOrderViewModelFactory.Create();
-                    Orders.Add(order);
-                    DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
-                }));
-            }
-        }
 
         public CommandBase<NewOrderViewModel> DeleteCommand
         {
@@ -62,7 +63,11 @@ namespace MyTradingApp.Core.ViewModels
                         if (Orders.Contains(order))
                         {
                             Orders.Remove(order);
-                            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
+                            DispatcherHelper.InvokeOnUiThread(() =>
+                            {
+                                DeleteAllCommand.RaiseCanExecuteChanged();
+                                StartStopStreamingCommand.RaiseCanExecuteChanged();
+                            });
                         }
                     },
                     order => CanDelete(order)));
@@ -75,6 +80,77 @@ namespace MyTradingApp.Core.ViewModels
             {
                 return _deleteAllCommand ?? (_deleteAllCommand = new CommandBase(DispatcherHelper, DeleteAll, () => Orders.Any()));
             }
+        }
+
+        public bool IsStreaming
+        {
+            get => _isStreaming;
+            private set
+            {
+                Set(ref _isStreaming, value);
+                //Messenger.Default.Send(new StreamingChangedMessage(value));
+                RaisePropertyChanged(nameof(StreamingButtonCaption));
+            }
+        }
+
+        public string StreamingButtonCaption => IsStreaming 
+            ? StreamingButtonCaptions.StopStreaming 
+            : StreamingButtonCaptions.StartStreaming;
+
+        public AsyncCommand StartStopStreamingCommand
+        {
+            get
+            {
+                return _startStopStreamingCommand ??
+                    (_startStopStreamingCommand = new AsyncCommand(DispatcherHelper, StartStopStreamingAsync, CanStartStopStreaming));
+            }
+        }
+
+        private async Task StartStopStreamingAsync()
+        {
+            var isStreaming = IsStreaming;
+            try
+            {
+                IsStreaming = !IsStreaming;
+                DispatcherHelper.InvokeOnUiThread(() => StartStopStreamingCommand.RaiseCanExecuteChanged());
+                if (IsStreaming)
+                {
+                    await GetMarketDataAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    CancelStreaming();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error starting/stopping streaming\n{0}", ex);
+                IsStreaming = isStreaming;
+            }
+        }
+
+        private void CancelStreaming()
+        {
+            _marketDataManager.StopActivePriceStreaming(_tickerIds);
+            _tickerIds.Clear();
+        }
+
+        private async Task GetMarketDataAsync()
+        {
+            var tasks = Orders.Select(o => StreamSymbolAsync(o));
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+
+        private async Task StreamSymbolAsync(NewOrderViewModel item)
+        {
+            var contract = item.MapOrderToContract();
+            var tickerId = await _marketDataManager.RequestStreamingPriceAsync(contract);
+            _tickerIds.Add(tickerId);
+        }
+
+        private bool CanStartStopStreaming()
+        {
+            return !StartStopStreamingCommand.IsExecuting && (IsStreaming || Orders.Any(o => o.Symbol.IsFound));
         }
 
         private void PopulateDirectionList()
@@ -91,7 +167,11 @@ namespace MyTradingApp.Core.ViewModels
             var order = _newOrderViewModelFactory.Create();
             order.ProcessFindCommandResults(symbol, results);
             Orders.Add(order);
-            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
+            DispatcherHelper.InvokeOnUiThread(() => 
+            {
+                DeleteAllCommand.RaiseCanExecuteChanged();
+                StartStopStreamingCommand.RaiseCanExecuteChanged();
+            });
         }
 
         private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -145,12 +225,40 @@ namespace MyTradingApp.Core.ViewModels
                 Orders.Remove(order);
             }
 
-            DispatcherHelper.InvokeOnUiThread(() => DeleteAllCommand.RaiseCanExecuteChanged());
+            DispatcherHelper.InvokeOnUiThread(() => 
+            {
+                DeleteAllCommand.RaiseCanExecuteChanged();
+                StartStopStreamingCommand.RaiseCanExecuteChanged();
+            });
         }
 
         private bool CanDelete(NewOrderViewModel order)
         {
             return Orders.Contains(order) && (order?.Status == OrderStatus.Pending || order?.Status == OrderStatus.Cancelled);
+        }
+
+        private void HandleBarPriceMessage(BarPriceMessage message)
+        {
+            if (!IsStreaming)
+            {
+                // It wasn't us that triggered the event
+                return;
+            }
+
+            var orders = Orders.Where(o => o.Symbol.Code == message.Symbol).ToList();
+            if (!orders.Any())
+            {
+                return;
+            }
+
+            if (orders.Count > 1)
+            {
+                Log.Warning("Found more than one order for {0} - taking the first", message.Symbol);
+            }
+
+            var order = orders.First();
+            order.Symbol.LatestPrice = message.Bar.Close;
+            order.CalculateOrderDetails(message.Bar.Close);
         }
     }
 }

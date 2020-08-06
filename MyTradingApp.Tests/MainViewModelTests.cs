@@ -87,7 +87,9 @@ namespace MyTradingApp.Tests
 
             var findSymbolService = Substitute.For<IFindSymbolService>();
             var factory = new NewOrderViewModelFactory(dispatcherHelper, queueProcessor, findSymbolService, _orderCalculationService, _orderManager);
-            _ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, _tradeRepository);
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            _ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, _tradeRepository, marketDataManager);
 
             var positionsManager = Substitute.For<IPositionManager>();
             var contractManager = Substitute.For<IContractManager>();            

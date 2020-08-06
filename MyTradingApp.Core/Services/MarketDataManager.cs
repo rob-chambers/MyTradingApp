@@ -40,20 +40,16 @@ namespace MyTradingApp.Services
             var tick = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, "233", false, false, null);
             Log.Debug("Ticker id for {0}: {1}", contract.Symbol, tick.TickerId);
 
-            _activeRequests.Add(tick.TickerId, new Tuple<Contract, bool>(contract, true));
-
             return tick.TickerId;
         }
 
-        public void StopActivePriceStreaming()
+        public void StopActivePriceStreaming(IEnumerable<int> tickerIds)
         {
             Log.Debug("Stopping active price streaming");
-            foreach (var request in _activeRequests)
+            foreach (var request in tickerIds)
             {
-                _twsObjectFactory.TwsController.CancelMarketData(request.Key);
+                _twsObjectFactory.TwsController.CancelMarketData(request);
             }
-
-            _activeRequests.Clear();
         }
 
         public void StopPriceStreaming(string symbol)

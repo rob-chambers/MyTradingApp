@@ -17,7 +17,7 @@ namespace MyTradingApp.ViewModels
         public string Code
         {
             get => _code;
-            set => Set(ref _code, value.ToUpperInvariant().Trim());
+            set => Set(ref _code, value?.ToUpperInvariant().Trim());
         }
 
         public Exchange Exchange

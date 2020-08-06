@@ -9,7 +9,6 @@ namespace MyTradingApp.Utils
     {
         public event EventHandler CanExecuteChanged;
 
-        private bool _isExecuting;
         private readonly IDispatcherHelper _dispatcherHelper;
         private readonly Func<Task> _execute;
         private readonly Func<bool> _canExecute;
@@ -29,8 +28,10 @@ namespace MyTradingApp.Utils
 
         public bool CanExecute()
         {
-            return !_isExecuting && (_canExecute?.Invoke() ?? true);
+            return !IsExecuting && (_canExecute?.Invoke() ?? true);
         }
+
+        public bool IsExecuting { get; private set; }
 
         public async Task ExecuteAsync()
         {
@@ -38,12 +39,12 @@ namespace MyTradingApp.Utils
             {
                 try
                 {
-                    _isExecuting = true;
+                    IsExecuting = true;
                     await _execute();
                 }
                 finally
                 {
-                    _isExecuting = false;
+                    IsExecuting = false;
                 }
             }
 

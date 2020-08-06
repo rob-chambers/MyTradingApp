@@ -373,7 +373,7 @@ namespace MyTradingApp.ViewModels
 
         private void CancelStreaming()
         {
-            _marketDataManager.StopActivePriceStreaming();
+            _marketDataManager.StopActivePriceStreaming(new List<int>());
         }
 
         private bool CanFindOrder(OrderItem order)
@@ -403,7 +403,7 @@ namespace MyTradingApp.ViewModels
         {
             var contract = MapOrderToContract(item);
             //_marketDataManager.RequestStreamingPrice(contract);
-            await _marketDataManager.RequestStreamingPriceAsync(contract);
+            await _marketDataManager.RequestStreamingPriceAsync(contract);            
         }
 
         private Order GetPrimaryOrder(OrderItem orderItem)
