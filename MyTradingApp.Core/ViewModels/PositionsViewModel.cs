@@ -24,6 +24,7 @@ namespace MyTradingApp.ViewModels
         private readonly IPositionManager _positionManager;
         private readonly IContractManager _contractManager;
         private readonly IQueueProcessor _queueProcessor;
+        private readonly Dictionary<string, int> _tickerIds = new Dictionary<string, int>();
         private bool _isLoading;
         private string _statusText;
 
@@ -123,10 +124,8 @@ namespace MyTradingApp.ViewModels
 
         private void StopStreaming()
         {
-            foreach (var item in Positions.Where(p => p.IsOpen))
-            {
-                _marketDataManager.StopPriceStreaming(item.Symbol.Code);
-            }
+            _marketDataManager.StopActivePriceStreaming(_tickerIds.Values);
+            _tickerIds.Clear();
         }
 
         private void HandleBarPriceMessage(BarPriceMessage message)
@@ -409,7 +408,8 @@ namespace MyTradingApp.ViewModels
                         var newContract = MapContractToNewContract(item.Contract);
 
                         StatusText = $"Starting streaming for {symbol}";
-                        await _marketDataManager.RequestStreamingPriceAsync(newContract);
+                        var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract);
+                        _tickerIds.Add(symbol, tickerId);
 
                         //positionsStopService.Manage(item);
                     }

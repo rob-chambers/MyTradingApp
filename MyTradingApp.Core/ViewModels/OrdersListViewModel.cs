@@ -10,6 +10,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace MyTradingApp.Core.ViewModels
         private readonly INewOrderViewModelFactory _newOrderViewModelFactory;
         private readonly ITradeRepository _tradeRepository;
         private readonly IMarketDataManager _marketDataManager;
-        private readonly List<int> _tickerIds = new List<int>();
+        private readonly Dictionary<string, int> _tickerIds = new Dictionary<string, int>();
         private CommandBase<NewOrderViewModel> _deleteCommand;
         private CommandBase _deleteAllCommand;
         private bool _isStreaming;
@@ -47,6 +48,7 @@ namespace MyTradingApp.Core.ViewModels
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
             Messenger.Default.Register<BarPriceMessage>(this, HandleBarPriceMessage);
             Orders = new ObservableCollectionNoReset<NewOrderViewModel>(dispatcherHelper: DispatcherHelper);
+            Orders.CollectionChanged += OnOrdersCollectionChanged;
         }
 
         public ObservableCollection<Direction> DirectionList { get; private set; } = new ObservableCollection<Direction>();
@@ -131,7 +133,7 @@ namespace MyTradingApp.Core.ViewModels
 
         private void CancelStreaming()
         {
-            _marketDataManager.StopActivePriceStreaming(_tickerIds);
+            _marketDataManager.StopActivePriceStreaming(_tickerIds.Values);
             _tickerIds.Clear();
         }
 
@@ -145,7 +147,7 @@ namespace MyTradingApp.Core.ViewModels
         {
             var contract = item.MapOrderToContract();
             var tickerId = await _marketDataManager.RequestStreamingPriceAsync(contract);
-            _tickerIds.Add(tickerId);
+            _tickerIds.Add(contract.Symbol, tickerId);
         }
 
         private bool CanStartStopStreaming()
@@ -259,6 +261,21 @@ namespace MyTradingApp.Core.ViewModels
             var order = orders.First();
             order.Symbol.LatestPrice = message.Bar.Close;
             order.CalculateOrderDetails(message.Bar.Close);
+        }
+
+        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Remove || !IsStreaming)
+            {
+                return;
+            }
+
+            foreach (NewOrderViewModel item in e.OldItems)
+            {
+                //Messenger.Default.Send(new OrderRemovedMessage(item));
+                Log.Debug("Stopping streaming for {0}", item.Symbol.Code);
+                _marketDataManager.StopActivePriceStreaming(new [] { _tickerIds[item.Symbol.Code] });
+            }
         }
     }
 }

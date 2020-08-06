@@ -64,7 +64,6 @@ namespace MyTradingApp.ViewModels
             IConnectionService connectionService,
             IOrderManager orderManager,
             IAccountManager accountManager,
-            OrdersViewModel ordersViewModel,
             StatusBarViewModel statusBarViewModel,
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
@@ -77,9 +76,7 @@ namespace MyTradingApp.ViewModels
             _connectionService = connectionService;
             _orderManager = orderManager;
             _accountManager = accountManager;
-            OrdersViewModel = ordersViewModel;
             OrdersListViewModel = ordersListViewModel;
-            OrdersViewModel.Orders.CollectionChanged += OnOrdersCollectionChanged;
             PositionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
@@ -169,8 +166,6 @@ namespace MyTradingApp.ViewModels
             set => Set(ref _isEnabled, value);
         }
 
-        public OrdersViewModel OrdersViewModel { get; private set; }
-
         public OrdersListViewModel OrdersListViewModel { get; private set; }
 
         public PositionsViewModel PositionsViewModel { get; private set; }
@@ -193,7 +188,7 @@ namespace MyTradingApp.ViewModels
             {
                 Set(ref _riskPerTrade, value);
                 _orderCalculationService.SetRiskPerTrade(value);
-                OrdersViewModel.RecalculateRiskForAllOrders();
+                //OrdersViewModel.RecalculateRiskForAllOrders();
             }
         }
 
@@ -348,7 +343,7 @@ namespace MyTradingApp.ViewModels
             {
                 DispatcherHelper.InvokeOnUiThread(async () =>
                 {                    
-                    OrdersViewModel.Orders.Remove(item);
+                    //OrdersViewModel.Orders.Remove(item);
                     await PositionsViewModel.GetPositionsAsync();
                 });
             });       

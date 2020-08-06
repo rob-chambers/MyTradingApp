@@ -43,31 +43,6 @@ namespace MyTradingApp.Services
             return tick.TickerId;
         }
 
-        public void StopActivePriceStreaming(IEnumerable<int> tickerIds)
-        {
-            Log.Debug("Stopping active price streaming");
-            foreach (var request in tickerIds)
-            {
-                _twsObjectFactory.TwsController.CancelMarketData(request);
-            }
-        }
-
-        public void StopPriceStreaming(string symbol)
-        {
-            Log.Debug("Stopping streaming for {0}", symbol);
-
-            var request = _activeRequests
-                .Where(x => x.Value.Item2 && x.Value.Item1.Symbol == symbol)
-                .Select(x => new { x.Key, x.Value })
-                .FirstOrDefault();
-
-            if (request != null)
-            {
-                _twsObjectFactory.TwsController.CancelMarketData(request.Key);
-                _activeRequests.Remove(request.Key);
-            }
-        }
-
         public async Task<double> RequestLatestPriceAsync(Contract contract)
         {
             Log.Debug("Requesting Latest Price");
@@ -76,7 +51,7 @@ namespace MyTradingApp.Services
                 _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
                 _tickHandlerAttached = true;
             }
-            
+
             var result = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
             Log.Debug("Ticker assigned to {0} = {1}", contract.Symbol, result.TickerId);
             _activeRequests.Add(result.TickerId, new Tuple<Contract, bool>(contract, false));
@@ -102,6 +77,31 @@ namespace MyTradingApp.Services
 
             //Log.Warning("Couldn't get price for {0}", contract.Symbol);
             //return 0;
+        }
+
+        public void StopActivePriceStreaming(IEnumerable<int> tickerIds)
+        {
+            Log.Debug("Stopping active price streaming");
+            foreach (var request in tickerIds)
+            {
+                _twsObjectFactory.TwsController.CancelMarketData(request);
+            }
+        }
+
+        public void StopPriceStreaming(string symbol)
+        {
+            Log.Debug("Stopping streaming for {0}", symbol);
+
+            var request = _activeRequests
+                .Where(x => x.Value.Item2 && x.Value.Item1.Symbol == symbol)
+                .Select(x => new { x.Key, x.Value })
+                .FirstOrDefault();
+
+            if (request != null)
+            {
+                _twsObjectFactory.TwsController.CancelMarketData(request.Key);
+                _activeRequests.Remove(request.Key);
+            }
         }
 
         private void OnTickPriceEvent(object sender, TickPriceEventArgs args)

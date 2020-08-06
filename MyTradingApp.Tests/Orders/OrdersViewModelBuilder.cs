@@ -117,35 +117,5 @@ namespace MyTradingApp.Tests.Orders
             _contractDetails = details;
             return this;
         }
-
-        public OrdersViewModel Build()
-        {
-            HistoricalDataManager.GetHistoricalDataAsync(
-                Arg.Any<Contract>(), Arg.Any<DateTime>(), Arg.Any<TwsDuration>(),
-                Arg.Any<TwsBarSizeSetting>(), Arg.Any<TwsHistoricalDataRequestType>(), Arg.Any<bool>(), Arg.Any<bool>())
-                .Returns(Task.FromResult(new List<HistoricalDataEventArgs>()));
-
-            ContractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(_contractDetails);
-            
-            var queueProcessor = Substitute.For<IQueueProcessor>();
-            var vm = new OrdersViewModel(DispatcherHelper, ContractManager, MarketDataManager, HistoricalDataManager, OrderCalculationService, OrderManager, TradeRepository, queueProcessor);
-
-            foreach (var item in _orderItems)
-            {
-                vm.Orders.Add(item.Item1);
-                if (item.Item2)
-                {
-                    // Requesting this item to be found
-                    item.Item1.Symbol.IsFound = true;
-                }
-            }
-
-            if (_accountSummaryCompletedMessage != null)
-            {
-                Messenger.Default.Send(_accountSummaryCompletedMessage);
-            }
-
-            return vm;
-        }
     }
 }

@@ -398,5 +398,46 @@ namespace MyTradingApp.Tests
             Assert.Equal(0, order.EntryPrice);
             Assert.Equal(1, order.Quantity);
         }
+
+        [Fact]
+        public async Task WhenStreamingAndOrderRemovedCancelStreamingAsync()
+        {
+            const string Symbol = "MSFT";
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var vm = GetVm(marketDataManager: marketDataManager);
+            vm.AddOrder(new Symbol { Code = Symbol }, new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+
+            // Act
+            await vm.StartStopStreamingCommand.ExecuteAsync();
+            var order = vm.Orders[0];
+            vm.DeleteCommand.Execute(order);
+
+            // Assert
+            marketDataManager.Received().StopActivePriceStreaming(Arg.Any<IEnumerable<int>>());
+        }
+
+        [Fact]
+        public void WhenNotStreamingAndOrderRemovedThenNoRequestToStopStreaming()
+        {
+            const string Symbol = "MSFT";
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var vm = GetVm(marketDataManager: marketDataManager);
+            vm.AddOrder(new Symbol { Code = Symbol }, new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+
+            // Act
+            var order = vm.Orders[0];
+            vm.DeleteCommand.Execute(order);
+
+            // Assert
+            marketDataManager.DidNotReceive().StopActivePriceStreaming(Arg.Any<IEnumerable<int>>());
+        }
     }
 }

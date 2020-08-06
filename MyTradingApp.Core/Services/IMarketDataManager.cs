@@ -11,7 +11,5 @@ namespace MyTradingApp.Services
         void StopActivePriceStreaming(IEnumerable<int> tickerIds);
 
         Task<double> RequestLatestPriceAsync(Contract contract);
-
-        void StopPriceStreaming(string symbol);
     }
 }

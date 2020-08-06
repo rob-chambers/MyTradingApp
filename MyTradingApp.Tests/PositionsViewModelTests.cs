@@ -256,8 +256,7 @@ namespace MyTradingApp.Tests
             Messenger.Default.Send(new ConnectionChangingMessage(false));
 
             // Assert
-            manager.Received().StopPriceStreaming(Symbol);
-            manager.DidNotReceive().StopPriceStreaming(ClosedSymbol);
+            manager.Received().StopActivePriceStreaming(Arg.Any<IEnumerable<int>>());
         }
 
         [Fact]

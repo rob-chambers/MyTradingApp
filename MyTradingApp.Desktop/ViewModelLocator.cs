@@ -43,8 +43,6 @@ namespace MyTradingApp.Desktop
 
         public SettingsViewModel Settings => _serviceProvider.GetService<SettingsViewModel>();
 
-        public OrdersViewModel Orders => _serviceProvider.GetService<OrdersViewModel>();
-
         public OrdersListViewModel OrdersList => _serviceProvider.GetService<OrdersListViewModel>();
 
         public FindSymbolViewModel FindSymbol => _serviceProvider.GetService<FindSymbolViewModel>();
@@ -70,7 +68,6 @@ namespace MyTradingApp.Desktop
             services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
             services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
             services.AddScoped<MainViewModel>();
-            services.AddScoped<OrdersViewModel>();
             services.AddScoped<OrdersListViewModel>();
             services.AddScoped<PositionsViewModel>();
             services.AddScoped<SettingsViewModel>();
