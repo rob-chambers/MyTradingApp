@@ -69,6 +69,13 @@ namespace MyTradingApp.Core.ViewModels
 
         private async Task FindSymbolAndProcessAsync()
         {
+            if (OrdersListViewModel.Orders.Any(o => o.Symbol.Code == Symbol.Code))
+            {
+                var message = "There is already an order for this symbol.";
+                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Error, message));
+                return;
+            }
+
             IsBusy = true;
             FindCommandCaption = FindButtonCaptions.Finding;
             FindCommand.RaiseCanExecuteChanged();

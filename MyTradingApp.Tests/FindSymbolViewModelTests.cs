@@ -250,5 +250,32 @@ namespace MyTradingApp.Tests
             Assert.Equal(CompanyName, order.Symbol.Name);
             Assert.Equal(LatestPrice, order.Symbol.LatestPrice);
         }
+
+        [Fact]
+        public async Task WhenFindingSymbolForOrderThatAlreadyExistsThenShowNotificationAsync()
+        {
+            // Arrange
+            const string Symbol = "MSFT";
+
+            var fired = false;
+            Messenger.Default.Register<NotificationMessage<NotificationType>>(this, msg => fired = true);
+            var findSymbolService = Substitute.For<IFindSymbolService>();
+            var vm = GetVm(findSymbolService);
+            var model = new FindCommandResultsModel
+            {
+                Details = new List<ContractDetails>
+                    {
+                        new ContractDetails { LongName = "Microsoft" }
+                    }
+            };
+            vm.OrdersListViewModel.AddOrder(new Symbol { Code = Symbol }, model);
+            vm.Symbol.Code = Symbol;
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert
+            Assert.True(fired);
+        }
     }
 }
