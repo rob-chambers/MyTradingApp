@@ -1,4 +1,5 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
+using Microsoft.Extensions.Configuration;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.ViewModels;
 using System.Collections.Generic;
@@ -8,9 +9,6 @@ namespace MyTradingApp.Core.Services
 {
     public class AccountManager : IAccountManager
     {
-        // TODO: Move this to appsettings
-        private const string AccountId = "DU1070034";
-
         public static class AccountSummaryTags
         {
             public const string BuyingPower = "BuyingPower";
@@ -18,15 +16,17 @@ namespace MyTradingApp.Core.Services
         }
 
         private readonly ITwsObjectFactory _twsObjectFactory;
+        private readonly string _accountId;
 
-        public AccountManager(ITwsObjectFactory twsObjectFactory)
+        public AccountManager(ITwsObjectFactory twsObjectFactory, IConfiguration configuration)
         {
             _twsObjectFactory = twsObjectFactory;
+            _accountId = configuration.GetValue<string>("AccountId");
         }
 
         public async Task<AccountSummaryCompletedMessage> RequestAccountSummaryAsync()
         {
-            var details = await _twsObjectFactory.TwsControllerBase.GetAccountDetailsAsync(AccountId);
+            var details = await _twsObjectFactory.TwsControllerBase.GetAccountDetailsAsync(_accountId);
 
             var message = new AccountSummaryCompletedMessage();
             if (details.ContainsKey(AccountSummaryTags.NetLiquidation))
@@ -39,7 +39,7 @@ namespace MyTradingApp.Core.Services
                 message.BuyingPower = double.Parse(details[AccountSummaryTags.BuyingPower]);
             }
 
-            message.AccountId = AccountId;
+            message.AccountId = _accountId;
 
             return message;
         }

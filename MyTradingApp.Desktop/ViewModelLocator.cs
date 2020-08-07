@@ -54,9 +54,9 @@ namespace MyTradingApp.Desktop
         {
             Log.Debug("Configuring services");
 
+            var app = (App)Application.Current;
             if (!isDesignTime)
-            {
-                var app = (App)Application.Current;
+            {                
                 var connectionString = ConfigurationExtensions.GetConnectionString(app.Configuration, "DefaultConnection");
                 services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
                 services.AddScoped<IApplicationContext, ApplicationContext>();
@@ -87,6 +87,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<IQueueProcessor, BlockingCollectionQueue>();
             services.AddScoped<IFindSymbolService, FindSymbolService>();
             services.AddScoped<INewOrderViewModelFactory, NewOrderViewModelFactory>();
+            services.AddScoped(x => app.Configuration);
         }
     }
 }
