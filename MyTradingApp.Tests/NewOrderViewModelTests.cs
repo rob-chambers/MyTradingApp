@@ -1,11 +1,10 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Services;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using System;

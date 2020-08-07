@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     internal static class Rounding
     {

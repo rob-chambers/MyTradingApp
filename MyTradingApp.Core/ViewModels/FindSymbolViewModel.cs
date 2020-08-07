@@ -3,8 +3,6 @@ using IBApi;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
-using MyTradingApp.Utils;
-using MyTradingApp.ViewModels;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;

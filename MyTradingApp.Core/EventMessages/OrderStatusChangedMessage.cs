@@ -1,6 +1,6 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 
-namespace MyTradingApp.EventMessages
+namespace MyTradingApp.Core.EventMessages
 {
     public class OrderStatusChangedMessage : SymbolMessage
     {

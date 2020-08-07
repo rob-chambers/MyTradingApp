@@ -1,4 +1,4 @@
-﻿namespace MyTradingApp.EventMessages
+﻿namespace MyTradingApp.Core.EventMessages
 {
     public class AccountSummaryCompletedMessage
     {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyTradingApp.Core.Persistence;
 using MyTradingApp.Domain;
-using MyTradingApp.Persistence;
-using MyTradingApp.Repositories;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

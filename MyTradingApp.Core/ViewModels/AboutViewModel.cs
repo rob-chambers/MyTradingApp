@@ -1,6 +1,6 @@
 ﻿using MyTradingApp.Core;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class AboutViewModel : MenuItemViewModel
     {

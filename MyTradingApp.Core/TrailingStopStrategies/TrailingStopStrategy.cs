@@ -1,4 +1,4 @@
-﻿namespace MyTradingApp.TrailingStopStrategies
+﻿namespace MyTradingApp.Core.TrailingStopStrategies
 {
     public abstract class TrailingStopStrategy
     {

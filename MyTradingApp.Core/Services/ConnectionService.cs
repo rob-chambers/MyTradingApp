@@ -1,13 +1,13 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
 using Serilog;
 using System;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class ConnectionService : IConnectionService
     {
@@ -60,7 +60,7 @@ namespace MyTradingApp.Services
             catch (Exception ex)
             {
                 throw new ApplicationException("Failed to connect", ex);
-            } 
+            }
         }
 
         public async Task DisconnectAsync()

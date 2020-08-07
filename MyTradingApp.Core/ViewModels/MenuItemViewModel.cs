@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public abstract class MenuItemViewModel : ViewModelBase
     {

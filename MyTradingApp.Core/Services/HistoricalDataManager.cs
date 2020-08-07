@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class HistoricalDataManager : IHistoricalDataManager
     {
         public const string FullDatePattern = "yyyyMMdd  HH:mm:ss";
-        
+
         private readonly ITwsObjectFactory _twsObjectFactory;
 
         public HistoricalDataManager(ITwsObjectFactory twsObjectFactory)

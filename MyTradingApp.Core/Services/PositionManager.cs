@@ -3,9 +3,9 @@ using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
+using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
 using Serilog;
 using System;
@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class PositionManager : IPositionManager
     {

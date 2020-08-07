@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     public interface IAsyncCommand : ICommand
     {

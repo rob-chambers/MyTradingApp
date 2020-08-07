@@ -1,11 +1,10 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
-using MyTradingApp.EventMessages;
-using MyTradingApp.ViewModels;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.ViewModels;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-// TODO: Fix namespaces
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class AccountManager : IAccountManager
     {
@@ -46,7 +45,7 @@ namespace MyTradingApp.Services
         }
 
         public async Task<IEnumerable<PositionItem>> RequestPositionsAsync()
-        {           
+        {
             var positions = await _twsObjectFactory.TwsControllerBase.RequestPositions();
             var items = new List<PositionItem>();
             foreach (var item in positions)

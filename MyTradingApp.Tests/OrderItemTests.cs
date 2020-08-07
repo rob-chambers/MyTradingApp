@@ -1,4 +1,4 @@
-﻿using MyTradingApp.ViewModels;
+﻿using MyTradingApp.Core.ViewModels;
 using Xunit;
 
 namespace MyTradingApp.Tests

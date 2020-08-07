@@ -2,12 +2,10 @@
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
-using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Services;
-using MyTradingApp.Utils;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -15,7 +13,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class PositionsViewModel : DispatcherViewModel
     {
@@ -38,7 +36,7 @@ namespace MyTradingApp.ViewModels
             IAccountManager accountManager,
             IPositionManager positionManager,
             IContractManager contractManager,
-            IQueueProcessor queueProcessor) 
+            IQueueProcessor queueProcessor)
             : base(dispatcherHelper, queueProcessor)
         {
             Positions = new ObservableCollectionNoReset<PositionItem>(dispatcherHelper: DispatcherHelper);
@@ -163,7 +161,7 @@ namespace MyTradingApp.ViewModels
                 {
                     await MoveStopAsync(position, stop.Value).ConfigureAwait(false);
                 }
-            });            
+            });
         }
 
         private async Task ProcessOpenOrdersAsync(IEnumerable<OpenOrderEventArgs> orders)
@@ -266,7 +264,7 @@ namespace MyTradingApp.ViewModels
         {
             Log.Debug("Getting contract details for single position");
             var newContract = MapContractToNewContract(position.Contract);
-            
+
             var detailsList = await _contractManager.RequestDetailsAsync(newContract).ConfigureAwait(false);
             HandleContractDetails(detailsList);
         }
@@ -382,7 +380,7 @@ namespace MyTradingApp.ViewModels
         }
 
         private static string MapPrimaryExchange(string exchange)
-        {            
+        {
             if (exchange == null || exchange.Equals(BrokerConstants.Routers.Smart, StringComparison.OrdinalIgnoreCase))
             {
                 return null;

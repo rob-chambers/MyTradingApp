@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using MyTradingApp.Domain;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class Symbol : ViewModelBase
     {

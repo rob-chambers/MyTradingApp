@@ -1,6 +1,6 @@
-﻿using MyTradingApp.ViewModels;
+﻿using MyTradingApp.Core.ViewModels;
 
-namespace MyTradingApp.EventMessages
+namespace MyTradingApp.Core.EventMessages
 {
     public class OrderSelectionChangedMessage
     {

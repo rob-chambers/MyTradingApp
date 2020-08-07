@@ -1,8 +1,8 @@
-﻿using MyTradingApp.Domain;
-using MyTradingApp.Persistence;
+﻿using MyTradingApp.Core.Persistence;
+using MyTradingApp.Domain;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Repositories
+namespace MyTradingApp.Core.Repositories
 {
     public class TradeRepository : EfRepository, ITradeRepository
     {

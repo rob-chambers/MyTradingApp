@@ -1,11 +1,9 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Repositories;
-using MyTradingApp.Services;
-using MyTradingApp.Utils;
-using MyTradingApp.ViewModels;
 using Serilog;
 using System;
 using System.Collections.Generic;

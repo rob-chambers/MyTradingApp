@@ -2,13 +2,11 @@
 using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.IconPacks;
 using MyTradingApp.Core;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
-using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
 using MyTradingApp.Messages;
-using MyTradingApp.Services;
-using MyTradingApp.Utils;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -18,7 +16,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class MainViewModel : DispatcherViewModel
     {
@@ -36,10 +34,10 @@ namespace MyTradingApp.ViewModels
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IOrderManager _orderManager;
         private readonly StatusBarViewModel _statusBarViewModel;
-        
-        private ICommand _clearCommand;        
+
+        private ICommand _clearCommand;
         private AsyncCommand _connectCommand;
-        
+
         private string _connectButtonCaption;
         private string _errorText;
         private double _exchangeRate;
@@ -196,7 +194,7 @@ namespace MyTradingApp.ViewModels
             }
         }
 
-#endregion
+        #endregion
 
         #region Methods
 
@@ -263,7 +261,7 @@ namespace MyTradingApp.ViewModels
                 ? message + "\n"
                 : message;
         }
-       
+
         private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
         {
             SetConnectionStatus();
@@ -288,7 +286,7 @@ namespace MyTradingApp.ViewModels
                 AddTextToMessagePanel("Error: " + e.ErrorMessage + "\n");
                 return;
             }
-            
+
             // The following are connection OK messages, as opposed to errors
             switch (e.ErrorCode)
             {
@@ -300,7 +298,7 @@ namespace MyTradingApp.ViewModels
 
             var error = new ErrorMessage(e.Id, e.ErrorCode, e.ErrorMessage);
             HandleErrorMessage(error);
-        }    
+        }
 
         private void OnSettingsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -358,10 +356,10 @@ namespace MyTradingApp.ViewModels
                     SetConnectionStatus();
 
                     var result = await InitOnceConnectedAsync();
-                    
+
                     _exchangeRate = result.ExchangeRate;
                     Messenger.Default.Send(result.AccountSummary);
-                    _netLiquidation = result.AccountSummary.NetLiquidation;                    
+                    _netLiquidation = result.AccountSummary.NetLiquidation;
                     CalculateRiskPerTrade();
 
                     await PositionsViewModel.GetPositionsAsync();
@@ -381,14 +379,14 @@ namespace MyTradingApp.ViewModels
         }
 
         private async Task<ApiInitialDataViewModel> InitOnceConnectedAsync()
-        {            
+        {
             Log.Debug("Start of InitOnceConnectedAsync");
 
             var exchangeRateTask = _exchangeRateService.GetExchangeRateAsync();
             var accountSummaryTask = _accountManager.RequestAccountSummaryAsync();
 
             await Task.WhenAll(exchangeRateTask, accountSummaryTask).ConfigureAwait(false);
-            
+
             var accountSummary = await accountSummaryTask.ConfigureAwait(false);
             var exchangeRate = await exchangeRateTask.ConfigureAwait(false);
             return new ApiInitialDataViewModel(exchangeRate, accountSummary);

@@ -1,7 +1,6 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Constants;
 using IBApi;
 using MyTradingApp.Core.ViewModels;
-using MyTradingApp.Services;
 using System;
 using System.Threading.Tasks;
 

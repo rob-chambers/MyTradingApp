@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyTradingApp.TrailingStopStrategies
+﻿namespace MyTradingApp.Core.TrailingStopStrategies
 {
     public class DayTradingProfitLockerStrategy : ProfitLockerStrategy
     {
@@ -28,7 +26,7 @@ namespace MyTradingApp.TrailingStopStrategies
 
             return CalculateTrailingStop(gainPercentage);
         }
-        
+
         private double CalculateTrailingStop(double gainPercentage)
         {
             // TODO: Use sophisticated calculation

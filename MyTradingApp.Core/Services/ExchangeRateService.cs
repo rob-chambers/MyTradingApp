@@ -4,7 +4,7 @@ using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using IBApi;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class ExchangeRateService : IExchangeRateService
     {

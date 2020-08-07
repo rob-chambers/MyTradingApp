@@ -1,9 +1,8 @@
-﻿using MyTradingApp.Core.Utils;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     public class AsyncCommand : IAsyncCommand
     {

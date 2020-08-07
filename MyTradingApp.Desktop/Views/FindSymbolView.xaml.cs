@@ -1,6 +1,5 @@
 ﻿using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
-using MyTradingApp.Utils;
 using System.Windows.Controls;
 using System.Windows.Input;
 

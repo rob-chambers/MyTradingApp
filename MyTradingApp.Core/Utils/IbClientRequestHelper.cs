@@ -1,6 +1,6 @@
 ﻿using MyTradingApp.Domain;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     internal static class IbClientRequestHelper
     {

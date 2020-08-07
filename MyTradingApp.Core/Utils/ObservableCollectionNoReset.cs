@@ -1,10 +1,9 @@
-﻿using MyTradingApp.Core.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     public class ObservableCollectionNoReset<T> : ObservableCollection<T>
     {

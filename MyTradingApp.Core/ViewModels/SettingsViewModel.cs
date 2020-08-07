@@ -1,12 +1,11 @@
 ﻿using MyTradingApp.Core.Repositories;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
-using MyTradingApp.Utils;
 using Serilog;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class SettingsViewModel : MenuItemViewModel
     {
@@ -14,7 +13,7 @@ namespace MyTradingApp.ViewModels
         private readonly Dictionary<string, Setting> _settings = new Dictionary<string, Setting>();
         private bool _isLoading;
         private double _riskPercentOfAccountSize;
-        private double _lastRiskMultiplier;                
+        private double _lastRiskMultiplier;
 
         public static class SettingsKeys
         {
@@ -58,7 +57,7 @@ namespace MyTradingApp.ViewModels
             Log.Information("Loading settings");
             _isLoading = true;
             try
-            {                
+            {
                 var items = await _settingsRepository.GetAllAsync().ConfigureAwait(false);
                 foreach (var item in items)
                 {

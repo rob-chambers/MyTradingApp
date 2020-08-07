@@ -1,6 +1,6 @@
 ﻿using MyTradingApp.Core.Repositories;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
-using MyTradingApp.ViewModels;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;

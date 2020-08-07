@@ -1,7 +1,7 @@
 ﻿using IBApi;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public interface IOrderManager
     {

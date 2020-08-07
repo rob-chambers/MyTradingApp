@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using MyTradingApp.Persistence;
+using MyTradingApp.Core.Persistence;
 using System.IO;
 
 namespace MyTradingApp.Desktop

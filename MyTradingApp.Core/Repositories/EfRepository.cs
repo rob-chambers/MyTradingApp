@@ -1,6 +1,6 @@
-﻿using MyTradingApp.Persistence;
+﻿using MyTradingApp.Core.Persistence;
 
-namespace MyTradingApp.Repositories
+namespace MyTradingApp.Core.Repositories
 {
     public abstract class EfRepository
     {

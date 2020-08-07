@@ -6,16 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyTradingApp.Core;
+using MyTradingApp.Core.Persistence;
 using MyTradingApp.Core.Repositories;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Desktop.Utils;
 using MyTradingApp.Domain;
-using MyTradingApp.Persistence;
-using MyTradingApp.Repositories;
-using MyTradingApp.Services;
-using MyTradingApp.ViewModels;
 using Serilog;
 using System.Windows;
 

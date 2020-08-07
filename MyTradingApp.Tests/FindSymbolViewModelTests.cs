@@ -2,12 +2,10 @@
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
+using MyTradingApp.Core.Repositories;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
-using MyTradingApp.Repositories;
-using MyTradingApp.Services;
-using MyTradingApp.ViewModels;
 using NSubstitute;
 using System;
 using System.Collections.Generic;

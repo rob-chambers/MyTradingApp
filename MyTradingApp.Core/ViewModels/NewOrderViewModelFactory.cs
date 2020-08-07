@@ -1,6 +1,5 @@
 ﻿using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
-using MyTradingApp.Services;
 
 namespace MyTradingApp.Core.ViewModels
 {

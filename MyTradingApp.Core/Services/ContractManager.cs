@@ -3,7 +3,7 @@ using IBApi;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class ContractManager : IContractManager
     {

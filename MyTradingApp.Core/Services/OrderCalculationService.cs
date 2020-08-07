@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class OrderCalculationService : IOrderCalculationService
     {
@@ -14,7 +14,7 @@ namespace MyTradingApp.Services
 
         private readonly Dictionary<string, BarCollection> _bars = new Dictionary<string, BarCollection>();
         private readonly Dictionary<string, double> _latestPrice = new Dictionary<string, double>();
-        private double _riskPerTrade;        
+        private double _riskPerTrade;
 
         public bool CanCalculate(string symbol) => _latestPrice.ContainsKey(symbol) &&
             !double.IsNaN(_latestPrice[symbol]) &&

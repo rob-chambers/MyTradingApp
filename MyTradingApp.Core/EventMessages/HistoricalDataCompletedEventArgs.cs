@@ -1,7 +1,6 @@
 ﻿using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
 
-namespace MyTradingApp.Models
+namespace MyTradingApp.Core.EventMessages
 {
     public class HistoricalDataCompletedMessage : SymbolMessage
     {

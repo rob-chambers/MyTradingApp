@@ -1,10 +1,10 @@
 ﻿using GalaSoft.MvvmLight;
 using IBApi;
-using MyTradingApp.TrailingStopStrategies;
+using MyTradingApp.Core.TrailingStopStrategies;
 using Serilog;
 using System;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class PositionItem : ObservableObject
     {
@@ -61,7 +61,7 @@ namespace MyTradingApp.ViewModels
         public Order Order { get; set; }
 
         public TrailingStopStrategy TrailingStopStrategy { get; set; }
-        
+
         public ContractDetails ContractDetails { get; set; }
 
         public double? CheckToAdjustStop()

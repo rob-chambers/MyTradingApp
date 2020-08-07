@@ -1,4 +1,4 @@
-﻿using MyTradingApp.EventMessages;
+﻿using MyTradingApp.Core.EventMessages;
 
 namespace MyTradingApp.Core.ViewModels
 {

@@ -1,6 +1,5 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.Utils;
-using MyTradingApp.ViewModels;
+using MyTradingApp.Core.ViewModels;
 using System;
 
 namespace MyTradingApp.Core.Utils

@@ -2,7 +2,7 @@
 using MyTradingApp.Domain;
 using System;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class OrderItem : ViewModelBase
     {
@@ -91,15 +91,15 @@ namespace MyTradingApp.ViewModels
             get => _status;
             set
             {
-                Set(ref _status, value); 
+                Set(ref _status, value);
                 switch (value)
                 {
                     case OrderStatus.PreSubmitted:
-                        // fall-through
+                    // fall-through
                     case OrderStatus.Submitted:
-                        // fall-through
+                    // fall-through
                     case OrderStatus.Filled:
-                        // fall-through
+                    // fall-through
                     case OrderStatus.Cancelled:
                         IsLocked = true;
                         break;
@@ -115,7 +115,7 @@ namespace MyTradingApp.ViewModels
 
         public double StandardDeviation { get; set; }
 
-        public bool HasHistory 
+        public bool HasHistory
         {
             get => _hasHistory;
             set => Set(ref _hasHistory, value);

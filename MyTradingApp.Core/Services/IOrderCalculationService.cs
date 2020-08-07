@@ -1,6 +1,6 @@
 ﻿using MyTradingApp.Domain;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public interface IOrderCalculationService
     {

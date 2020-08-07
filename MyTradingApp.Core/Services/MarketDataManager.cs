@@ -2,14 +2,14 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
-using MyTradingApp.EventMessages;
+using MyTradingApp.Core.EventMessages;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Services
+namespace MyTradingApp.Core.Services
 {
     public class MarketDataManager : IMarketDataManager
     {
@@ -32,7 +32,7 @@ namespace MyTradingApp.Services
             Log.Debug("Requesting streaming price for {0}", contract.Symbol);
 
             if (!_tickHandlerAttached)
-            { 
+            {
                 // TODO: When do we remove event handler?
                 _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
             }
@@ -105,8 +105,8 @@ namespace MyTradingApp.Services
         }
 
         private void OnTickPriceEvent(object sender, TickPriceEventArgs args)
-        {            
-            _tickPriceEventArgs = args;          
+        {
+            _tickPriceEventArgs = args;
             if (!_activeRequests.ContainsKey(args.TickerId))
             {
                 // Request latest price (not streaming)
@@ -163,7 +163,7 @@ namespace MyTradingApp.Services
                     }
 
                     _oneOffPrices.Add(symbol, args.Price);
-                }                       
+                }
             }
         }
     }

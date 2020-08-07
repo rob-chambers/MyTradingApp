@@ -1,7 +1,7 @@
 ﻿using MyTradingApp.Domain;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Repositories
+namespace MyTradingApp.Core.Repositories
 {
     public interface ITradeRepository
     {

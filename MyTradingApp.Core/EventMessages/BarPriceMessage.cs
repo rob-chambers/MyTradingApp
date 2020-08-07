@@ -1,6 +1,6 @@
 ﻿using MyTradingApp.Domain;
 
-namespace MyTradingApp.EventMessages
+namespace MyTradingApp.Core.EventMessages
 {
     public class BarPriceMessage : SymbolMessage
     {

@@ -3,7 +3,7 @@ using MyTradingApp.Domain;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Persistence
+namespace MyTradingApp.Core.Persistence
 {
     public interface IApplicationContext
     {

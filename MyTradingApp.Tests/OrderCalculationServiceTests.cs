@@ -1,5 +1,5 @@
-﻿using MyTradingApp.Domain;
-using MyTradingApp.Services;
+﻿using MyTradingApp.Core.Services;
+using MyTradingApp.Domain;
 using System;
 using System.Collections.Generic;
 using Xunit;

@@ -2,11 +2,11 @@
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
+using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
-using MyTradingApp.EventMessages;
-using MyTradingApp.Services;
-using MyTradingApp.ViewModels;
 using NSubstitute;
 using System;
 using System.Collections.Generic;

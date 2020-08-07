@@ -1,5 +1,4 @@
-﻿using MyTradingApp.Utils;
-using Serilog;
+﻿using Serilog;
 using System;
 
 namespace MyTradingApp.Core.Utils

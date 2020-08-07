@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.EventMessages;
-using MyTradingApp.ViewModels;
+using MyTradingApp.Core.EventMessages;
+using MyTradingApp.Core.ViewModels;
 using Xunit;
 
 namespace MyTradingApp.Tests

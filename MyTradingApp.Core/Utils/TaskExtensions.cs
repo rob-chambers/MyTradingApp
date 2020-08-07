@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace MyTradingApp.Utils
+namespace MyTradingApp.Core.Utils
 {
     internal static class TaskExtensions
     {

@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyTradingApp.Core.Persistence;
 using MyTradingApp.Domain;
 
-namespace MyTradingApp.Persistence
+namespace MyTradingApp.Core.Persistence
 {
     public class ApplicationContext : DbContext, IApplicationContext
     {

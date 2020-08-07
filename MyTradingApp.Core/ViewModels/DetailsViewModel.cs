@@ -1,9 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.EventMessages;
+using MyTradingApp.Core.EventMessages;
 
-namespace MyTradingApp.ViewModels
+namespace MyTradingApp.Core.ViewModels
 {
     public class DetailsViewModel : ViewModelBase
     {
