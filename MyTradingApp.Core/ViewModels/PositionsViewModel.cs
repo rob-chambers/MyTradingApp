@@ -1,7 +1,6 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
-using MyTradingApp.Core;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;

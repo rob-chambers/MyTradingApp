@@ -1,7 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using MahApps.Metro.IconPacks;
-using MyTradingApp.Core;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;

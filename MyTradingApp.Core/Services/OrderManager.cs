@@ -2,7 +2,6 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
-using MyTradingApp.Core;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Domain;
 using Serilog;
@@ -34,8 +33,7 @@ namespace MyTradingApp.Core.Services
 
             var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync();
 
-            // TODO: Change to single client id
-            order.ClientId = BrokerConstants.ClientId + 1;
+            order.ClientId = BrokerConstants.ClientId;
             order.OrderId = id;
             _orders.Add(id, contract.Symbol);
             var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order);

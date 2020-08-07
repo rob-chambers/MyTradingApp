@@ -82,10 +82,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<IExchangeRateService, ExchangeRateService>();
             services.AddScoped<ITradeRepository, TradeRepository>();
             services.AddScoped<ISettingsRepository, SettingsRepository>();
-
-            // Treat requests sent via the new TwsObjectFactory as if they are from a different client
-            services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId + 1));
-
+            services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId));
             services.AddScoped<IDispatcherHelper, DispatcherHelper>();
             services.AddScoped<IQueueProcessor, BlockingCollectionQueue>();
             services.AddScoped<IFindSymbolService, FindSymbolService>();

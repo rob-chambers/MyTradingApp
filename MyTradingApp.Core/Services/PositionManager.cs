@@ -2,7 +2,6 @@
 using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
-using MyTradingApp.Core;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
@@ -94,16 +93,13 @@ namespace MyTradingApp.Core.Services
             // Specifically set Transmit flag to ensure we send the order
             order.Transmit = true;
 
-            //_ibClient.ClientSocket.placeOrder(order.OrderId, contract, order);
-            var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync();
-
-            // TODO: Change to single client id
-            order.ClientId = BrokerConstants.ClientId + 1;
+            var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync().ConfigureAwait(false);
+            order.ClientId = BrokerConstants.ClientId;
             order.OrderId = id;
 
             Log.Debug("Updating stop order for {0}.  Order id = {1}", contract.Symbol, id);
 
-            var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order);
+            var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order).ConfigureAwait(false);
             if (!acknowledged)
             {
                 Log.Warning("New order ({0}) not acknowledged", id);
