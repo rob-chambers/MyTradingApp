@@ -1,4 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
+using IBApi;
+using MyTradingApp.Core.Utils;
 using MyTradingApp.Domain;
 
 namespace MyTradingApp.Core.ViewModels
@@ -71,6 +73,24 @@ namespace MyTradingApp.Core.ViewModels
         {
             get => _minTick;
             set => Set(ref _minTick, value);
+        }
+
+        public Contract ToContract()
+        {
+            var contract = new Contract
+            {
+                Symbol = Code,
+                SecType = BrokerConstants.Stock,
+                Exchange = BrokerConstants.Routers.Smart,
+                PrimaryExch = IbClientRequestHelper.MapExchange(Exchange),
+                Currency = BrokerConstants.UsCurrency,
+                LastTradeDateOrContractMonth = string.Empty,
+                Strike = 0,
+                Multiplier = string.Empty,
+                LocalSymbol = string.Empty
+            };
+
+            return contract;
         }
 
         private void CalculateLatestHigh()

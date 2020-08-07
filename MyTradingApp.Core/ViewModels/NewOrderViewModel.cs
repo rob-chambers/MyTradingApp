@@ -224,7 +224,7 @@ namespace MyTradingApp.Core.ViewModels
 
         private async Task SubmitOrderAsync()
         {
-            var contract = MapOrderToContract();
+            var contract = Symbol.ToContract();
             contract.LocalSymbol = Symbol.Code;
 
             var order = GetPrimaryOrder();
@@ -267,27 +267,7 @@ namespace MyTradingApp.Core.ViewModels
                 Transmit = true
             };
 
-            var contract = MapOrderToContract();
-            await _orderManager.PlaceNewOrderAsync(contract, order);
-        }
-
-        // TODO: Move this to a shared helper
-        public Contract MapOrderToContract()
-        {
-            var contract = new Contract
-            {
-                Symbol = Symbol.Code,
-                SecType = BrokerConstants.Stock,
-                Exchange = BrokerConstants.Routers.Smart,
-                PrimaryExch = IbClientRequestHelper.MapExchange(Symbol.Exchange),
-                Currency = BrokerConstants.UsCurrency,
-                LastTradeDateOrContractMonth = string.Empty,
-                Strike = 0,
-                Multiplier = string.Empty,
-                LocalSymbol = string.Empty
-            };
-
-            return contract;
+            await _orderManager.PlaceNewOrderAsync(Symbol.ToContract(), order);
         }
 
         private async Task FindSymbolAndProcessAsync()
@@ -297,7 +277,7 @@ namespace MyTradingApp.Core.ViewModels
 
             try
             {
-                var contract = MapOrderToContract();
+                var contract = Symbol.ToContract();
                 var results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
                 if (results.Details == null)
                 {

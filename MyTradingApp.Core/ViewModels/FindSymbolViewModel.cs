@@ -80,7 +80,7 @@ namespace MyTradingApp.Core.ViewModels
 
             try
             {
-                var contract = MapOrderToContract();
+                var contract = Symbol.ToContract();
                 var results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
                 if (results.Details == null)
                 {
@@ -103,24 +103,6 @@ namespace MyTradingApp.Core.ViewModels
                 FindCommandCaption = FindButtonCaptions.Default;
                 DispatcherHelper.InvokeOnUiThread(() => FindCommand.RaiseCanExecuteChanged());
             }
-        }
-
-        private Contract MapOrderToContract()
-        {
-            var contract = new Contract
-            {
-                Symbol = Symbol.Code,
-                SecType = BrokerConstants.Stock,
-                Exchange = BrokerConstants.Routers.Smart,
-                PrimaryExch = IbClientRequestHelper.MapExchange(Symbol.Exchange),
-                Currency = BrokerConstants.UsCurrency,
-                LastTradeDateOrContractMonth = string.Empty,
-                Strike = 0,
-                Multiplier = string.Empty,
-                LocalSymbol = string.Empty
-            };
-
-            return contract;
         }
 
         private void OnSymbolPropertyChanged(object sender, PropertyChangedEventArgs e)

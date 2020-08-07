@@ -143,7 +143,7 @@ namespace MyTradingApp.Core.ViewModels
 
         private async Task StreamSymbolAsync(NewOrderViewModel item)
         {
-            var contract = item.MapOrderToContract();
+            var contract = item.Symbol.ToContract();
             var tickerId = await _marketDataManager.RequestStreamingPriceAsync(contract);
             _tickerIds.Add(contract.Symbol, tickerId);
         }
