@@ -13,8 +13,8 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -86,6 +86,7 @@ namespace MyTradingApp.ViewModels
 
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
             Messenger.Default.Register<DetailsPanelClosedMessage>(this, HandleDetailsPanelClosed);
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Main, HandleOrderStatusChangedMessage);
 
             _connectionService.ClientError += HandleClientError;
             SetConnectionStatus();
@@ -188,7 +189,10 @@ namespace MyTradingApp.ViewModels
             {
                 Set(ref _riskPerTrade, value);
                 _orderCalculationService.SetRiskPerTrade(value);
-                //OrdersViewModel.RecalculateRiskForAllOrders();
+                foreach (var item in OrdersListViewModel.Orders)
+                {
+                    item.CalculateOrderDetails();
+                }
             }
         }
 
@@ -296,58 +300,7 @@ namespace MyTradingApp.ViewModels
 
             var error = new ErrorMessage(e.Id, e.ErrorCode, e.ErrorMessage);
             HandleErrorMessage(error);
-        }
-
-        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                foreach (OrderItem item in e.NewItems)
-                {
-                    item.PropertyChanged += OnItemPropertyChanged;
-                }
-            }
-
-            if (e.OldItems != null)
-            {
-                foreach (OrderItem item in e.OldItems)
-                {
-                    item.PropertyChanged -= OnItemPropertyChanged;
-                }
-            }
-        }
-
-        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(OrderItem.Status))
-            {
-                return;
-            }
-
-            var item = (OrderItem)sender;
-            var status = item.Status;
-            if (status != OrderStatus.Filled)
-            {
-                return;
-            }
-
-            /* Once the order has been filled, it is deleted and a request is made for the current positions, 
-             * which will add it to the positions collection
-             * 
-             * We are more than likely on the thread that processed the API controller's event handler.  
-             * Because we want to give back control to the API controller worker ASAP, we queue this processing on the queue processor
-             * However the job of removing the order needs to happen on the UI thread because the ObservableCollection is not thread-safe,
-             * so we use the DispatcherHelper to invoke the action
-             */
-            QueueProcessor.Enqueue(() =>
-            {
-                DispatcherHelper.InvokeOnUiThread(async () =>
-                {                    
-                    //OrdersViewModel.Orders.Remove(item);
-                    await PositionsViewModel.GetPositionsAsync();
-                });
-            });       
-        }
+        }    
 
         private void OnSettingsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -439,6 +392,43 @@ namespace MyTradingApp.ViewModels
             var accountSummary = await accountSummaryTask.ConfigureAwait(false);
             var exchangeRate = await exchangeRateTask.ConfigureAwait(false);
             return new ApiInitialDataViewModel(exchangeRate, accountSummary);
+        }
+
+        private void HandleOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        {
+            if (message.Message.Status != BrokerConstants.OrderStatus.Filled)
+            {
+                return;
+            }
+
+            // Find corresponding order
+            var order = OrdersListViewModel.Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
+            if (order == null)
+            {
+                return;
+            }
+
+            Log.Debug(message.Dump($"Order for symbol {order.Symbol.Code} was filled."));
+            OrdersListViewModel.Orders.Remove(order);
+            PositionsViewModel.GetPositionForSymbolAsync(order.Symbol.Code).FireAndForgetSafeAsync(new LoggingErrorHandler());
+
+            /* Once the order has been filled, it is deleted and a request is made for the current positions, 
+             * which will add it to the positions collection
+             * 
+             * We are more than likely on the thread that processed the API controller's event handler.  
+             * Because we want to give back control to the API controller worker ASAP, we queue this processing on the queue processor
+             * However the job of removing the order needs to happen on the UI thread because the ObservableCollection is not thread-safe,
+             * so we use the DispatcherHelper to invoke the action
+             */
+
+            //QueueProcessor.Enqueue(() =>
+            //{
+            //DispatcherHelper.InvokeOnUiThread(async () =>
+            //{                    
+            //    //OrdersViewModel.Orders.Remove(item);
+            //    await PositionsViewModel.GetPositionsAsync();
+            //});
+            //}); 
         }
         #endregion
     }

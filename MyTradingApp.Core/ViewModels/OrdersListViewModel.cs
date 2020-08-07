@@ -176,7 +176,7 @@ namespace MyTradingApp.Core.ViewModels
             });
         }
 
-        private async void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
+        private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
         {
             // Find corresponding order
             var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
@@ -194,17 +194,12 @@ namespace MyTradingApp.Core.ViewModels
             Log.Debug("A new order for {0} was filled", order.Symbol.Code);
             var addTradeTask = AddTradeAsync(order, message.Message.AvgFillPrice);
 
-            await addTradeTask;
-            //    var stopOrderTask = SubmitStopOrderAsync(order, message.Message);
+            var handler = new LoggingErrorHandler();
+            addTradeTask.FireAndForgetSafeAsync(handler);
+            order.AttachStopOrderAsync().FireAndForgetSafeAsync(handler);
 
-            //    await Task.WhenAll(addTradeTask, stopOrderTask).ConfigureAwait(false);
-
-            //    // This order can be removed now that it is dealt with - it will be added as a position
-            //    DispatcherHelper.InvokeOnUiThread(() => Orders.Remove(order));
-
-            //    // Pass this message on to the positions vm now that we have a stop order 
-            //    Messenger.Default.Send(message, OrderStatusChangedMessage.Tokens.Positions);
-            //}
+            // Pass this message on to the Main vm now that we have a stop order 
+            Messenger.Default.Send(message, OrderStatusChangedMessage.Tokens.Main);
         }
 
         private Task AddTradeAsync(NewOrderViewModel order, double fillPrice)

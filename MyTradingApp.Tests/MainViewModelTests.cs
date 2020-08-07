@@ -1,17 +1,13 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
-using MyTradingApp.Core;
+using IBApi;
 using MyTradingApp.Core.Repositories;
-using MyTradingApp.Core.Services;
-using MyTradingApp.Core.Utils;
 using MyTradingApp.Core.ViewModels;
 using MyTradingApp.Domain;
 using MyTradingApp.EventMessages;
-using MyTradingApp.Repositories;
 using MyTradingApp.Services;
 using MyTradingApp.ViewModels;
 using NSubstitute;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -20,100 +16,49 @@ namespace MyTradingApp.Tests
 {
     public class MainViewModelTests
     {
-        private IConnectionService _connectionService;
-        private IOrderManager _orderManager;
-        private IAccountManager _accountManager;
-        private IContractManager _contractManager;
-        private IMarketDataManager _marketDataManager;
-        private IHistoricalDataManager _historicalDataManager;
-        private IOrderCalculationService _orderCalculationService;
-        private IExchangeRateService _exchangeRateService;
-        private ITradeRepository _tradeRepository;
-        private ISettingsRepository _settingsRepository;
-        private StatusBarViewModel _statusBarViewModel;
-        private SettingsViewModel _settingsViewModel;
-        private OrdersListViewModel _ordersListViewModel;
-
-        private MainViewModel GetVm(ISettingsRepository settingsRepository = null)
+        private void ConnectionTest(MainViewModelBuilder builder, double netLiquidationValue, double exchangeRate)
         {
-            MainViewModel.IsUnitTesting = true;
-            _connectionService = Substitute.For<IConnectionService>();
-            _orderManager = Substitute.For<IOrderManager>();
-            _accountManager = Substitute.For<IAccountManager>();
-            _contractManager = Substitute.For<IContractManager>();
-            _marketDataManager = Substitute.For<IMarketDataManager>();
-            _historicalDataManager = Substitute.For<IHistoricalDataManager>();
-            _orderCalculationService = Substitute.For<IOrderCalculationService>();
-            _exchangeRateService = Substitute.For<IExchangeRateService>();
-            _tradeRepository = Substitute.For<ITradeRepository>();
-
-            if (settingsRepository == null)
-            {
-                _settingsRepository = Substitute.For<ISettingsRepository>();
-                _settingsRepository.GetAllAsync().Returns(new List<Setting>
+            var connectionService = Substitute.For<IConnectionService>();
+            connectionService.When(x => x.ConnectAsync())
+                .Do(x =>
                 {
-                    new Setting
-                    {
-                        Key = SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize,
-                        Value = "1"
-                    },
-                    new Setting
-                    {
-                        Key = SettingsViewModel.SettingsKeys.RiskMultiplier,
-                        Value = "1"
-                    }
+                    builder.ConnectionService.IsConnected.Returns(true);
+                    Messenger.Default.Send(new ConnectionChangedMessage(true));
                 });
-            }
-            else
+            builder.WithConnectionService(connectionService);
+
+            var accountManager = Substitute.For<IAccountManager>();
+            accountManager.RequestAccountSummaryAsync().Returns(Task.FromResult(new AccountSummaryCompletedMessage
             {
-                _settingsRepository = settingsRepository;
-            }
+                NetLiquidation = netLiquidationValue
+            }));
+            builder.WithAccountManager(accountManager);
 
-            var orderManager = Substitute.For<IOrderManager>();
-
-            var dispatcherHelper = Substitute.For<IDispatcherHelper>();
-            dispatcherHelper
-                .When(x => x.InvokeOnUiThread(Arg.Any<Action>()))
-                .Do(x => x.Arg<Action>().Invoke());
-
-            var queueProcessor = Substitute.For<IQueueProcessor>();
-            queueProcessor
-                .When(x => x.Enqueue(Arg.Any<Action>()))
-                .Do(x => x.Arg<Action>().Invoke());
-
-            _statusBarViewModel = Substitute.For<StatusBarViewModel>();
-
-            var findSymbolService = Substitute.For<IFindSymbolService>();
-            var factory = new NewOrderViewModelFactory(dispatcherHelper, queueProcessor, findSymbolService, _orderCalculationService, _orderManager);
-
-            var marketDataManager = Substitute.For<IMarketDataManager>();
-            _ordersListViewModel = new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, _tradeRepository, marketDataManager);
-
-            var positionsManager = Substitute.For<IPositionManager>();
-            var contractManager = Substitute.For<IContractManager>();            
-
-            var positionsViewModel = new PositionsViewModel(dispatcherHelper, _marketDataManager, _accountManager, positionsManager, contractManager, queueProcessor);
-            _settingsViewModel = new SettingsViewModel(_settingsRepository);            
-
-            return new MainViewModel(dispatcherHelper, _connectionService, _orderManager, _accountManager, _statusBarViewModel, _exchangeRateService, _orderCalculationService, positionsViewModel, _settingsViewModel, queueProcessor, _ordersListViewModel);
+            var exchangeRateService = Substitute.For<IExchangeRateService>();
+            exchangeRateService.GetExchangeRateAsync().Returns(Task.FromResult(exchangeRate));
+            builder.WithExchangeRateService(exchangeRateService);
         }
 
         [Fact]
         public void ConnectionStatusInitiallyCorrect()
         {
-            var vm = GetVm();
+            var builder = new MainViewModelBuilder();
+            var vm = builder.Build();
             Assert.Equal("Connect", vm.ConnectButtonCaption);
             Assert.False(vm.IsEnabled);
-            Assert.Equal("Disconnected...", _statusBarViewModel.ConnectionStatusText);
+            Assert.Equal("Disconnected...", builder.StatusBarViewModel.ConnectionStatusText);
         }
 
         [Fact]
         public async Task WhenConnectionErrorThenShowErrorInTextBox()
         {
-            var vm = GetVm();
-            _connectionService
+            var connectionService = Substitute.For<IConnectionService>();
+            var builder = new MainViewModelBuilder()
+                .WithConnectionService(connectionService);
+            connectionService
                 .When(x => x.ConnectAsync())
                 .Do(x => Raise.Event<ClientError>(this, new ClientError(1, 1, "Error")));
+            var vm = builder.Build();
 
             await vm.ConnectCommand.ExecuteAsync();
             Assert.False(string.IsNullOrEmpty(vm.ErrorText));
@@ -132,7 +77,6 @@ namespace MyTradingApp.Tests
         {
             // Arrange
             var fired = false;
-
             var settingsRepository = Substitute.For<ISettingsRepository>();
             settingsRepository.GetAllAsync().Returns(new List<Setting>
                 {
@@ -148,7 +92,9 @@ namespace MyTradingApp.Tests
                     }
                 });
 
-            var vm = GetVm(settingsRepository);
+            var builder = new MainViewModelBuilder().WithSettingsRepository(settingsRepository);
+            ConnectionTest(builder, netLiquidationValue, exchangeRate);
+            var vm = builder.Build();
             vm.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(MainViewModel.RiskPerTrade))
@@ -156,8 +102,6 @@ namespace MyTradingApp.Tests
                     fired = true;
                 }
             };
-
-            ConnectionTest(netLiquidationValue, exchangeRate);
 
             // Act
             await vm.ConnectCommand.ExecuteAsync();
@@ -168,11 +112,12 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public async Task StatusShownCorrectlyWhenConnectedAsync()
+        public async Task StatusShownCorrectlyWhenConnected()
         {
             // Arrange
-            var vm = GetVm();
-            ConnectionTest(10000, 0.5);
+            var builder = new MainViewModelBuilder();            
+            ConnectionTest(builder, 10000, 0.5);
+            var vm = builder.Build();
 
             // Act
             await vm.ConnectCommand.ExecuteAsync();
@@ -180,40 +125,23 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.Equal("Disconnect", vm.ConnectButtonCaption);
             Assert.True(vm.IsEnabled);
-            Assert.Equal("Connected to TWS", _statusBarViewModel.ConnectionStatusText);
-        }
-
-        private void ConnectionTest(double netLiquidationValue, double exchangeRate)
-        {
-            _connectionService
-                .When(x => x.ConnectAsync())
-                .Do(x =>
-                {                    
-                    _connectionService.IsConnected.Returns(true);
-                    Messenger.Default.Send(new ConnectionChangedMessage(true));
-                });
-            
-            _accountManager.RequestAccountSummaryAsync().Returns(Task.FromResult(new AccountSummaryCompletedMessage
-            {
-                NetLiquidation = netLiquidationValue
-            }));
-
-            _exchangeRateService.GetExchangeRateAsync().Returns(Task.FromResult(exchangeRate));
+            Assert.Equal("Connected to TWS", builder.StatusBarViewModel.ConnectionStatusText);
         }
 
         [Fact]
-        public async Task WhenAppClosingThenConnectionClosedAsync()
+        public async Task WhenAppClosingThenConnectionClosed()
         {
-            // Act
-            var vm = GetVm();
-            ConnectionTest(0, 0);
+            // Arrange
+            var builder = new MainViewModelBuilder();
+            ConnectionTest(builder, 0, 0);
+            var vm = builder.Build();
             await vm.ConnectCommand.ExecuteAsync();
 
             // Act
             vm.AppIsClosing();
 
             // Assert
-            await _connectionService.Received().DisconnectAsync();
+            await builder.ConnectionService.Received().DisconnectAsync();
         }
 
         [Fact]
@@ -221,10 +149,12 @@ namespace MyTradingApp.Tests
         {
             // Arrange
             const double Multiplier = 1.234;
-
-            var vm = GetVm();            
+            
             var settings = new List<Setting>();
-            _settingsRepository.GetAllAsync().Returns(settings);
+            var settingsRepository = Substitute.For<ISettingsRepository>();
+            settingsRepository.GetAllAsync().Returns(settings);
+            var builder = new MainViewModelBuilder().WithSettingsRepository(settingsRepository);
+            var vm = builder.Build();
 
             // HACK: Wait here to allow the viewmodel's background task to load the settings initially
             await Task.Delay(100);
@@ -233,60 +163,69 @@ namespace MyTradingApp.Tests
             vm.RiskMultiplier = Multiplier;
 
             // Assert
-            Assert.Equal(Multiplier, _settingsViewModel.LastRiskMultiplier);
-            _settingsRepository
+            Assert.Equal(Multiplier, builder.SettingsViewModel.LastRiskMultiplier);
+            settingsRepository
                 .Received()
                 .Update(Arg.Is<Setting>(x => x.Key == SettingsViewModel.SettingsKeys.RiskMultiplier && x.Value == Multiplier.ToString()));
-            await _settingsRepository.Received().SaveAsync();
+            await settingsRepository.Received().SaveAsync();
         }
 
         [Fact]
         public async Task StartingAppLoadsSettingsFromRepository()
         {
             // Arrange
-            GetVm();            
+            var builder = new MainViewModelBuilder();
+            var vm = builder.Build();
 
             // Assert
-            await _settingsRepository.Received().GetAllAsync();
+            await builder.SettingsRepository.Received().GetAllAsync();
         }
 
         [Fact]
-        public async Task WhenConnectionMadePositionsRequestedAsync()
+        public async Task WhenConnectionMadePositionsRequested()
         {
             // Arrange
-            var vm = GetVm();
-            ConnectionTest(0, 0);
+            var builder = new MainViewModelBuilder();            
+            ConnectionTest(builder, 0, 0);
+            var vm = builder.Build();
 
             // Act
             await vm.ConnectCommand.ExecuteAsync();
 
             // Assert
-            await _accountManager.Received().RequestPositionsAsync();
+            await builder.AccountManager.Received().RequestPositionsAsync();
         }
 
         [Fact]
-        public async Task WhenOrderIsFilledDeleteAndRequestPositionsAsync()
+        public async Task WhenOrderIsFilledRemoveFromOrdersAndAddToPositions()
         {
-            //// Arrange
-            //const int OrderId = 123;
+            // Arrange
+            const int OrderId = 123;
+            const string Symbol = "MSFT";
 
-            //var vm = GetVm();
-            //ConnectionTest(0, 0);
-            //await vm.ConnectCommand.ExecuteAsync();
-            //vm.OrdersViewModel.AddCommand.Execute(null);
-            //var order = vm.OrdersViewModel.Orders[0];
-            //order.Id = OrderId;
+            var builder = new MainViewModelBuilder();
+            ConnectionTest(builder, 10000, 1);
+            var vm = builder.Build();
+            await vm.ConnectCommand.ExecuteAsync();
+            vm.OrdersListViewModel.AddOrder(new Symbol { Code = Symbol }, new FindCommandResultsModel
+            {
+                Details = new List<ContractDetails>(),
+                LatestPrice = 10,
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+            var order = vm.OrdersListViewModel.Orders[0];
+            order.Id = OrderId;
 
-            //// Act            
-            //Messenger.Default.Send(new OrderStatusChangedMessage(string.Empty, new OrderStatusEventArgs(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, 0, 0, 0, 0, 0, null)), OrderStatusChangedMessage.Tokens.Orders);
+            // Act            
+            Messenger.Default.Send(new OrderStatusChangedMessage(Symbol, new OrderStatusEventArgs(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, 0, 0, 0, 0, 0, null)), OrderStatusChangedMessage.Tokens.Main);
 
-            //// Assert
-            //await _accountManager.Received(2).RequestPositionsAsync(); // 2 requests - one initially and a second once filled
-            //Assert.Empty(vm.OrdersViewModel.Orders);
+            // Assert
+            Assert.Empty(vm.OrdersListViewModel.Orders);
+            //Assert.NotEmpty(vm.PositionsViewModel.Positions);
         }
 
         [Fact]
-        public async Task ModifyingRiskPercentageOfAccountSizeModifiesRiskPerTradeAsync()
+        public async Task ModifyingRiskPercentageOfAccountSizeModifiesRiskPerTrade()
         {
             var settingsRepository = Substitute.For<ISettingsRepository>();
             settingsRepository.GetAllAsync().Returns(new List<Setting>
@@ -303,13 +242,40 @@ namespace MyTradingApp.Tests
                     }
                 });
 
-            var vm = GetVm(settingsRepository);
-            ConnectionTest(10000, 1);
+            var builder = new MainViewModelBuilder().WithSettingsRepository(settingsRepository);            
+            ConnectionTest(builder, 10000, 1);
+            var vm = builder.Build();
             await vm.ConnectCommand.ExecuteAsync();
             Assert.Equal(10, vm.RiskPerTrade);
 
-            _settingsViewModel.RiskPercentOfAccountSize = 2;
+            builder.SettingsViewModel.RiskPercentOfAccountSize = 2;
             Assert.Equal(200, vm.RiskPerTrade);
+        }
+
+        [Fact]
+        public async Task WhenRiskPerTradeModifiedThenQuantityUpdatedOnAllOrders()
+        {
+            // Arrange
+            const string Symbol = "MSFT";
+
+            var orderCaluclationService = Substitute.For<IOrderCalculationService>();
+            orderCaluclationService.CanCalculate(Symbol).Returns(true);
+
+            var builder = new MainViewModelBuilder()
+                .WithOrderCalculationService(orderCaluclationService);
+            ConnectionTest(builder, 10000, 1);
+            var vm = builder.Build();
+
+            await vm.ConnectCommand.ExecuteAsync();
+            vm.OrdersListViewModel.AddOrder(new Symbol { Code = Symbol }, new FindCommandResultsModel());
+            var order = vm.OrdersListViewModel.Orders[0];
+            order.Quantity = 1000;
+
+            // Act
+            vm.RiskMultiplier = 2;
+
+            // Assert
+            orderCaluclationService.Received(2).GetCalculatedQuantity(Symbol, Direction.Buy);
         }
     }
 }

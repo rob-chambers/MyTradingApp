@@ -4,6 +4,7 @@ using MyTradingApp.ViewModels;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+// TODO: Fix namespaces
 namespace MyTradingApp.Services
 {
     public class AccountManager : IAccountManager

@@ -26,7 +26,8 @@ namespace MyTradingApp.Tests
         private static OrdersListViewModel GetVm(
             ITradeRepository tradeRepository = null, 
             IMarketDataManager marketDataManager = null,
-            IOrderCalculationService orderCalculationService = null)
+            IOrderCalculationService orderCalculationService = null,
+            IOrderManager orderManager = null)
         {
             var dispatcherHelper = Substitute.For<IDispatcherHelper>();
             dispatcherHelper
@@ -51,7 +52,11 @@ namespace MyTradingApp.Tests
                 orderCalculationService = Substitute.For<IOrderCalculationService>();
             }
             
-            var orderManager = Substitute.For<IOrderManager>();
+            if (orderManager == null)
+            {
+                orderManager = Substitute.For<IOrderManager>();
+            }
+            
             var factory = new NewOrderViewModelFactory(dispatcherHelper, queueProcessor, findSymbolService, orderCalculationService, orderManager);
 
             return new OrdersListViewModel(dispatcherHelper, Substitute.For<IQueueProcessor>(), factory, tradeRepository, marketDataManager);
@@ -186,22 +191,27 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void WhenOrderFilledTradeAdded()
+        public void WhenOrderFilledTradeAddedAndMessageForwardedOntoMainViewModel()
         {
             // Arrange
             const string Symbol = "AMZN";
             const int OrderId = 1;
             const int Quantity = 99;
             const double FillPrice = 12.03;
+            const double StopPrice = 10;
 
             var tradeRepository = Substitute.For<ITradeRepository>();
-            var vm = GetVm(tradeRepository);
+            var orderManager = Substitute.For<IOrderManager>();
+            var vm = GetVm(tradeRepository, orderManager: orderManager);
             vm.AddOrder(new Symbol(), new FindCommandResultsModel());
             var order = vm.Orders[0];
             order.Status = OrderStatus.Filled;
             order.Symbol.Code = Symbol;
             order.Id = OrderId;
             order.Quantity = Quantity;
+            order.InitialStopLossPrice = StopPrice;
+            var fired = false;
+            Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Main, msg => fired = true);
 
             // Act
             var msg = new OrderStatusEventArgs(OrderId, BrokerConstants.OrderStatus.Filled, 0, 0, FillPrice, 1, 0, FillPrice, 0, null);
@@ -215,6 +225,17 @@ namespace MyTradingApp.Tests
                 x.EntryPrice == FillPrice &&
                 !x.ExitPrice.HasValue &&
                 !x.ExitTimeStamp.HasValue));
+
+            Assert.True(fired);
+
+            // Check stop order
+            orderManager.Received().PlaceNewOrderAsync(Arg.Is<Contract>(x => x.Symbol == Symbol), Arg.Is<Order>(o =>
+                o.OrderType == BrokerConstants.OrderTypes.Stop &&
+                o.Action == BrokerConstants.Actions.Sell &&
+                o.TotalQuantity == Quantity &&
+                o.AuxPrice == StopPrice &&
+                o.Tif == BrokerConstants.TimeInForce.GoodTilCancelled &&
+                o.Transmit));
         }
 
         [Fact]

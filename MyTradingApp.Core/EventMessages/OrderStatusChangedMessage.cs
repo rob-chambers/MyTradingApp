@@ -8,6 +8,7 @@ namespace MyTradingApp.EventMessages
         {
             public const string Positions = "Positions";
             public const string Orders = "Orders";
+            public const string Main = "Main";
         }
 
         public OrderStatusChangedMessage(string symbol, OrderStatusEventArgs message)

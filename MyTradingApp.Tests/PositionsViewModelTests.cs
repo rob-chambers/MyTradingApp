@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using GalaSoft.MvvmLight.Messaging;
 using IBApi;
 using MyTradingApp.Core;
 using MyTradingApp.Core.Utils;
@@ -19,15 +20,25 @@ namespace MyTradingApp.Tests
         private const string Symbol = "MSFT";
 
         private IAccountManager _accountManager;
-        private IPositionManager _positionsManager;
-        private IContractManager _contractManager;
 
-        private PositionsViewModel GetVm(IMarketDataManager marketDataManager = null)
+        private PositionsViewModel GetVm(
+            IMarketDataManager marketDataManager = null,
+            IPositionManager positionManager = null,
+            IContractManager contractManager = null)
         {
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
             _accountManager = Substitute.For<IAccountManager>();
-            _positionsManager = Substitute.For<IPositionManager>();
-            _contractManager = Substitute.For<IContractManager>();
+
+            if (positionManager == null)
+            {
+                positionManager = Substitute.For<IPositionManager>();
+            }
+
+            if (contractManager == null)
+            {
+                contractManager = Substitute.For<IContractManager>();
+            }
+
             var queueProcessor = Substitute.For<IQueueProcessor>();
             queueProcessor
                 .When(x => x.Enqueue(Arg.Any<Action>()))
@@ -46,7 +57,7 @@ namespace MyTradingApp.Tests
                     action.Invoke();
                 });
 
-            return new PositionsViewModel(dispatcherHelper, manager, _accountManager, _positionsManager, _contractManager, queueProcessor);
+            return new PositionsViewModel(dispatcherHelper, manager, _accountManager, positionManager, contractManager, queueProcessor);
         }
 
         [Fact]
@@ -130,11 +141,11 @@ namespace MyTradingApp.Tests
             const double EntryPrice = 10;
 
             var vm = GetVm();
-            var position = new PositionItem 
-            { 
-                Symbol = new Symbol { Code = Symbol }, 
+            var position = new PositionItem
+            {
+                Symbol = new Symbol { Code = Symbol },
                 Quantity = 100,
-                AvgPrice = EntryPrice 
+                AvgPrice = EntryPrice
             };
             vm.Positions.Add(position);
 
@@ -263,7 +274,8 @@ namespace MyTradingApp.Tests
         public async Task RequestingPositionsGetAssociatedOrdersAsync()
         {
             // Arrange
-            var vm = GetVm();
+            var positionManager = Substitute.For<IPositionManager>();
+            var vm = GetVm(positionManager: positionManager);
             var position = new PositionItem
             {
                 Contract = new Contract
@@ -282,7 +294,7 @@ namespace MyTradingApp.Tests
             await vm.GetPositionsAsync();
 
             // Assert
-            await _positionsManager.Received().RequestOpenOrdersAsync();
+            await positionManager.Received().RequestOpenOrdersAsync();
         }
 
         [Fact]
@@ -291,7 +303,8 @@ namespace MyTradingApp.Tests
             // Arrange
             const string CompanyName = "Microsoft";
 
-            var vm = GetVm();
+            var contractManager = Substitute.For<IContractManager>();
+            var vm = GetVm(contractManager: contractManager);
             var position = new PositionItem
             {
                 Contract = new Contract
@@ -312,13 +325,13 @@ namespace MyTradingApp.Tests
                 LongName = CompanyName
             };
 
-            _contractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(new List<ContractDetails> { detail });
+            contractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(new List<ContractDetails> { detail });
 
             // Act
             await vm.GetPositionsAsync();
 
             // Assert
-            await _contractManager.Received().RequestDetailsAsync(Arg.Is<Contract>(x => x.Symbol == position.Contract.Symbol &&
+            await contractManager.Received().RequestDetailsAsync(Arg.Is<Contract>(x => x.Symbol == position.Contract.Symbol &&
                 x.Exchange == BrokerConstants.Routers.Smart &&
                 x.PrimaryExch == position.Contract.Exchange &&
                 x.SecType == BrokerConstants.Stock &&
@@ -326,6 +339,174 @@ namespace MyTradingApp.Tests
 
             Assert.Equal(CompanyName, position.Symbol.Name);
             Assert.Equal(detail, position.ContractDetails);
+        }
+
+        [Fact]
+        public async Task WhenPositionReturnedFromRequestThenPositionAddedToCollection()
+        {
+            // Arrange
+            var item = new PositionItem
+            {
+                AvgPrice = 11,
+                Quantity = 100,
+                Symbol = new Symbol
+                {
+                    Code = Symbol
+                }
+            };
+            var vm = GetPositionForSymbolTest(item);
+
+            // Act
+            await vm.GetPositionForSymbolAsync(Symbol);
+
+            // Assert
+            Assert.Single(vm.Positions);
+            var position = vm.Positions[0];
+            Assert.Equal(Symbol, position.Symbol.Code);
+            Assert.Equal(11, position.AvgPrice);
+            Assert.Equal(100, position.Quantity);
+        }
+
+        [Fact]
+        public async Task GetPositionForSymbolStreamsPrice()
+        {
+            // Arrange
+            var item = new PositionItem
+            {
+                Quantity = 1000,
+                Symbol = new Symbol { Code = Symbol },
+                Contract = new Contract { Symbol = Symbol }
+            };
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var vm = GetPositionForSymbolTest(item, marketDataManager);
+
+            // Act
+            await vm.GetPositionForSymbolAsync(Symbol);
+
+            // Assert
+            await marketDataManager.Received().RequestStreamingPriceAsync(Arg.Is<Contract>(x => x.Symbol == Symbol));
+        }
+
+        [Fact]
+        public async Task ClosedPositionDoesNotStreamPrice()
+        {
+            // Arrange
+            var item = new PositionItem
+            {
+                Quantity = 0,
+                Symbol = new Symbol { Code = Symbol },
+                Contract = new Contract { Symbol = Symbol }
+            };
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var vm = GetPositionForSymbolTest(item, marketDataManager);
+
+            // Act
+            await vm.GetPositionForSymbolAsync(Symbol);
+
+            // Assert
+            await marketDataManager.DidNotReceive().RequestStreamingPriceAsync(Arg.Is<Contract>(x => x.Symbol == Symbol));
+        }
+
+        [Fact]
+        public async Task GetPositionForSymbolAssignsContractAndOrderToPosition()
+        {
+            // Arrange
+            var item = new PositionItem
+            {
+                Quantity = 1000,
+                Symbol = new Symbol { Code = Symbol },
+                Contract = new Contract { Symbol = Symbol }
+            };
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var positionManager = Substitute.For<IPositionManager>();
+            var order = new Order
+            {
+                OrderType = BrokerConstants.OrderTypes.Stop
+            };
+            var contract = new Contract { Symbol = Symbol };
+            var orders = new List<OpenOrderEventArgs>
+            {
+                new OpenOrderEventArgs(1, contract, order, new OrderState())
+            };
+            positionManager.RequestOpenOrdersAsync().Returns(orders);
+
+            var vm = GetPositionForSymbolTest(item, marketDataManager, positionManager);
+
+            // Act
+            await vm.GetPositionForSymbolAsync(Symbol);
+
+            // Assert
+            Assert.Equal(order, vm.Positions[0].Order);
+            Assert.Equal(contract, vm.Positions[0].Contract);
+        }
+
+        [Fact]
+        public async Task GetPositionForSymbolGetsCompanyName()
+        {
+            // Arrange
+            const string CompanyName = "Microsoft";
+
+            var item = new PositionItem
+            {
+                Quantity = 1000,
+                Symbol = new Symbol { Code = Symbol },
+                Contract = new Contract { Symbol = Symbol }
+            };
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var positionManager = Substitute.For<IPositionManager>();
+            var contractManager = Substitute.For<IContractManager>();
+
+            var order = new Order
+            {
+                OrderType = BrokerConstants.OrderTypes.Stop
+            };
+            var contract = new Contract { Symbol = Symbol };
+
+            var contractDetails = new ContractDetails()
+            {
+                LongName = CompanyName,
+                Contract = contract,
+            };
+            contractManager.RequestDetailsAsync(Arg.Is<Contract>(x => x.Symbol == Symbol)).Returns(new List<ContractDetails>
+            {
+                contractDetails
+            });
+
+            var orders = new List<OpenOrderEventArgs>
+            {
+                new OpenOrderEventArgs(1, contract, order, new OrderState())
+            };
+            positionManager.RequestOpenOrdersAsync().Returns(orders);
+
+            var vm = GetPositionForSymbolTest(item, marketDataManager, positionManager, contractManager);
+
+            // Act
+            await vm.GetPositionForSymbolAsync(Symbol);
+
+            // Assert
+            Assert.Equal(CompanyName, vm.Positions[0].Symbol.Name);
+            Assert.Equal(contractDetails, vm.Positions[0].ContractDetails);
+        }
+
+        private PositionsViewModel GetPositionForSymbolTest(
+            PositionItem item,
+            IMarketDataManager marketDataManager = null,
+            IPositionManager positionManager = null,
+            IContractManager contractManager = null)
+        {
+            var vm = GetVm(marketDataManager, positionManager, contractManager);
+            var positions = new List<PositionItem>
+            {
+                item
+            };
+
+            // Act
+            _accountManager.RequestPositionsAsync().Returns(positions);
+            return vm;
         }
     }
 }

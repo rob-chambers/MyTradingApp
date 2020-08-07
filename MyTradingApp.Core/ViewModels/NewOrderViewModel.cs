@@ -251,6 +251,29 @@ namespace MyTradingApp.Core.ViewModels
             };
         }
 
+        public async Task AttachStopOrderAsync()
+        {
+            var stopPrice = Rounding.ValueAdjustedForMinTick(InitialStopLossPrice, Symbol.MinTick);
+            var order = new Order
+            {
+                // Action for a Stop order will be the opposite
+                Action = Direction == Direction.Buy
+                    ? BrokerConstants.Actions.Sell
+                    : BrokerConstants.Actions.Buy,
+
+                OrderType = BrokerConstants.OrderTypes.Stop,
+                AuxPrice = stopPrice,
+                TotalQuantity = Quantity,
+                Account = _accountId,
+                ModelCode = string.Empty,
+                Tif = BrokerConstants.TimeInForce.GoodTilCancelled,
+                Transmit = true
+            };
+
+            var contract = MapOrderToContract();
+            await _orderManager.PlaceNewOrderAsync(contract, order);
+        }
+
         // TODO: Move this to a shared helper
         public Contract MapOrderToContract()
         {

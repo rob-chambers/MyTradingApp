@@ -200,7 +200,49 @@ namespace MyTradingApp.ViewModels
             }
 
             // Request contract details for all positions in parallel
+            await GetContractDetailsAsync().ConfigureAwait(false);
+        }
 
+        private async Task ProcessOpenOrderAsync(OpenOrderEventArgs order)
+        {
+            if (order.Order.OrderType != BrokerConstants.OrderTypes.Stop && order.Order.OrderType != BrokerConstants.OrderTypes.Trail)
+            {
+                return;
+            }
+
+            if (order.OrderId == 0)
+            {
+                // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
+                Log.Warning(order.Dump("Order without an id"));
+                return;
+            }
+
+            var symbol = order.Contract.Symbol;
+            var positions = Positions.Where(x => x.Symbol.Code == symbol).ToList();
+            if (!positions.Any())
+            {
+                return;
+            }
+
+            if (positions.Count > 1)
+            {
+                Log.Warning("Found more than one position for {0} - taking first", symbol);
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+            }
+
+            var position = positions.First();
+            position.Contract = order.Contract;
+            position.Order = order.Order;
+
+            // Request contract details for all positions in parallel
+            await GetContractDetailsAsync(position).ConfigureAwait(false);
+        }
+
+        private async Task GetContractDetailsAsync()
+        {
             Log.Debug("Getting contract details for all positions in parallel");
             var sw = Stopwatch.StartNew();
 
@@ -208,7 +250,7 @@ namespace MyTradingApp.ViewModels
             foreach (var item in Positions.Where(p => p.Contract != null))
             {
                 var newContract = MapContractToNewContract(item.Contract);
-                getContractDetailTasks.Add(_contractManager.RequestDetailsAsync(newContract));                
+                getContractDetailTasks.Add(_contractManager.RequestDetailsAsync(newContract));
             }
 
             var detailsList = await Task.WhenAll(getContractDetailTasks).ConfigureAwait(false);
@@ -218,6 +260,15 @@ namespace MyTradingApp.ViewModels
             }
 
             Log.Debug("Completed getting contract details in {0}ms", sw.ElapsedMilliseconds);
+        }
+
+        private async Task GetContractDetailsAsync(PositionItem position)
+        {
+            Log.Debug("Getting contract details for single position");
+            var newContract = MapContractToNewContract(position.Contract);
+            
+            var detailsList = await _contractManager.RequestDetailsAsync(newContract).ConfigureAwait(false);
+            HandleContractDetails(detailsList);
         }
 
         private void HandleContractDetails(IList<ContractDetails> details)
@@ -421,6 +472,61 @@ namespace MyTradingApp.ViewModels
 
                 StatusText = $"Processing stop orders";
                 await ProcessOpenOrdersAsync(orders).ConfigureAwait(false);
+            }
+            catch
+            {
+                // TODO: Show error to user
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        public async Task GetPositionForSymbolAsync(string symbol)
+        {
+            IsLoading = true;
+
+            try
+            {
+                StatusText = "Requesting positions from API";
+                var positions = await _accountManager.RequestPositionsAsync();
+                var item = positions.SingleOrDefault(p => p.Symbol.Code == symbol);
+                if (item == null)
+                {
+                    return;
+                }
+
+                if (Positions.Contains(item))
+                {
+                    Positions.Remove(item);
+                }
+
+                Positions.Insert(0, item);
+                if (item.IsOpen && item.Contract != null)
+                {
+                    Log.Debug("Requesting streaming price for position {0}", symbol);
+                    //                    ModifyContractForRequest(item.Contract);                    
+                    var newContract = MapContractToNewContract(item.Contract);
+
+                    StatusText = $"Starting streaming for {symbol}";
+                    var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract);
+                    _tickerIds.Add(symbol, tickerId);
+
+                    //positionsStopService.Manage(item);
+                }
+
+                // Get associated stop orders
+                StatusText = "Getting associated stop orders";
+                var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+
+                var order = orders.SingleOrDefault(o => o.Contract.Symbol == symbol);
+                if (order != null)
+                {
+                    StatusText = $"Processing stop order";
+                    await ProcessOpenOrderAsync(order).ConfigureAwait(false);
+                }
             }
             catch
             {
