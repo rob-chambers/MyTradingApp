@@ -20,18 +20,25 @@
             Padding="6"
             KeyUp="OnSymbolTextBoxKeyUp"
             MaxLength="6"
-            Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}" />
+            Text="{Binding Symbol.Code, UpdateSourceTrigger=PropertyChanged}"
+            d:Text="MSFT"
+            />
         <Button
             Grid.Column="1"
             Margin="10,0"
             Command="{Binding FindCommand}"
-            Content="{Binding FindCommandCaption}" />
+            Content="{Binding FindCommandCaption}"
+            d:Content="Finding..."
+            />
 
         <TextBlock
             Grid.Column="2"
             Margin="10,0"
             VerticalAlignment="Center"
-            Text="{Binding Symbol.Name}" />
+            Text="{Binding Symbol.Name}"
+            d:Foreground="White"
+            d:Text="Microsoft"
+            />
 
     </Grid>
 </UserControl>
