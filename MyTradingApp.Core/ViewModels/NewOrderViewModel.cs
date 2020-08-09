@@ -64,7 +64,7 @@ namespace MyTradingApp.Core.ViewModels
             _findSymbolService = findSymbolService;
             _orderCalculationService = orderCalculationService;
             _orderManager = orderManager;
-            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, msg => _accountId = msg.AccountId);
+            Messenger.Default.Register<AccountSummary>(this, msg => _accountId = msg.AccountId);
             Messenger.Default.Register<OrderStatusChangedMessage>(this, OrderStatusChangedMessage.Tokens.Orders, OnOrderStatusChangedMessage);
         }
 

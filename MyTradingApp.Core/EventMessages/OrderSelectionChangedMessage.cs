@@ -4,11 +4,11 @@ namespace MyTradingApp.Core.EventMessages
 {
     public class OrderSelectionChangedMessage
     {
-        public OrderSelectionChangedMessage(OrderItem order)
+        public OrderSelectionChangedMessage(NewOrderViewModel order)
         {
             Order = order;
         }
 
-        public OrderItem Order { get; }
+        public NewOrderViewModel Order { get; }
     }
 }

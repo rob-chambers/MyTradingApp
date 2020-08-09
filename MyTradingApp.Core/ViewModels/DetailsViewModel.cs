@@ -8,7 +8,7 @@ namespace MyTradingApp.Core.ViewModels
     public class DetailsViewModel : ViewModelBase
     {
         private RelayCommand _closeDetailsCommand;
-        private OrderItem _selection;
+        private NewOrderViewModel _selection;
 
         public DetailsViewModel()
         {
@@ -17,7 +17,7 @@ namespace MyTradingApp.Core.ViewModels
 
         public RelayCommand CloseDetailsCommand => _closeDetailsCommand ?? (_closeDetailsCommand = new RelayCommand(CloseDetails));
 
-        public OrderItem Selection
+        public NewOrderViewModel Selection
         {
             get => _selection;
             set => Set(ref _selection, value);

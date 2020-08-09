@@ -1,10 +1,10 @@
-﻿using MyTradingApp.Core.EventMessages;
+﻿using MyTradingApp.Domain;
 
 namespace MyTradingApp.Core.ViewModels
 {
     internal class ApiInitialDataViewModel
     {
-        public ApiInitialDataViewModel(double exchangeRate, AccountSummaryCompletedMessage accountSummary)
+        public ApiInitialDataViewModel(double exchangeRate, AccountSummary accountSummary)
         {
             ExchangeRate = exchangeRate;
             AccountSummary = accountSummary;
@@ -12,6 +12,6 @@ namespace MyTradingApp.Core.ViewModels
 
         public double ExchangeRate { get; }
 
-        public AccountSummaryCompletedMessage AccountSummary { get; }
+        public AccountSummary AccountSummary { get; }
     }
 }

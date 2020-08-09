@@ -1,7 +1,7 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using Microsoft.Extensions.Configuration;
-using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.ViewModels;
+using MyTradingApp.Domain;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -24,24 +24,24 @@ namespace MyTradingApp.Core.Services
             _accountId = configuration.GetValue<string>("AccountId");
         }
 
-        public async Task<AccountSummaryCompletedMessage> RequestAccountSummaryAsync()
+        public async Task<AccountSummary> RequestAccountSummaryAsync()
         {
             var details = await _twsObjectFactory.TwsControllerBase.GetAccountDetailsAsync(_accountId);
 
-            var message = new AccountSummaryCompletedMessage();
+            var summary = new AccountSummary();
             if (details.ContainsKey(AccountSummaryTags.NetLiquidation))
             {
-                message.NetLiquidation = double.Parse(details[AccountSummaryTags.NetLiquidation]);
+                summary.NetLiquidation = double.Parse(details[AccountSummaryTags.NetLiquidation]);
             }
 
             if (details.ContainsKey(AccountSummaryTags.BuyingPower))
             {
-                message.BuyingPower = double.Parse(details[AccountSummaryTags.BuyingPower]);
+                summary.BuyingPower = double.Parse(details[AccountSummaryTags.BuyingPower]);
             }
 
-            message.AccountId = _accountId;
+            summary.AccountId = _accountId;
 
-            return message;
+            return summary;
         }
 
         public async Task<IEnumerable<PositionItem>> RequestPositionsAsync()

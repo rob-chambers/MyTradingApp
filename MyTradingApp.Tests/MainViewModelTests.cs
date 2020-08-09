@@ -27,7 +27,7 @@ namespace MyTradingApp.Tests
             builder.WithConnectionService(connectionService);
 
             var accountManager = Substitute.For<IAccountManager>();
-            accountManager.RequestAccountSummaryAsync().Returns(Task.FromResult(new AccountSummaryCompletedMessage
+            accountManager.RequestAccountSummaryAsync().Returns(Task.FromResult(new AccountSummary
             {
                 NetLiquidation = netLiquidationValue
             }));

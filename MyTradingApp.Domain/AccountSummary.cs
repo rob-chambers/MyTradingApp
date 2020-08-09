@@ -1,6 +1,6 @@
-﻿namespace MyTradingApp.Core.EventMessages
+﻿namespace MyTradingApp.Domain
 {
-    public class AccountSummaryCompletedMessage
+    public class AccountSummary
     {
         public string AccountId { get; set; }
         public double NetLiquidation { get; set; }

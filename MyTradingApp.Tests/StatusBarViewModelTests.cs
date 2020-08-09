@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.ViewModels;
+using MyTradingApp.Domain;
 using Xunit;
 
 namespace MyTradingApp.Tests
@@ -15,14 +16,14 @@ namespace MyTradingApp.Tests
 
             var vm = new StatusBarViewModel();
 
-            var message = new AccountSummaryCompletedMessage
+            var summary = new AccountSummary
             {
                 BuyingPower = BuyingPower,
                 NetLiquidation = NetLiquidation
             };
 
             // Act
-            Messenger.Default.Send(message);
+            Messenger.Default.Send(new AccountSummaryMessage(summary));
 
             // Assert
             Assert.Equal("$500,000.00", vm.BuyingPower);

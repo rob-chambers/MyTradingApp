@@ -1,6 +1,7 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.EventArgs;
 using GalaSoft.MvvmLight.Messaging;
 using IBApi;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using MyTradingApp.Core.EventMessages;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.ViewModels;
@@ -290,7 +291,7 @@ namespace MyTradingApp.Tests
             vm.EntryPrice = 20;
 
             // Act
-            Messenger.Default.Send(new AccountSummaryCompletedMessage
+            Messenger.Default.Send(new AccountSummary
             {
                 AccountId = AccountId
             });

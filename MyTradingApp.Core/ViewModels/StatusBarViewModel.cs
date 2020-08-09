@@ -13,7 +13,7 @@ namespace MyTradingApp.Core.ViewModels
 
         public StatusBarViewModel()
         {
-            Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
+            Messenger.Default.Register<AccountSummaryMessage>(this, HandleAccountSummaryMessage);
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
         }
 
@@ -35,10 +35,11 @@ namespace MyTradingApp.Core.ViewModels
             set => Set(ref _buyingPower, value);
         }
 
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
+        private void HandleAccountSummaryMessage(AccountSummaryMessage message)
         {
-            NetLiquidation = args.NetLiquidation.ToString("C", CultureInfo.GetCultureInfo("en-US"));
-            BuyingPower = args.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            var summary = message.AccountSummary;
+            NetLiquidation = summary.NetLiquidation.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            BuyingPower = summary.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
         }
 
         private void HandleConnectionChangedMessage(ConnectionChangedMessage message)

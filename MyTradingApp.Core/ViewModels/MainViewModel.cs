@@ -345,7 +345,7 @@ namespace MyTradingApp.Core.ViewModels
                     var result = await InitOnceConnectedAsync();
 
                     _exchangeRate = result.ExchangeRate;
-                    Messenger.Default.Send(result.AccountSummary);
+                    Messenger.Default.Send(new EventMessages.AccountSummaryMessage(result.AccountSummary));
                     _netLiquidation = result.AccountSummary.NetLiquidation;
                     CalculateRiskPerTrade();
 
