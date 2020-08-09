@@ -54,8 +54,6 @@ namespace MyTradingApp.Tests
             return this;
         }
 
-        public StatusBarViewModel StatusBarViewModel { get; private set; } = new StatusBarViewModel();
-
         public SettingsViewModel SettingsViewModel { get; private set; }
 
         public MainViewModel Build()
@@ -111,14 +109,11 @@ namespace MyTradingApp.Tests
             return new MainViewModel(
                 dispatcherHelper,
                 ConnectionService,
-                orderManager,
                 AccountManager,
-                StatusBarViewModel,
                 exchangeRateService,
                 orderCalculationService,
                 positionsViewModel,
                 SettingsViewModel,
-                queueProcessor,
                 new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository, marketDataManager));
         }
     }

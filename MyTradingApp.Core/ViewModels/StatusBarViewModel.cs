@@ -7,19 +7,14 @@ namespace MyTradingApp.Core.ViewModels
 {
     public class StatusBarViewModel : ViewModelBase
     {
-        private string _connectionStatusText;
+        private string _connectionStatusText = "Disconnected...";
         private string _netLiquidation;
         private string _buyingPower;
 
         public StatusBarViewModel()
         {
             Messenger.Default.Register<AccountSummaryCompletedMessage>(this, HandleAccountSummaryMessage);
-        }
-
-        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
-        {
-            NetLiquidation = args.NetLiquidation.ToString("C", CultureInfo.GetCultureInfo("en-US"));
-            BuyingPower = args.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
         }
 
         public string ConnectionStatusText
@@ -38,6 +33,19 @@ namespace MyTradingApp.Core.ViewModels
         {
             get => _buyingPower;
             set => Set(ref _buyingPower, value);
+        }
+
+        private void HandleAccountSummaryMessage(AccountSummaryCompletedMessage args)
+        {
+            NetLiquidation = args.NetLiquidation.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+            BuyingPower = args.BuyingPower.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+        }
+
+        private void HandleConnectionChangedMessage(ConnectionChangedMessage message)
+        {
+            ConnectionStatusText = message.IsConnected
+                ? "Connected to TWS"
+                : "Disconnected...";
         }
     }
 }

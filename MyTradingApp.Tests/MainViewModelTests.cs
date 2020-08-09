@@ -39,16 +39,6 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
-        public void ConnectionStatusInitiallyCorrect()
-        {
-            var builder = new MainViewModelBuilder();
-            var vm = builder.Build();
-            Assert.Equal("Connect", vm.ConnectButtonCaption);
-            Assert.False(vm.IsEnabled);
-            Assert.Equal("Disconnected...", builder.StatusBarViewModel.ConnectionStatusText);
-        }
-
-        [Fact]
         public async Task WhenConnectionErrorThenShowErrorInTextBox()
         {
             var connectionService = Substitute.For<IConnectionService>();
@@ -124,7 +114,6 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.Equal("Disconnect", vm.ConnectButtonCaption);
             Assert.True(vm.IsEnabled);
-            Assert.Equal("Connected to TWS", builder.StatusBarViewModel.ConnectionStatusText);
         }
 
         [Fact]

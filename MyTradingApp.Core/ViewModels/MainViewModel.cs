@@ -31,9 +31,6 @@ namespace MyTradingApp.Core.ViewModels
         private readonly IExchangeRateService _exchangeRateService;
         private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
         private readonly IOrderCalculationService _orderCalculationService;
-        private readonly IOrderManager _orderManager;
-        private readonly StatusBarViewModel _statusBarViewModel;
-
         private ICommand _clearCommand;
         private AsyncCommand _connectCommand;
 
@@ -59,25 +56,20 @@ namespace MyTradingApp.Core.ViewModels
         public MainViewModel(
             IDispatcherHelper dispatcherHelper,
             IConnectionService connectionService,
-            IOrderManager orderManager,
             IAccountManager accountManager,
-            StatusBarViewModel statusBarViewModel,
             IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
             SettingsViewModel settingsViewModel,
-            IQueueProcessor queueProcessor,
             OrdersListViewModel ordersListViewModel)
-            : base(dispatcherHelper, queueProcessor)
+            : base(dispatcherHelper)
         {
             _connectionService = connectionService;
-            _orderManager = orderManager;
             _accountManager = accountManager;
             OrdersListViewModel = ordersListViewModel;
             PositionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
-            _statusBarViewModel = statusBarViewModel;
             _exchangeRateService = exchangeRateService;
             _orderCalculationService = orderCalculationService;
 
@@ -315,10 +307,6 @@ namespace MyTradingApp.Core.ViewModels
             ConnectButtonCaption = isConnected
                 ? "Disconnect"
                 : "Connect";
-
-            _statusBarViewModel.ConnectionStatusText = isConnected
-                ? "Connected to TWS"
-                : "Disconnected...";
 
             IsEnabled = isConnected;
         }

@@ -6,9 +6,14 @@ namespace MyTradingApp.Core.ViewModels
 {
     public abstract class DispatcherViewModel : ObservableObject
     {
-        protected DispatcherViewModel(IDispatcherHelper dispatcherHelper, IQueueProcessor queueProcessor)
+        protected DispatcherViewModel(IDispatcherHelper dispatcherHelper)
         {
             DispatcherHelper = dispatcherHelper;
+        }
+
+        protected DispatcherViewModel(IDispatcherHelper dispatcherHelper, IQueueProcessor queueProcessor)
+            : this(dispatcherHelper)
+        {
             QueueProcessor = queueProcessor;
         }
 
