@@ -2,9 +2,9 @@
 
 namespace MyTradingApp.Core.ViewModels
 {
-    internal class ApiInitialDataViewModel
+    internal class RiskCalculationServiceData
     {
-        public ApiInitialDataViewModel(double exchangeRate, AccountSummary accountSummary)
+        public RiskCalculationServiceData(double exchangeRate, AccountSummary accountSummary)
         {
             ExchangeRate = exchangeRate;
             AccountSummary = accountSummary;

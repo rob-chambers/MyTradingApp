@@ -32,10 +32,6 @@ namespace MyTradingApp.Tests
                 NetLiquidation = netLiquidationValue
             }));
             builder.WithAccountManager(accountManager);
-
-            var exchangeRateService = Substitute.For<IExchangeRateService>();
-            exchangeRateService.GetExchangeRateAsync().Returns(Task.FromResult(exchangeRate));
-            builder.WithExchangeRateService(exchangeRateService);
         }
 
         [Fact]
@@ -81,8 +77,13 @@ namespace MyTradingApp.Tests
                     }
                 });
 
-            var builder = new MainViewModelBuilder().WithSettingsRepository(settingsRepository);
+            var riskCalculationService = Substitute.For<IRiskCalculationService>();
+            riskCalculationService.RiskPerTrade.Returns(expected);
+            var builder = new MainViewModelBuilder()
+                .WithSettingsRepository(settingsRepository)
+                .WithRiskCalculationService(riskCalculationService);
             ConnectionTest(builder, netLiquidationValue, exchangeRate);
+            
             var vm = builder.Build();
             vm.PropertyChanged += (s, e) =>
             {
@@ -96,6 +97,9 @@ namespace MyTradingApp.Tests
             await vm.ConnectCommand.ExecuteAsync();
 
             // Assert
+            await riskCalculationService.Received().RequestDataForCalculationAsync();
+            riskCalculationService.Received().SetRiskMultiplier(riskMultiplier);            
+
             Assert.Equal(expected, vm.RiskPerTrade);
             Assert.True(fired);
         }
@@ -175,13 +179,17 @@ namespace MyTradingApp.Tests
             // Arrange
             var builder = new MainViewModelBuilder();            
             ConnectionTest(builder, 0, 0);
-            var vm = builder.Build();
+            var accountManager = Substitute.For<IAccountManager>();
+
+            var vm = builder
+                .WithAccountManager(accountManager)
+                .Build();
 
             // Act
             await vm.ConnectCommand.ExecuteAsync();
 
             // Assert
-            await builder.AccountManager.Received().RequestPositionsAsync();
+            await accountManager.Received().RequestPositionsAsync();
         }
 
         [Fact]
@@ -210,34 +218,6 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.Empty(vm.OrdersListViewModel.Orders);
             //Assert.NotEmpty(vm.PositionsViewModel.Positions);
-        }
-
-        [Fact]
-        public async Task ModifyingRiskPercentageOfAccountSizeModifiesRiskPerTrade()
-        {
-            var settingsRepository = Substitute.For<ISettingsRepository>();
-            settingsRepository.GetAllAsync().Returns(new List<Setting>
-                {
-                    new Setting
-                    {
-                        Key = SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize,
-                        Value = "0.1"                        
-                    },
-                    new Setting
-                    {
-                        Key = SettingsViewModel.SettingsKeys.RiskMultiplier,
-                        Value = "1"
-                    }
-                });
-
-            var builder = new MainViewModelBuilder().WithSettingsRepository(settingsRepository);            
-            ConnectionTest(builder, 10000, 1);
-            var vm = builder.Build();
-            await vm.ConnectCommand.ExecuteAsync();
-            Assert.Equal(10, vm.RiskPerTrade);
-
-            builder.SettingsViewModel.RiskPercentOfAccountSize = 2;
-            Assert.Equal(200, vm.RiskPerTrade);
         }
 
         [Fact]

@@ -26,28 +26,26 @@ namespace MyTradingApp.Core.ViewModels
 
         private const int REDUCED_LINES_IN_MESSAGE_BOX = 100;
 
-        private readonly IAccountManager _accountManager;
         private readonly IConnectionService _connectionService;
-        private readonly IExchangeRateService _exchangeRateService;
         private readonly List<string> _linesInMessageBox = new List<string>(MAX_LINES_IN_MESSAGE_BOX);
         private readonly IOrderCalculationService _orderCalculationService;
+        private readonly SettingsViewModel _settingsViewModel;
+        private readonly IRiskCalculationService _riskCalculationService;
         private ICommand _clearCommand;
         private AsyncCommand _connectCommand;
 
         private string _connectButtonCaption;
         private string _errorText;
-        private double _exchangeRate;
         private bool _isEnabled;
-        private double _netLiquidation;
         private int _numberOfLinesInMessageBox;
         private double _riskMultiplier;
         private double _riskPerTrade;
         private ObservableCollection<MenuItemViewModel> _menuItems;
         private ObservableCollection<MenuItemViewModel> _menuOptionItems;
-        private bool _isDetailsPanelVisible;
-        private SettingsViewModel _settingsViewModel;
+        private bool _isDetailsPanelVisible;        
         private bool _isBusy;
         private DefaultErrorHandler _defaultErrorHandler;
+        private PositionsViewModel _positionsViewModel;
 
         #endregion
 
@@ -56,21 +54,19 @@ namespace MyTradingApp.Core.ViewModels
         public MainViewModel(
             IDispatcherHelper dispatcherHelper,
             IConnectionService connectionService,
-            IAccountManager accountManager,
-            IExchangeRateService exchangeRateService,
             IOrderCalculationService orderCalculationService,
             PositionsViewModel positionsViewModel,
             SettingsViewModel settingsViewModel,
-            OrdersListViewModel ordersListViewModel)
+            OrdersListViewModel ordersListViewModel,
+            IRiskCalculationService riskCalculationService)
             : base(dispatcherHelper)
         {
             _connectionService = connectionService;
-            _accountManager = accountManager;
             OrdersListViewModel = ordersListViewModel;
-            PositionsViewModel = positionsViewModel;
+            _riskCalculationService = riskCalculationService;
+            _positionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
-            _exchangeRateService = exchangeRateService;
             _orderCalculationService = orderCalculationService;
 
             Messenger.Default.Register<ConnectionChangedMessage>(this, HandleConnectionChangedMessage);
@@ -102,13 +98,7 @@ namespace MyTradingApp.Core.ViewModels
 
         #endregion
 
-        private IErrorHandler DefaultErrorHandler
-        {
-            get
-            {
-                return _defaultErrorHandler ?? (_defaultErrorHandler = new DefaultErrorHandler());
-            }
-        }
+        private IErrorHandler DefaultErrorHandler => _defaultErrorHandler ?? (_defaultErrorHandler = new DefaultErrorHandler());
 
         public ObservableCollection<MenuItemViewModel> MenuItems
         {
@@ -158,8 +148,6 @@ namespace MyTradingApp.Core.ViewModels
 
         public OrdersListViewModel OrdersListViewModel { get; private set; }
 
-        public PositionsViewModel PositionsViewModel { get; private set; }
-
         public double RiskMultiplier
         {
             get => _riskMultiplier;
@@ -167,6 +155,7 @@ namespace MyTradingApp.Core.ViewModels
             {
                 Set(ref _riskMultiplier, value);
                 _settingsViewModel.LastRiskMultiplier = value;
+                _riskCalculationService.SetRiskMultiplier(value);
                 CalculateRiskPerTrade();
             }
         }
@@ -205,7 +194,7 @@ namespace MyTradingApp.Core.ViewModels
 
         private void CalculateRiskPerTrade()
         {
-            RiskPerTrade = _netLiquidation * _settingsViewModel.RiskPercentOfAccountSize / 100 * _exchangeRate * RiskMultiplier;
+            RiskPerTrade = _riskCalculationService.RiskPerTrade;
         }
 
         private void ClearLog()
@@ -342,14 +331,10 @@ namespace MyTradingApp.Core.ViewModels
                     await _connectionService.ConnectAsync();
                     SetConnectionStatus();
 
-                    var result = await InitOnceConnectedAsync();
-
-                    _exchangeRate = result.ExchangeRate;
-                    Messenger.Default.Send(new EventMessages.AccountSummaryMessage(result.AccountSummary));
-                    _netLiquidation = result.AccountSummary.NetLiquidation;
+                    await _riskCalculationService.RequestDataForCalculationAsync().ConfigureAwait(false);
                     CalculateRiskPerTrade();
 
-                    await PositionsViewModel.GetPositionsAsync();
+                    await _positionsViewModel.GetPositionsAsync();
                 }
             }
             catch (Exception ex)
@@ -363,20 +348,6 @@ namespace MyTradingApp.Core.ViewModels
                 IsBusy = false;
                 SetConnectionStatus();
             }
-        }
-
-        private async Task<ApiInitialDataViewModel> InitOnceConnectedAsync()
-        {
-            Log.Debug("Start of InitOnceConnectedAsync");
-
-            var exchangeRateTask = _exchangeRateService.GetExchangeRateAsync();
-            var accountSummaryTask = _accountManager.RequestAccountSummaryAsync();
-
-            await Task.WhenAll(exchangeRateTask, accountSummaryTask).ConfigureAwait(false);
-
-            var accountSummary = await accountSummaryTask.ConfigureAwait(false);
-            var exchangeRate = await exchangeRateTask.ConfigureAwait(false);
-            return new ApiInitialDataViewModel(exchangeRate, accountSummary);
         }
 
         private void HandleOrderStatusChangedMessage(OrderStatusChangedMessage message)
@@ -395,7 +366,7 @@ namespace MyTradingApp.Core.ViewModels
 
             Log.Debug(message.Dump($"Order for symbol {order.Symbol.Code} was filled."));
             OrdersListViewModel.Orders.Remove(order);
-            PositionsViewModel.GetPositionForSymbolAsync(order.Symbol.Code).FireAndForgetSafeAsync(new LoggingErrorHandler());
+            _positionsViewModel.GetPositionForSymbolAsync(order.Symbol.Code).FireAndForgetSafeAsync(new LoggingErrorHandler());
 
             /* Once the order has been filled, it is deleted and a request is made for the current positions, 
              * which will add it to the positions collection

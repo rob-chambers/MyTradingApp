@@ -88,6 +88,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<IFindSymbolService, FindSymbolService>();
             services.AddScoped<INewOrderViewModelFactory, NewOrderViewModelFactory>();
             services.AddScoped(x => app.Configuration);
+            services.AddScoped<IRiskCalculationService, RiskCalculationService>();
         }
     }
 }

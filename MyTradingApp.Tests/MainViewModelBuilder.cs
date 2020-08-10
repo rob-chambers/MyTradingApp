@@ -14,11 +14,9 @@ namespace MyTradingApp.Tests
     {
         private IConnectionService _connectionService;
         private IAccountManager _accountManager;
-        private IExchangeRateService _exchangeRateService;
         private IOrderCalculationService _orderCalculationService;
         private ISettingsRepository _settingsRepository;
-
-        public IAccountManager AccountManager { get; private set; }
+        private IRiskCalculationService _riskCalculationService;
 
         public IConnectionService ConnectionService { get; private set; }
 
@@ -36,9 +34,9 @@ namespace MyTradingApp.Tests
 
         public ISettingsRepository SettingsRepository { get; private set; }
 
-        public MainViewModelBuilder WithExchangeRateService(IExchangeRateService exchangeRateService)
+        public MainViewModelBuilder WithRiskCalculationService(IRiskCalculationService riskCalculationService)
         {
-            _exchangeRateService = exchangeRateService;
+            _riskCalculationService = riskCalculationService;
             return this;
         }
 
@@ -60,8 +58,6 @@ namespace MyTradingApp.Tests
         {
             ConnectionService = _connectionService ?? Substitute.For<IConnectionService>();
             var orderManager = Substitute.For<IOrderManager>();
-            AccountManager = _accountManager ?? Substitute.For<IAccountManager>();
-            var exchangeRateService = _exchangeRateService ?? Substitute.For<IExchangeRateService>();
             var orderCalculationService = _orderCalculationService ?? Substitute.For<IOrderCalculationService>();
 
             var marketDataManager = Substitute.For<IMarketDataManager>();
@@ -78,7 +74,9 @@ namespace MyTradingApp.Tests
                 .When(x => x.InvokeOnUiThread(Arg.Any<Action>()))
                 .Do(x => x.Arg<Action>().Invoke());
 
-            var positionsViewModel = new PositionsViewModel(dispatcherHelper, marketDataManager, _accountManager, positionsManager, contractManager, queueProcessor);
+            var accountManager = _accountManager ?? Substitute.For<IAccountManager>();
+
+            var positionsViewModel = new PositionsViewModel(dispatcherHelper, marketDataManager, accountManager, positionsManager, contractManager, queueProcessor);
 
             SettingsRepository = _settingsRepository;
             if (SettingsRepository == null)
@@ -104,17 +102,17 @@ namespace MyTradingApp.Tests
             var findSymbolService = Substitute.For<IFindSymbolService>();
             var factory = new NewOrderViewModelFactory(dispatcherHelper, queueProcessor, findSymbolService, orderCalculationService, orderManager);
             var tradeRepository = Substitute.For<ITradeRepository>();
+            var riskCalculationService = _riskCalculationService ?? Substitute.For<IRiskCalculationService>();
 
             MainViewModel.IsUnitTesting = true;
             return new MainViewModel(
                 dispatcherHelper,
                 ConnectionService,
-                AccountManager,
-                exchangeRateService,
                 orderCalculationService,
                 positionsViewModel,
                 SettingsViewModel,
-                new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository, marketDataManager));
+                new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository, marketDataManager),
+                riskCalculationService);
         }
     }
 }
