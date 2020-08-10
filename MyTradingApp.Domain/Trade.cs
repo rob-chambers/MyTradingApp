@@ -31,5 +31,7 @@ namespace MyTradingApp.Domain
         public double? ProfitLoss { get; set; }
 
         public virtual ICollection<StopLoss> Stops { get; set; }
+
+        public virtual ICollection<Exit> Exits { get; set; }
     }
 }
