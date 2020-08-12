@@ -21,11 +21,10 @@ namespace MyTradingApp.Core.ViewModels
         private readonly IPositionManager _positionManager;
         private readonly IContractManager _contractManager;
         private readonly IQueueProcessor _queueProcessor;
+        private readonly ITradeRecordingService _tradeRecordingService;
         private readonly Dictionary<string, int> _tickerIds = new Dictionary<string, int>();
         private bool _isLoading;
         private string _statusText;
-
-        //private AsyncCommand<PositionItem> _tempCommand;
 
         public ObservableCollectionNoReset<PositionItem> Positions { get; }
 
@@ -35,7 +34,8 @@ namespace MyTradingApp.Core.ViewModels
             IAccountManager accountManager,
             IPositionManager positionManager,
             IContractManager contractManager,
-            IQueueProcessor queueProcessor)
+            IQueueProcessor queueProcessor,
+            ITradeRecordingService tradeRecordingService)
             : base(dispatcherHelper, queueProcessor)
         {
             Positions = new ObservableCollectionNoReset<PositionItem>(dispatcherHelper: DispatcherHelper);
@@ -49,6 +49,7 @@ namespace MyTradingApp.Core.ViewModels
             _positionManager = positionManager;
             _contractManager = contractManager;
             _queueProcessor = queueProcessor;
+            _tradeRecordingService = tradeRecordingService;
         }
 
         public bool IsLoading
@@ -85,7 +86,12 @@ namespace MyTradingApp.Core.ViewModels
 
             Log.Debug("An order was filled for a position");
 
-            GetPositionsAsync().FireAndForgetSafeAsync(new LoggingErrorHandler());
+            var position = Positions.First(p => p.Symbol.Code == message.Symbol);
+
+            var handler = new LoggingErrorHandler();
+            _tradeRecordingService.ExitTradeAsync(position, message).FireAndForgetSafeAsync(handler);
+
+            GetPositionsAsync().FireAndForgetSafeAsync(handler);
 
             //_queueProcessor.Enqueue(async () =>
             //{
@@ -469,6 +475,8 @@ namespace MyTradingApp.Core.ViewModels
 
                 StatusText = $"Processing stop orders";
                 await ProcessOpenOrdersAsync(orders).ConfigureAwait(false);
+
+                await _tradeRecordingService.LoadTradesAsync().ConfigureAwait(false);
             }
             catch
             {

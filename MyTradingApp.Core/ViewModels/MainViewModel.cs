@@ -31,6 +31,7 @@ namespace MyTradingApp.Core.ViewModels
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly SettingsViewModel _settingsViewModel;
         private readonly IRiskCalculationService _riskCalculationService;
+        private readonly ITradeRecordingService _tradeRecordingService;
         private ICommand _clearCommand;
         private AsyncCommand _connectCommand;
 
@@ -58,12 +59,14 @@ namespace MyTradingApp.Core.ViewModels
             PositionsViewModel positionsViewModel,
             SettingsViewModel settingsViewModel,
             OrdersListViewModel ordersListViewModel,
-            IRiskCalculationService riskCalculationService)
+            IRiskCalculationService riskCalculationService,
+            ITradeRecordingService tradeRecordingService)
             : base(dispatcherHelper)
         {
             _connectionService = connectionService;
             OrdersListViewModel = ordersListViewModel;
             _riskCalculationService = riskCalculationService;
+            _tradeRecordingService = tradeRecordingService;
             _positionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
@@ -84,6 +87,12 @@ namespace MyTradingApp.Core.ViewModels
                     RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
                 })
                 .ConfigureAwait(false);
+
+            Task.Run(() => 
+            {
+                var handler = new LoggingErrorHandler();
+                _tradeRecordingService.LoadTradesAsync().FireAndForgetSafeAsync(handler);
+            });
         }
 
         #endregion

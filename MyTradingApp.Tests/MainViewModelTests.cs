@@ -245,5 +245,21 @@ namespace MyTradingApp.Tests
             // Assert
             orderCaluclationService.Received(2).GetCalculatedQuantity(Symbol, Direction.Buy);
         }
+
+        [Fact]
+        public async Task WhenLoadedThenLoadTrades()
+        {
+            // Arrange
+            var tradeRecordingService = Substitute.For<ITradeRecordingService>();
+
+            var builder = new MainViewModelBuilder()
+                .WithTradeRecordingService(tradeRecordingService);
+
+            // Act
+            builder.Build();
+
+            // Assert
+            await tradeRecordingService.Received().LoadTradesAsync();
+        }
     }
 }

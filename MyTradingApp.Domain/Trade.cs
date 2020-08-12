@@ -33,5 +33,16 @@ namespace MyTradingApp.Domain
         public virtual ICollection<StopLoss> Stops { get; set; }
 
         public virtual ICollection<Exit> Exits { get; set; }
+
+        public double? CalculateProfitLoss()
+        {
+            var profit = ExitPrice - EntryPrice;
+            if (Direction == Direction.Sell)
+            {
+                profit -= profit;
+            }
+
+            return profit;
+        }
     }
 }

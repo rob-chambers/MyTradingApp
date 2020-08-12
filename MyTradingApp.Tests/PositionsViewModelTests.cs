@@ -24,7 +24,8 @@ namespace MyTradingApp.Tests
         private PositionsViewModel GetVm(
             IMarketDataManager marketDataManager = null,
             IPositionManager positionManager = null,
-            IContractManager contractManager = null)
+            IContractManager contractManager = null,
+            ITradeRecordingService tradeRecordingService = null)
         {
             var manager = marketDataManager ?? Substitute.For<IMarketDataManager>();
             _accountManager = Substitute.For<IAccountManager>();
@@ -57,7 +58,12 @@ namespace MyTradingApp.Tests
                     action.Invoke();
                 });
 
-            return new PositionsViewModel(dispatcherHelper, manager, _accountManager, positionManager, contractManager, queueProcessor);
+            if (tradeRecordingService == null)
+            {
+                tradeRecordingService = Substitute.For<ITradeRecordingService>();
+            }
+            
+            return new PositionsViewModel(dispatcherHelper, manager, _accountManager, positionManager, contractManager, queueProcessor, tradeRecordingService);
         }
 
         [Fact]
@@ -490,6 +496,57 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.Equal(CompanyName, vm.Positions[0].Symbol.Name);
             Assert.Equal(contractDetails, vm.Positions[0].ContractDetails);
+        }
+
+        [Fact]
+        public async Task WhenPositionFilledRecordTradeExitAsync()
+        {
+            // Arrange
+            const double FillPrice = 10;
+            const ushort Quantity = 1000;
+
+            var tradeRecordingService = Substitute.For<ITradeRecordingService>();
+            var position = new PositionItem
+            {
+                Quantity = Quantity,
+                Symbol = new Symbol
+                {
+                    Code = Symbol
+                }
+            };
+            var vm = GetVm(tradeRecordingService: tradeRecordingService);
+            vm.Positions.Add(position);
+
+            // Act
+            var msg = new OrderStatusEventArgs(1, BrokerConstants.OrderStatus.Filled, Quantity, 0, FillPrice, 0, 0, FillPrice, 0, null);
+            var message = new OrderStatusChangedMessage(Symbol, msg);
+            Messenger.Default.Send(message, OrderStatusChangedMessage.Tokens.Positions);
+
+            // Assert
+            await tradeRecordingService.Received().ExitTradeAsync(
+                Arg.Is<PositionItem>(x => x == position),
+                Arg.Is<OrderStatusChangedMessage>(x => x == message));
+        }
+
+        [Fact]
+        public async Task WhenOrderStatusChangedAndNotFilledDoNotRecordTradeExitAsync()
+        {
+            // Arrange
+            const double FillPrice = 10;
+            const ushort Quantity = 1000;
+
+            var tradeRecordingService = Substitute.For<ITradeRecordingService>();
+            GetVm(tradeRecordingService: tradeRecordingService);
+
+            // Act
+            var msg = new OrderStatusEventArgs(1, BrokerConstants.OrderStatus.Cancelled, Quantity, 0, FillPrice, 0, 0, FillPrice, 0, null);
+            var message = new OrderStatusChangedMessage(Symbol, msg);
+            Messenger.Default.Send(message, OrderStatusChangedMessage.Tokens.Positions);
+
+            // Assert
+            await tradeRecordingService.DidNotReceive().ExitTradeAsync(
+                Arg.Any<PositionItem>(),
+                Arg.Any<OrderStatusChangedMessage>());
         }
 
         private PositionsViewModel GetPositionForSymbolTest(

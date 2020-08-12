@@ -28,7 +28,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.Tests", "MyTra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFinance.Broker", "AutoFinance.Broker\AutoFinance.Broker.csproj", "{F71C7820-EA70-4AE3-B5FD-5AC11A4FDDE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{7CF66A9E-FA07-446F-854D-C8A4C3350319}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTradingApp.StopsTestHarness", "MyTradingApp.StopsTestHarness\MyTradingApp.StopsTestHarness.csproj", "{7CF66A9E-FA07-446F-854D-C8A4C3350319}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTradingApp.Tests.Integration", "MyTradingApp.Tests.Integration\MyTradingApp.Tests.Integration.csproj", "{B1D10958-F934-4D11-BF0D-70A9950F4133}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +78,10 @@ Global
 		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CF66A9E-FA07-446F-854D-C8A4C3350319}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1D10958-F934-4D11-BF0D-70A9950F4133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1D10958-F934-4D11-BF0D-70A9950F4133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1D10958-F934-4D11-BF0D-70A9950F4133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1D10958-F934-4D11-BF0D-70A9950F4133}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

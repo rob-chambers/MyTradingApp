@@ -17,6 +17,7 @@ namespace MyTradingApp.Tests
         private IOrderCalculationService _orderCalculationService;
         private ISettingsRepository _settingsRepository;
         private IRiskCalculationService _riskCalculationService;
+        private ITradeRecordingService _tradeRecordingService;
 
         public IConnectionService ConnectionService { get; private set; }
 
@@ -52,6 +53,12 @@ namespace MyTradingApp.Tests
             return this;
         }
 
+        public MainViewModelBuilder WithTradeRecordingService(ITradeRecordingService tradeRecordingService)
+        {
+            _tradeRecordingService = tradeRecordingService;
+            return this;
+        }
+
         public SettingsViewModel SettingsViewModel { get; private set; }
 
         public MainViewModel Build()
@@ -76,7 +83,9 @@ namespace MyTradingApp.Tests
 
             var accountManager = _accountManager ?? Substitute.For<IAccountManager>();
 
-            var positionsViewModel = new PositionsViewModel(dispatcherHelper, marketDataManager, accountManager, positionsManager, contractManager, queueProcessor);
+            var tradeRecordingService = _tradeRecordingService ?? Substitute.For<ITradeRecordingService>();
+
+            var positionsViewModel = new PositionsViewModel(dispatcherHelper, marketDataManager, accountManager, positionsManager, contractManager, queueProcessor, tradeRecordingService);
 
             SettingsRepository = _settingsRepository;
             if (SettingsRepository == null)
@@ -112,7 +121,8 @@ namespace MyTradingApp.Tests
                 positionsViewModel,
                 SettingsViewModel,
                 new OrdersListViewModel(dispatcherHelper, queueProcessor, factory, tradeRepository, marketDataManager),
-                riskCalculationService);
+                riskCalculationService,
+                tradeRecordingService);
         }
     }
 }

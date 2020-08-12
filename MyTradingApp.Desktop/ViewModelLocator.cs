@@ -59,7 +59,7 @@ namespace MyTradingApp.Desktop
             {                
                 var connectionString = ConfigurationExtensions.GetConnectionString(app.Configuration, "DefaultConnection");
                 services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
-                services.AddScoped<IApplicationContext, ApplicationContext>();
+                services.AddSingleton<IApplicationContext, ApplicationContext>();
             }
 
             services.AddScoped<EReaderSignal, EReaderMonitorSignal>();
@@ -89,6 +89,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<INewOrderViewModelFactory, NewOrderViewModelFactory>();
             services.AddScoped(x => app.Configuration);
             services.AddScoped<IRiskCalculationService, RiskCalculationService>();
+            services.AddScoped<ITradeRecordingService, TradeRecordingService>();
         }
     }
 }
