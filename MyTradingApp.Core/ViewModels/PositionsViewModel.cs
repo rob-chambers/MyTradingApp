@@ -306,19 +306,6 @@ namespace MyTradingApp.Core.ViewModels
             position.ContractDetails = detail;
         }
 
-        //public AsyncCommand<PositionItem> TempCommand => _tempCommand ?? (_tempCommand = new AsyncCommand<PositionItem>(DoTempCommand));
-
-        //private async Task DoTempCommand(PositionItem position)
-        //{
-        //    var result = await Task.Delay(5000).ContinueWith(t =>
-        //    {
-        //        var r = new Random();
-        //        return r.Next(int.MaxValue);
-        //    });
-
-        //    position.AvgPrice = result;
-        //}
-
         private async Task MoveStopAsync(PositionItem position, double newStopPercentage)
         {
             //var order = GetOrder();
@@ -495,16 +482,19 @@ namespace MyTradingApp.Core.ViewModels
 
             try
             {
+                Log.Debug("Requesting positions from TWS for symbol {0}", symbol);
                 StatusText = "Requesting positions from API";
                 var positions = await _accountManager.RequestPositionsAsync();
                 var item = positions.SingleOrDefault(p => p.Symbol.Code == symbol);
                 if (item == null)
                 {
+                    Log.Warning("No position found");
                     return;
                 }
 
                 if (Positions.Contains(item))
                 {
+                    Log.Warning("Position already existed - removing");
                     Positions.Remove(item);
                 }
 

@@ -46,7 +46,6 @@ namespace MyTradingApp.Core.ViewModels
         private bool _isDetailsPanelVisible;        
         private bool _isBusy;
         private DefaultErrorHandler _defaultErrorHandler;
-        private PositionsViewModel _positionsViewModel;
 
         #endregion
 
@@ -67,7 +66,7 @@ namespace MyTradingApp.Core.ViewModels
             OrdersListViewModel = ordersListViewModel;
             _riskCalculationService = riskCalculationService;
             _tradeRecordingService = tradeRecordingService;
-            _positionsViewModel = positionsViewModel;
+            PositionsViewModel = positionsViewModel;
             _settingsViewModel = settingsViewModel;
             _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
             _orderCalculationService = orderCalculationService;
@@ -85,14 +84,10 @@ namespace MyTradingApp.Core.ViewModels
                 .ContinueWith(t =>
                 {
                     RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
+                    var handler = new LoggingErrorHandler();
+                    _tradeRecordingService.LoadTradesAsync().FireAndForgetSafeAsync(handler);
                 })
                 .ConfigureAwait(false);
-
-            Task.Run(() => 
-            {
-                var handler = new LoggingErrorHandler();
-                _tradeRecordingService.LoadTradesAsync().FireAndForgetSafeAsync(handler);
-            });
         }
 
         #endregion
@@ -156,6 +151,8 @@ namespace MyTradingApp.Core.ViewModels
         }
 
         public OrdersListViewModel OrdersListViewModel { get; private set; }
+
+        public PositionsViewModel PositionsViewModel { get; private set; }
 
         public double RiskMultiplier
         {
@@ -343,13 +340,17 @@ namespace MyTradingApp.Core.ViewModels
                     await _riskCalculationService.RequestDataForCalculationAsync().ConfigureAwait(false);
                     CalculateRiskPerTrade();
 
-                    await _positionsViewModel.GetPositionsAsync();
+                    await PositionsViewModel.GetPositionsAsync();
                 }
             }
             catch (Exception ex)
             {
                 Log.Error("Error in ToggleConnectionAsync:\n{0}", ex);
-                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Error, $"Error during initialisation upon connection:\n{ex.Message}"));
+                DispatcherHelper.InvokeOnUiThread(() =>
+                {
+                    var notification = $"Error during initialisation upon connection:\n{ex.Message}";
+                    Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Error, notification));
+                });
                 ShowMessageOnPanel(ex.Message);
             }
             finally
@@ -375,7 +376,7 @@ namespace MyTradingApp.Core.ViewModels
 
             Log.Debug(message.Dump($"Order for symbol {order.Symbol.Code} was filled."));
             OrdersListViewModel.Orders.Remove(order);
-            _positionsViewModel.GetPositionForSymbolAsync(order.Symbol.Code).FireAndForgetSafeAsync(new LoggingErrorHandler());
+            PositionsViewModel.GetPositionForSymbolAsync(order.Symbol.Code).FireAndForgetSafeAsync(new LoggingErrorHandler());
 
             /* Once the order has been filled, it is deleted and a request is made for the current positions, 
              * which will add it to the positions collection

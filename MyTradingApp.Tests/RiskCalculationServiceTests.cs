@@ -29,15 +29,30 @@ namespace MyTradingApp.Tests
                 RiskPercentOfAccountSize = 1
             };
 
-            var vm = new RiskCalculationService(exchangeRateService, accountManager, settingsViewModel);
+            var service = new RiskCalculationService(exchangeRateService, accountManager, settingsViewModel);
 
             // Act
-            await vm.RequestDataForCalculationAsync();
+            await service.RequestDataForCalculationAsync();
 
             // Assert
-            Assert.Equal(100, vm.RiskPerTrade);
+            Assert.Equal(100, service.RiskPerTrade);
             settingsViewModel.RiskPercentOfAccountSize = 2;
-            Assert.Equal(200, vm.RiskPerTrade);
+            Assert.Equal(200, service.RiskPerTrade);
+        }
+
+        [Fact]
+        public void WhenAccountSummaryNotAvailableRiskPerTradeIsCorrect()
+        {
+            var settingsRepository = Substitute.For<ISettingsRepository>();
+            var exchangeRateService = Substitute.For<IExchangeRateService>();
+            var accountManager = Substitute.For<IAccountManager>();
+            var settingsViewModel = new SettingsViewModel(settingsRepository);
+            
+            // Act
+            var service = new RiskCalculationService(exchangeRateService, accountManager, settingsViewModel);
+
+            // Assert
+            Assert.Equal(0, service.RiskPerTrade);
         }
     }
 }

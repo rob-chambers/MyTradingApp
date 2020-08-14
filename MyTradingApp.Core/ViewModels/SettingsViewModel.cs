@@ -11,6 +11,7 @@ namespace MyTradingApp.Core.ViewModels
     {
         private readonly ISettingsRepository _settingsRepository;
         private readonly Dictionary<string, Setting> _settings = new Dictionary<string, Setting>();
+        private readonly object _locker = new object();
         private bool _isLoading;
         private double _riskPercentOfAccountSize;
         private double _lastRiskMultiplier;
@@ -99,25 +100,28 @@ namespace MyTradingApp.Core.ViewModels
         private void SetValue(string key, string value)
         {
             Setting setting;
-            if (_settings.ContainsKey(key))
+            lock (_locker)
             {
-                setting = _settings[key];
-                setting.Value = value;
-                _settingsRepository.Update(setting);
-            }
-            else
-            {
-                setting = new Setting
+                if (_settings.ContainsKey(key))
                 {
-                    Key = key,
-                    Value = value
-                };
-                _settings.Add(setting.Key, setting);
-                _settingsRepository.Add(setting);
-            }
+                    setting = _settings[key];
+                    setting.Value = value;
+                    _settingsRepository.Update(setting);
+                }
+                else
+                {
+                    setting = new Setting
+                    {
+                        Key = key,
+                        Value = value
+                    };
+                    _settings.Add(setting.Key, setting);
+                    _settingsRepository.Add(setting);
+                }
 
-            // Save settings in the background
-            Task.Run(() => _settingsRepository.SaveAsync().FireAndForgetSafeAsync(new LoggingErrorHandler()));
+                // Save settings in the background
+                Task.Run(() => _settingsRepository.SaveAsync().FireAndForgetSafeAsync(new LoggingErrorHandler()));
+            }
         }
     }
 }

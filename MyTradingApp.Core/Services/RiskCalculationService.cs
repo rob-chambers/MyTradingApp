@@ -30,6 +30,11 @@ namespace MyTradingApp.Core.Services
         {
             get
             {
+                if (_data == null)
+                {
+                    return 0;
+                }
+
                 var maxCapital = _data.AccountSummary.NetLiquidation * _settingsViewModel.RiskPercentOfAccountSize / 100;
                 return maxCapital * _data.ExchangeRate * _riskMultiplier;
             }

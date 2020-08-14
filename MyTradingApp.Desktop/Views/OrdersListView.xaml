@@ -39,7 +39,7 @@
             Command="{Binding StartStopStreamingCommand}"
             Content="{Binding StreamingButtonCaption}" />
 
-        <ListView ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder}">
+        <ListView ItemsSource="{Binding Orders}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="Focusable" Value="false" />
