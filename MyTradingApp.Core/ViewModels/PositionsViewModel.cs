@@ -436,22 +436,8 @@ namespace MyTradingApp.Core.ViewModels
                 var positions = await _accountManager.RequestPositionsAsync();
                 StatusText = "Stopping streaming";
                 StopStreaming();
-                Positions.Clear();
-
-                foreach (var item in positions)
-                {
-                    Positions.Add(item);
-                    if (item.IsOpen && item.Contract != null)
-                    {
-                        var symbol = item.Contract.Symbol;
-                        Log.Debug("Requesting streaming price for position {0}", symbol);
-                        //                    ModifyContractForRequest(item.Contract);                    
-                        var newContract = MapContractToNewContract(item.Contract);
-
-                        await RequestStreamingAsync(symbol, newContract);
-                        //positionsStopService.Manage(item);
-                    }
-                }
+                
+                await IteratePositionsAsync(positions);
 
                 // Get associated stop orders
                 StatusText = "Getting associated stop orders";
@@ -465,13 +451,37 @@ namespace MyTradingApp.Core.ViewModels
             catch
             {
                 // TODO: Show error to user
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+
                 throw;
             }
             finally
             {
                 IsLoading = false;
             }
-        }       
+        }
+
+        private async Task IteratePositionsAsync(IEnumerable<PositionItem> positions)
+        {
+            Positions.Clear();
+            foreach (var item in positions)
+            {
+                Positions.Add(item);
+                if (item.IsOpen && item.Contract != null)
+                {
+                    var symbol = item.Contract.Symbol;
+                    Log.Debug("Requesting streaming price for position {0}", symbol);
+                    //                    ModifyContractForRequest(item.Contract);                    
+                    var newContract = MapContractToNewContract(item.Contract);
+
+                    await RequestStreamingAsync(symbol, newContract);
+                    //positionsStopService.Manage(item);
+                }
+            }
+        }
 
         public async Task GetPositionForSymbolAsync(string symbol)
         {

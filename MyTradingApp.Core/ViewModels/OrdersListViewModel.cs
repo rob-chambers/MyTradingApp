@@ -166,7 +166,7 @@ namespace MyTradingApp.Core.ViewModels
         {
             var order = _newOrderViewModelFactory.Create();
             order.ProcessFindCommandResults(symbol, results);
-            Orders.Add(order);
+            Orders.Insert(0, order);
 
             if (IsStreaming)
             {

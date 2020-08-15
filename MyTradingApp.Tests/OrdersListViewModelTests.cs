@@ -484,5 +484,23 @@ namespace MyTradingApp.Tests
             // Assert
             marketDataManager.DidNotReceive().StopActivePriceStreaming(Arg.Any<IEnumerable<int>>());
         }
+
+        [Fact]
+        public void WhenSubsequentOrderAddedThenAddToTopOfList()
+        {
+            // Arrange
+            var vm = GetVm();
+            var model = new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            };
+            vm.AddOrder(new Symbol { Code = "AMZN" }, model);
+
+            // Act
+            vm.AddOrder(new Symbol { Code = "MSFT" }, model);
+
+            // Assert
+            Assert.Equal("MSFT", vm.Orders.First().Symbol.Code);
+        }
     }
 }
