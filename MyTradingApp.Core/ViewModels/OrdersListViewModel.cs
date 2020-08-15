@@ -167,6 +167,12 @@ namespace MyTradingApp.Core.ViewModels
             var order = _newOrderViewModelFactory.Create();
             order.ProcessFindCommandResults(symbol, results);
             Orders.Add(order);
+
+            if (IsStreaming)
+            {
+                StreamSymbolAsync(order).FireAndForgetSafeAsync(new LoggingErrorHandler());
+            }
+
             DispatcherHelper.InvokeOnUiThread(() => 
             {
                 DeleteAllCommand.RaiseCanExecuteChanged();
@@ -234,6 +240,10 @@ namespace MyTradingApp.Core.ViewModels
 
         private void HandleBarPriceMessage(BarPriceMessage message)
         {
+            // TODO: Only closing price is actually set atm
+
+            //Log.Debug(message.Dump("Bar price msg"));
+
             if (!IsStreaming)
             {
                 // It wasn't us that triggered the event

@@ -316,6 +316,32 @@ namespace MyTradingApp.Tests
         }
 
         [Fact]
+        public async Task WhenAlreadyStreamingAndNewOrderAddedStartStreamingNewSymbol()
+        {
+            const string Symbol = "TSLA";
+
+            var marketDataManager = Substitute.For<IMarketDataManager>();
+            var vm = GetVm(marketDataManager: marketDataManager);
+
+            vm.AddOrder(new Symbol { Code = "MSFT" }, new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+
+            // Act
+            await vm.StartStopStreamingCommand.ExecuteAsync();
+            vm.AddOrder(new Symbol { Code = Symbol }, new FindCommandResultsModel
+            {
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            });
+
+            // Assert
+            await marketDataManager.Received().RequestStreamingPriceAsync(Arg.Is<Contract>(x =>
+                x.Symbol == Symbol &&
+                x.SecType == BrokerConstants.Stock));
+        }
+
+        [Fact]
         public async Task WhenStreamingStoppedMarketDataRequestIsCancelledAsync()
         {
             const string Symbol = "MSFT";

@@ -448,10 +448,7 @@ namespace MyTradingApp.Core.ViewModels
                         //                    ModifyContractForRequest(item.Contract);                    
                         var newContract = MapContractToNewContract(item.Contract);
 
-                        StatusText = $"Starting streaming for {symbol}";
-                        var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract);
-                        _tickerIds.Add(symbol, tickerId);
-
+                        await RequestStreamingAsync(symbol, newContract);
                         //positionsStopService.Manage(item);
                     }
                 }
@@ -474,7 +471,7 @@ namespace MyTradingApp.Core.ViewModels
             {
                 IsLoading = false;
             }
-        }
+        }       
 
         public async Task GetPositionForSymbolAsync(string symbol)
         {
@@ -505,10 +502,7 @@ namespace MyTradingApp.Core.ViewModels
                     //                    ModifyContractForRequest(item.Contract);                    
                     var newContract = MapContractToNewContract(item.Contract);
 
-                    StatusText = $"Starting streaming for {symbol}";
-                    var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract);
-                    _tickerIds.Add(symbol, tickerId);
-
+                    await RequestStreamingAsync(symbol, newContract);
                     //positionsStopService.Manage(item);
                 }
 
@@ -532,6 +526,31 @@ namespace MyTradingApp.Core.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        private async Task RequestStreamingAsync(string symbol, Contract newContract)
+        {
+            StatusText = $"Starting streaming for {symbol}";
+            var retryCount = 0;
+            bool hadException;
+
+            do
+            {
+                try
+                {
+                    Log.Debug("In RequestStreamingAsync for {0}", symbol);
+                    hadException = false;
+                    var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract).ConfigureAwait(false);
+                    _tickerIds.Add(symbol, tickerId);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Handling the following exception by retrying.  Retry count={0}\n{1}", retryCount, ex);
+                    hadException = true;
+                    retryCount++;
+                    await Task.Delay(10);
+                }
+            } while (hadException && retryCount < 3);
         }
     }
 }

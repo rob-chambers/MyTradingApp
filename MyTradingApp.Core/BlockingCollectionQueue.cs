@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -29,7 +30,15 @@ namespace MyTradingApp.Core
         {
             foreach (var job in _jobs.GetConsumingEnumerable(CancellationToken.None))
             {
-                job.Invoke();
+                try
+                {
+                    job.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("An error occurred invoking a job on the queue processor.\n{0}", ex);
+                    throw;
+                }
             }
         }
     }

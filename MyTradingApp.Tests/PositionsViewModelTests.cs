@@ -486,6 +486,7 @@ namespace MyTradingApp.Tests
             {
                 new OpenOrderEventArgs(1, contract, order, new OrderState())
             };
+            
             positionManager.RequestOpenOrdersAsync().Returns(orders);
 
             var vm = GetPositionForSymbolTest(item, marketDataManager, positionManager, contractManager);

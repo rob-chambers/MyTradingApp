@@ -19,6 +19,7 @@ namespace MyTradingApp.Core.Services
         private readonly ITwsObjectFactory _twsObjectFactory;
         private readonly Dictionary<string, Domain.Bar> _prices = new Dictionary<string, Domain.Bar>();
         private readonly Dictionary<string, double> _oneOffPrices = new Dictionary<string, double>();
+        private readonly object _locker = new object();
         private TickPriceEventArgs _tickPriceEventArgs;
         private bool _tickHandlerAttached;
 
@@ -31,14 +32,18 @@ namespace MyTradingApp.Core.Services
         {
             Log.Debug("Requesting streaming price for {0}", contract.Symbol);
 
-            if (!_tickHandlerAttached)
+            lock (_locker)
             {
-                // TODO: When do we remove event handler?
-                _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
+                if (!_tickHandlerAttached)
+                {
+                    // TODO: When do we remove event handler?
+                    _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += (sender, args) => HandleTickPriceEvent(args);
+                }
             }
 
             var tick = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, "233", false, false, null);
             Log.Debug("Ticker id for {0}: {1}", contract.Symbol, tick.TickerId);
+            _activeRequests.Add(tick.TickerId, new Tuple<Contract, bool>(contract, true));
 
             return tick.TickerId;
         }
@@ -46,10 +51,14 @@ namespace MyTradingApp.Core.Services
         public async Task<double> RequestLatestPriceAsync(Contract contract)
         {
             Log.Debug("Requesting Latest Price");
-            if (!_tickHandlerAttached)
+
+            lock (_locker)
             {
-                _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
-                _tickHandlerAttached = true;
+                if (!_tickHandlerAttached)
+                {
+                    _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += (sender, args) => HandleTickPriceEvent(args);
+                    _tickHandlerAttached = true;
+                }
             }
 
             var result = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
@@ -104,8 +113,10 @@ namespace MyTradingApp.Core.Services
             }
         }
 
-        private void OnTickPriceEvent(object sender, TickPriceEventArgs args)
+        protected void HandleTickPriceEvent(TickPriceEventArgs args)
         {
+            //Log.Debug(args.Dump("Tick event fired"));
+
             _tickPriceEventArgs = args;
             if (!_activeRequests.ContainsKey(args.TickerId))
             {
@@ -113,12 +124,11 @@ namespace MyTradingApp.Core.Services
                 return;
             }
 
-            var request = _activeRequests[args.TickerId];
-            var symbol = request.Item1.Symbol;
+            var (contract, isStreaming) = _activeRequests[args.TickerId];
+            var symbol = contract.Symbol;
 
-            if (request.Item2)
+            if (isStreaming)
             {
-                // Streaming request
                 if (!_prices.ContainsKey(symbol))
                 {
                     _prices.Add(symbol, new Domain.Bar
