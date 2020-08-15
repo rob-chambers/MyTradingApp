@@ -15,7 +15,7 @@ namespace MyTradingApp.Core.ViewModels
             Messenger.Default.Register<OrderSelectionChangedMessage>(this, msg => Selection = msg.Order);
         }
 
-        public RelayCommand CloseDetailsCommand => _closeDetailsCommand ?? (_closeDetailsCommand = new RelayCommand(CloseDetails));
+        public RelayCommand CloseDetailsCommand => _closeDetailsCommand ??= new RelayCommand(CloseDetails);
 
         public NewOrderViewModel Selection
         {

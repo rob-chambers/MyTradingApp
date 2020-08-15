@@ -53,11 +53,7 @@ namespace MyTradingApp.Core.ViewModels
 
         public ObservableCollectionNoReset<NewOrderViewModel> Orders { get; private set; }
 
-        public CommandBase<NewOrderViewModel> DeleteCommand
-        {
-            get
-            {
-                return _deleteCommand ?? (_deleteCommand = new CommandBase<NewOrderViewModel>(DispatcherHelper,
+        public CommandBase<NewOrderViewModel> DeleteCommand => _deleteCommand ??= new CommandBase<NewOrderViewModel>(DispatcherHelper,
                     order =>
                     {
                         if (Orders.Contains(order))
@@ -70,17 +66,9 @@ namespace MyTradingApp.Core.ViewModels
                             });
                         }
                     },
-                    order => CanDelete(order)));
-            }
-        }
+                    order => CanDelete(order));
 
-        public CommandBase DeleteAllCommand
-        {
-            get
-            {
-                return _deleteAllCommand ?? (_deleteAllCommand = new CommandBase(DispatcherHelper, DeleteAll, () => Orders.Any()));
-            }
-        }
+        public CommandBase DeleteAllCommand => _deleteAllCommand ??= new CommandBase(DispatcherHelper, DeleteAll, () => Orders.Any());
 
         public bool IsStreaming
         {
@@ -88,7 +76,6 @@ namespace MyTradingApp.Core.ViewModels
             private set
             {
                 Set(ref _isStreaming, value);
-                //Messenger.Default.Send(new StreamingChangedMessage(value));
                 RaisePropertyChanged(nameof(StreamingButtonCaption));
             }
         }
@@ -97,30 +84,14 @@ namespace MyTradingApp.Core.ViewModels
             ? StreamingButtonCaptions.StopStreaming 
             : StreamingButtonCaptions.StartStreaming;
 
-        public AsyncCommand StartStopStreamingCommand
-        {
-            get
-            {
-                return _startStopStreamingCommand ??
-                    (_startStopStreamingCommand = new AsyncCommand(DispatcherHelper, StartStopStreamingAsync, CanStartStopStreaming));
-            }
-        }
+        public AsyncCommand StartStopStreamingCommand => _startStopStreamingCommand ??= new AsyncCommand(DispatcherHelper, TryStartStopStreamingAsync, CanStartStopStreaming);
 
-        private async Task StartStopStreamingAsync()
+        private async Task TryStartStopStreamingAsync()
         {
             var isStreaming = IsStreaming;
             try
             {
-                IsStreaming = !IsStreaming;
-                DispatcherHelper.InvokeOnUiThread(() => StartStopStreamingCommand.RaiseCanExecuteChanged());
-                if (IsStreaming)
-                {
-                    await GetMarketDataAsync().ConfigureAwait(false);
-                }
-                else
-                {
-                    CancelStreaming();
-                }
+                await DoStartStopStreamingAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -129,10 +100,18 @@ namespace MyTradingApp.Core.ViewModels
             }
         }
 
-        private void CancelStreaming()
+        private async Task DoStartStopStreamingAsync()
         {
-            _marketDataManager.StopActivePriceStreaming(_tickerIds.Values);
-            _tickerIds.Clear();
+            IsStreaming = !IsStreaming;
+            DispatcherHelper.InvokeOnUiThread(() => StartStopStreamingCommand.RaiseCanExecuteChanged());
+            if (IsStreaming)
+            {
+                await GetMarketDataAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                CancelStreaming();
+            }
         }
 
         private async Task GetMarketDataAsync()
@@ -146,6 +125,12 @@ namespace MyTradingApp.Core.ViewModels
             var contract = item.Symbol.ToContract();
             var tickerId = await _marketDataManager.RequestStreamingPriceAsync(contract);
             _tickerIds.Add(contract.Symbol, tickerId);
+        }
+
+        private void CancelStreaming()
+        {
+            _marketDataManager.StopActivePriceStreaming(_tickerIds.Values);
+            _tickerIds.Clear();
         }
 
         private bool CanStartStopStreaming()
@@ -182,15 +167,8 @@ namespace MyTradingApp.Core.ViewModels
 
         private void OnOrderStatusChangedMessage(OrderStatusChangedMessage message)
         {
-            // Find corresponding order
-            var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId);
+            var order = Orders.SingleOrDefault(o => o.Id == message.Message.OrderId && o.Status == OrderStatus.Filled);
             if (order == null)
-            {
-                // Most likely an existing pending order (i.e. one that wasn't submitted via this app while it is currently open)
-                return;
-            }
-
-            if (order.Status != OrderStatus.Filled)
             {
                 return;
             }
@@ -250,20 +228,36 @@ namespace MyTradingApp.Core.ViewModels
                 return;
             }
 
-            var orders = Orders.Where(o => o.Symbol.Code == message.Symbol).ToList();
-            if (!orders.Any())
+            var order = GetOrderForSymbol(message.Symbol);
+            if (order == null)
             {
                 return;
             }
 
-            if (orders.Count > 1)
+            ApplyLatestPriceToOrder(order, message);
+        }
+
+        private NewOrderViewModel GetOrderForSymbol(string symbol)
+        {
+            var orders = Orders.Where(o => o.Symbol.Code == symbol).ToList();
+            if (!orders.Any())
             {
-                Log.Warning("Found more than one order for {0} - taking the first", message.Symbol);
+                return null;
             }
 
-            var order = orders.First();
-            order.Symbol.LatestPrice = message.Bar.Close;
-            order.CalculateOrderDetails(message.Bar.Close);
+            if (orders.Count > 1)
+            {
+                Log.Warning("Found more than one order for {0} - taking the first", symbol);
+            }
+
+            return orders.First();
+        }
+
+        private static void ApplyLatestPriceToOrder(NewOrderViewModel order, BarPriceMessage message)
+        {
+            var price = message.Bar.Close;
+            order.Symbol.LatestPrice = price;
+            order.CalculateOrderDetails(price);
         }
 
         private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

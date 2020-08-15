@@ -96,13 +96,13 @@ namespace MyTradingApp.Core.ViewModels
 
         #region Commands
 
-        public ICommand ClearCommand => _clearCommand ?? (_clearCommand = new RelayCommand(new Action(ClearLog)));
+        public ICommand ClearCommand => _clearCommand ??= new RelayCommand(new Action(ClearLog));
 
-        public AsyncCommand ConnectCommand => _connectCommand ?? (_connectCommand = new AsyncCommand(DispatcherHelper, ToggleConnectionAsync, () => !IsBusy, DefaultErrorHandler));
+        public AsyncCommand ConnectCommand => _connectCommand ??= new AsyncCommand(DispatcherHelper, ToggleConnectionAsync, () => !IsBusy, DefaultErrorHandler);
 
         #endregion
 
-        private IErrorHandler DefaultErrorHandler => _defaultErrorHandler ?? (_defaultErrorHandler = new DefaultErrorHandler());
+        private IErrorHandler DefaultErrorHandler => _defaultErrorHandler ??= new DefaultErrorHandler();
 
         public ObservableCollection<MenuItemViewModel> MenuItems
         {

@@ -93,6 +93,9 @@ namespace MyTradingApp.Tests
                 }
             };
 
+            // Wait for settings to load
+            await Task.Delay(25);
+
             // Act
             await vm.ConnectCommand.ExecuteAsync();
 

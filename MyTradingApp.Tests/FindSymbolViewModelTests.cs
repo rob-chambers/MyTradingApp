@@ -29,7 +29,7 @@ namespace MyTradingApp.Tests
                 });
 
             var queueProcessor = Substitute.For<IQueueProcessor>();
-            findSymbolService = findSymbolService ?? Substitute.For<IFindSymbolService>();
+            findSymbolService ??= Substitute.For<IFindSymbolService>();
             var factory = Substitute.For<INewOrderViewModelFactory>();
 
             var orderCalculationService = Substitute.For<IOrderCalculationService>();

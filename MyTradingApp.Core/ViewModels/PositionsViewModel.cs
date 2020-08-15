@@ -26,8 +26,6 @@ namespace MyTradingApp.Core.ViewModels
         private bool _isLoading;
         private string _statusText;
 
-        public ObservableCollectionNoReset<PositionItem> Positions { get; }
-
         public PositionsViewModel(
             IDispatcherHelper dispatcherHelper,
             IMarketDataManager marketDataManager,
@@ -50,6 +48,11 @@ namespace MyTradingApp.Core.ViewModels
             _contractManager = contractManager;
             _queueProcessor = queueProcessor;
             _tradeRecordingService = tradeRecordingService;
+        }
+
+        public ObservableCollectionNoReset<PositionItem> Positions
+        {
+            get;
         }
 
         public bool IsLoading
@@ -169,41 +172,64 @@ namespace MyTradingApp.Core.ViewModels
             });
         }
 
-        private async Task ProcessOpenOrdersAsync(IEnumerable<OpenOrderEventArgs> orders)
+        private void ProcessOpenOrders(IEnumerable<OpenOrderEventArgs> orders)
         {
-            foreach (var order in orders.Where(o => o.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
-                o.Order.OrderType == BrokerConstants.OrderTypes.Trail))
+            foreach (var order in orders.Where(o => IsStopOrder(o)))
             {
-                if (order.OrderId == 0)
-                {
-                    // This order was not submitted via this app.  As we don't have an ID, we can't manage the position
-                    Log.Warning(order.Dump("Order without an id"));
-                    continue;
-                }
-
-                var symbol = order.Contract.Symbol;
-                var positions = Positions.Where(x => x.Symbol.Code == symbol).ToList();
-                if (!positions.Any())
+                if (!IsValid(order))
                 {
                     continue;
                 }
 
-                if (positions.Count > 1)
+                var position = GetPositionForOrder(order);
+                if (position != null)
                 {
-                    Log.Warning("Found more than one position for {0} - taking first", symbol);
-                    if (Debugger.IsAttached)
-                    {
-                        Debugger.Break();
-                    }
+                    continue;
                 }
 
-                var position = positions.First();
-                position.Contract = order.Contract;
-                position.Order = order.Order;
+                ProcessOrder(position, order);
+            }
+        }
+
+        private static void ProcessOrder(PositionItem position, OpenOrderEventArgs order)
+        {
+            position.Contract = order.Contract;
+            position.Order = order.Order;
+        }
+
+        private static bool IsValid(OpenOrderEventArgs order)
+        {
+            if (order.OrderId == 0)
+            {
+                Log.Warning(order.Dump("Order without an id"));
+                return false;
             }
 
-            // Request contract details for all positions in parallel
-            await GetContractDetailsAsync().ConfigureAwait(false);
+            return true;
+        }
+
+        private PositionItem GetPositionForOrder(OpenOrderEventArgs order)
+        {
+            var symbol = order.Contract.Symbol;
+            var positions = Positions.Where(x => x.Symbol.Code == symbol).ToList();
+            if (!positions.Any())
+            {
+                return null;
+            }
+
+            if (positions.Count > 1)
+            {
+                Log.Warning("Found more than one position for {0} - taking first", symbol);
+                DebuggerHelper.BreakIfAttached();
+            }
+
+            return positions.First();
+        }
+
+        private static bool IsStopOrder(OpenOrderEventArgs order)
+        {        
+            return order.Order.OrderType == BrokerConstants.OrderTypes.Stop ||
+                order.Order.OrderType == BrokerConstants.OrderTypes.Trail;
         }
 
         private async Task ProcessOpenOrderAsync(OpenOrderEventArgs order)
@@ -230,10 +256,7 @@ namespace MyTradingApp.Core.ViewModels
             if (positions.Count > 1)
             {
                 Log.Warning("Found more than one position for {0} - taking first", symbol);
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
+                DebuggerHelper.BreakIfAttached();
             }
 
             var position = positions.First();
@@ -381,11 +404,7 @@ namespace MyTradingApp.Core.ViewModels
             if (!Enum.TryParse<Exchange>(exchange, true, out var exchangeEnum))
             {
                 Log.Warning("Couldn't find exchange enum value {0}", exchange);
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
-
+                DebuggerHelper.BreakIfAttached();
                 return null;
             }
 
@@ -434,6 +453,7 @@ namespace MyTradingApp.Core.ViewModels
             {
                 StatusText = "Requesting positions from API";
                 var positions = await _accountManager.RequestPositionsAsync();
+
                 StatusText = "Stopping streaming";
                 StopStreaming();
                 
@@ -441,21 +461,21 @@ namespace MyTradingApp.Core.ViewModels
 
                 // Get associated stop orders
                 StatusText = "Getting associated stop orders";
-                var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+                var orders = (await _positionManager.RequestOpenOrdersAsync().ConfigureAwait(false)).ToList();
 
                 StatusText = $"Processing stop orders";
-                await ProcessOpenOrdersAsync(orders).ConfigureAwait(false);
+                ProcessOpenOrders(orders);
 
+                StatusText = "Getting contract details";
+                await GetContractDetailsAsync().ConfigureAwait(false);
+
+                StatusText = "Loading trade information from database";
                 await _tradeRecordingService.LoadTradesAsync().ConfigureAwait(false);
             }
             catch
             {
                 // TODO: Show error to user
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
-
+                DebuggerHelper.BreakIfAttached();
                 throw;
             }
             finally
@@ -489,53 +509,89 @@ namespace MyTradingApp.Core.ViewModels
 
             try
             {
-                Log.Debug("Requesting positions from TWS for symbol {0}", symbol);
-                StatusText = "Requesting positions from API";
-                var positions = await _accountManager.RequestPositionsAsync();
-                var item = positions.SingleOrDefault(p => p.Symbol.Code == symbol);
+                var item = await RequestPositionForSymbolAsync(symbol);
                 if (item == null)
                 {
-                    Log.Warning("No position found");
                     return;
                 }
 
-                if (Positions.Contains(item))
+                RemoveExistingPositionIfRequired(item);
+                InsertPosition(item);
+                if (CanStream(item))
                 {
-                    Log.Warning("Position already existed - removing");
-                    Positions.Remove(item);
+                    await StartStreamingAsync(item).ConfigureAwait(false);
                 }
 
-                Positions.Insert(0, item);
-                if (item.IsOpen && item.Contract != null)
-                {
-                    Log.Debug("Requesting streaming price for position {0}", symbol);
-                    //                    ModifyContractForRequest(item.Contract);                    
-                    var newContract = MapContractToNewContract(item.Contract);
-
-                    await RequestStreamingAsync(symbol, newContract);
-                    //positionsStopService.Manage(item);
-                }
-
-                // Get associated stop orders
-                StatusText = "Getting associated stop orders";
-                var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
-
-                var order = orders.SingleOrDefault(o => o.Contract.Symbol == symbol);
-                if (order != null)
-                {
-                    StatusText = $"Processing stop order";
-                    await ProcessOpenOrderAsync(order).ConfigureAwait(false);
-                }
+                await ProcessStopOrderAsync(symbol).ConfigureAwait(false);
             }
             catch
             {
                 // TODO: Show error to user
+                DebuggerHelper.BreakIfAttached();
                 throw;
             }
             finally
             {
                 IsLoading = false;
+                LogStatus("Finished");
             }
+        }
+
+        private async Task ProcessStopOrderAsync(string symbol)
+        {
+            LogStatus("Getting associated stop orders");
+            var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+
+            var order = orders.SingleOrDefault(o => o.Contract.Symbol == symbol);
+            if (order != null)
+            {
+                LogStatus("Processing stop order");
+                await ProcessOpenOrderAsync(order).ConfigureAwait(false);
+            }
+            else
+            {
+                Log.Warning("No stop order found for {0}", symbol);
+            }
+        }
+
+        private async Task StartStreamingAsync(PositionItem item)
+        {
+            var symbol = item.Symbol.Code;
+            Log.Debug("Requesting streaming price for position {0}", symbol);
+            var newContract = MapContractToNewContract(item.Contract);
+            await RequestStreamingAsync(symbol, newContract);
+        }
+
+        private bool CanStream(PositionItem item)
+        {
+            return item.IsOpen && item.Contract != null;
+        }
+
+        private void InsertPosition(PositionItem item)
+        {
+            Positions.Insert(0, item);
+        }
+
+        private void RemoveExistingPositionIfRequired(PositionItem item)
+        {
+            if (Positions.Contains(item))
+            {
+                Log.Warning("Position already existed - removing");
+                Positions.Remove(item);
+            }
+        }
+
+        private async Task<PositionItem> RequestPositionForSymbolAsync(string symbol)
+        {
+            LogStatus($"Requesting positions from TWS for symbol {symbol}");
+            var positions = await _accountManager.RequestPositionsAsync();
+            var item = positions.SingleOrDefault(p => p.Symbol.Code == symbol);
+            if (item == null)
+            {
+                Log.Warning("No position found");
+            }
+
+            return item;
         }
 
         private async Task RequestStreamingAsync(string symbol, Contract newContract)
@@ -561,6 +617,12 @@ namespace MyTradingApp.Core.ViewModels
                     await Task.Delay(10);
                 }
             } while (hadException && retryCount < 3);
+        }
+
+        private void LogStatus(string status)
+        {
+            Log.Debug(status);
+            StatusText = status;
         }
     }
 }

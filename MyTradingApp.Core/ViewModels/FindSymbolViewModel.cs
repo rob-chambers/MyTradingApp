@@ -54,16 +54,10 @@ namespace MyTradingApp.Core.ViewModels
 
         public OrdersListViewModel OrdersListViewModel { get; }
 
-        public AsyncCommand FindCommand
-        {
-            get
-            {
-                return _findCommand ?? (_findCommand = new AsyncCommand(
+        public AsyncCommand FindCommand => _findCommand ??= new AsyncCommand(
                     DispatcherHelper,
                     () => FindSymbolAndProcessAsync(),
-                    () => !IsBusy && !string.IsNullOrEmpty(Symbol.Code)));
-            }
-        }
+                    () => !IsBusy && !string.IsNullOrEmpty(Symbol.Code));
 
         private async Task FindSymbolAndProcessAsync()
         {

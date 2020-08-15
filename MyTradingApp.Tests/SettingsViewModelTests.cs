@@ -40,6 +40,9 @@ namespace MyTradingApp.Tests
             // Act
             vm.LastRiskMultiplier = 3;
 
+            // Wait for save on background task to complete
+            await Task.Delay(20);
+
             // Assert
             repository.Received().Update(Arg.Is<Setting>(x => x.Key == SettingsViewModel.SettingsKeys.RiskMultiplier && x.Value == "3"));
             await repository.Received().SaveAsync();

@@ -191,16 +191,10 @@ namespace MyTradingApp.Core.ViewModels
             }
         }
 
-        public AsyncCommand SubmitCommand
-        {
-            get
-            {
-                return _submitCommand ?? (_submitCommand = new AsyncCommand(
-                    DispatcherHelper, 
-                    SubmitOrderAsync, 
-                    () => Status == OrderStatus.Pending && EntryPrice > 0 && Quantity > 0));
-            }
-        }
+        public AsyncCommand SubmitCommand => _submitCommand ??= new AsyncCommand(
+                    DispatcherHelper,
+                    SubmitOrderAsync,
+                    () => Status == OrderStatus.Pending && EntryPrice > 0 && Quantity > 0);
 
         #endregion
 
