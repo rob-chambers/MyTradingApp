@@ -75,6 +75,9 @@ namespace MyTradingApp.Tests
             // Act
             vm.RiskPercentOfAccountSize = 3;
 
+            // Wait a little while for the secondary task to run
+            await Task.Delay(50);
+
             // Assert
             repository.Received().Update(Arg.Is<Setting>(x => x.Key == SettingsViewModel.SettingsKeys.RiskPercentOfAccountSize && x.Value == "3"));
             await repository.Received().SaveAsync();

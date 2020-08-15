@@ -166,11 +166,19 @@ namespace MyTradingApp.Tests
         public async Task StartingAppLoadsSettingsFromRepository()
         {
             // Arrange
-            var builder = new MainViewModelBuilder();
-            var vm = builder.Build();
+            var settingsRepository = Substitute.For<ISettingsRepository>();
+            settingsRepository.GetAllAsync().Returns(new List<Setting>());
+            var builder = new MainViewModelBuilder()
+                .WithSettingsRepository(settingsRepository);
+                      
+            // Act
+            builder.Build();
+
+            // Wait a little while for the secondary task to run
+            await Task.Delay(50);
 
             // Assert
-            await builder.SettingsRepository.Received().GetAllAsync();
+            await settingsRepository.Received().GetAllAsync();
         }
 
         [Fact]
@@ -257,6 +265,9 @@ namespace MyTradingApp.Tests
 
             // Act
             builder.Build();
+
+            // Wait a little while for the secondary task to run
+            await Task.Delay(50);
 
             // Assert
             await tradeRecordingService.Received().LoadTradesAsync();
