@@ -32,7 +32,7 @@ namespace MyTradingApp.Core.Services
 
             // Call the API
             _twsObjectFactory.TwsCallbackHandler.TickPriceEvent += OnTickPriceEvent;
-            var marketDataResult = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
+            var marketDataResult = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null).ConfigureAwait(false);
             _twsObjectFactory.TwsCallbackHandler.TickPriceEvent -= OnTickPriceEvent;
 
             return _tickPriceEventArgs == null

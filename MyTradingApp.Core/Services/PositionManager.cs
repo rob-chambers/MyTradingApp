@@ -60,10 +60,9 @@ namespace MyTradingApp.Core.Services
             }
         }
 
-        public async Task<IEnumerable<OpenOrderEventArgs>> RequestOpenOrdersAsync()
+        public Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync()
         {
-            var list = await _twsObjectFactory.TwsControllerBase.RequestOpenOrders();
-            return list;
+            return _twsObjectFactory.TwsControllerBase.RequestOpenOrders();
         }
 
         public async Task UpdateStopOrderAsync(Contract contract, Order order)
@@ -88,7 +87,7 @@ namespace MyTradingApp.Core.Services
             // We rely on the order's orderid and parentid being set
             // order.ClientId = BrokerConstants.ClientId;
 
-            Log.Debug("In UpdateStopOrderAsync");
+            Log.Debug("In {0}", nameof(UpdateStopOrderAsync));
 
             // Specifically set Transmit flag to ensure we send the order
             order.Transmit = true;

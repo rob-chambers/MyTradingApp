@@ -6,6 +6,6 @@ namespace MyTradingApp.Core.Services
 {
     public interface IContractManager
     {
-        Task<IList<ContractDetails>> RequestDetailsAsync(Contract contract);
+        Task<List<ContractDetails>> RequestDetailsAsync(Contract contract);
     }
 }

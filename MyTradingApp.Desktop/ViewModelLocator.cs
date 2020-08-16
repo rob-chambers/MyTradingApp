@@ -27,7 +27,7 @@ namespace MyTradingApp.Desktop
         /// </summary>
         public ViewModelLocator()
         {
-            Log.Debug("In ViewModelLocator ctor");
+            Log.Debug("In {0} ctor", nameof(ViewModelLocator));
 
             var isDesignTime = ViewModelBase.IsInDesignModeStatic;
             var serviceCollection = new ServiceCollection();

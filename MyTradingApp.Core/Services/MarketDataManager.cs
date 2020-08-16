@@ -41,7 +41,7 @@ namespace MyTradingApp.Core.Services
                 }
             }
 
-            var tick = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, "233", false, false, null);
+            var tick = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, "233", false, false, null).ConfigureAwait(false);
             Log.Debug("Ticker id for {0}: {1}", contract.Symbol, tick.TickerId);
             _activeRequests.Add(tick.TickerId, new Tuple<Contract, bool>(contract, true));
 
@@ -61,7 +61,7 @@ namespace MyTradingApp.Core.Services
                 }
             }
 
-            var result = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null);
+            var result = await _twsObjectFactory.TwsControllerBase.RequestMarketDataAsync(contract, string.Empty, true, false, null).ConfigureAwait(false);
             Log.Debug("Ticker assigned to {0} = {1}", contract.Symbol, result.TickerId);
             _activeRequests.Add(result.TickerId, new Tuple<Contract, bool>(contract, false));
 

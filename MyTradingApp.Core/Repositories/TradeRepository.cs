@@ -15,18 +15,18 @@ namespace MyTradingApp.Core.Repositories
         {
         }
 
-        public async Task AddExitAsync(Exit exit)
+        public Task AddExitAsync(Exit exit)
         {
             Log.Information("Adding exit");
             Context.Trades.Attach(exit.Trade);
             Context.Exits.Add(exit);
-            await Context.SaveChangesAsync().ConfigureAwait(false);
+            return Context.SaveChangesAsync();
         }
 
-        public async Task AddTradeAsync(Trade trade)
+        public Task AddTradeAsync(Trade trade)
         {
             Context.Trades.Add(trade);
-            await Context.SaveChangesAsync().ConfigureAwait(false);
+            return Context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Trade>> GetAllOpenAsync()
@@ -37,10 +37,10 @@ namespace MyTradingApp.Core.Repositories
             return await trades.ToListAsync();
         }
 
-        public async Task UpdateAsync(Trade trade)
+        public Task UpdateAsync(Trade trade)
         {
             Context.Trades.Attach(trade);
-            await Context.SaveChangesAsync().ConfigureAwait(false);
+            return Context.SaveChangesAsync();
         }
     }
 }

@@ -38,11 +38,11 @@ namespace MyTradingApp.Core.Services
             var exit = new Exit { Trade = trade };
             MapMessageDetails(exit, message);
 
-            await _tradeRepository.AddExitAsync(exit);
+            await _tradeRepository.AddExitAsync(exit).ConfigureAwait(false);
 
             if (!AnyRemainingShares(message))
             {
-                await CloseOpenTradeAsync(trade, message);
+                await CloseOpenTradeAsync(trade, message).ConfigureAwait(false);
             }
         }
 
@@ -58,13 +58,13 @@ namespace MyTradingApp.Core.Services
             return message.Message.Remaining != 0;
         }
 
-        private async Task CloseOpenTradeAsync(Trade trade, OrderStatusChangedMessage message)
+        private Task CloseOpenTradeAsync(Trade trade, OrderStatusChangedMessage message)
         {
             trade.ExitTimeStamp = DateTime.UtcNow;
             trade.ExitPrice = message.Message.AvgFillPrice;
             trade.ProfitLoss = trade.CalculateProfitLoss();
 
-            await _tradeRepository.UpdateAsync(trade);
+            return _tradeRepository.UpdateAsync(trade);
         }
     }
 }

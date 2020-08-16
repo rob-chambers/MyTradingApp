@@ -174,6 +174,11 @@ namespace MyTradingApp.Core.ViewModels
 
         private void ProcessOpenOrders(IEnumerable<OpenOrderEventArgs> orders)
         {
+            if (orders == null)
+            {
+                return;
+            }
+
             foreach (var order in orders.Where(o => IsStopOrder(o)))
             {
                 if (!IsValid(order))
@@ -272,7 +277,7 @@ namespace MyTradingApp.Core.ViewModels
             Log.Debug("Getting contract details for all positions in parallel");
             var sw = Stopwatch.StartNew();
 
-            var getContractDetailTasks = new List<Task<IList<ContractDetails>>>();
+            var getContractDetailTasks = new List<Task<List<ContractDetails>>>();
             foreach (var item in Positions.Where(p => p.Contract != null))
             {
                 var newContract = MapContractToNewContract(item.Contract);
@@ -297,7 +302,7 @@ namespace MyTradingApp.Core.ViewModels
             HandleContractDetails(detailsList);
         }
 
-        private void HandleContractDetails(IList<ContractDetails> details)
+        private void HandleContractDetails(List<ContractDetails> details)
         {
             if (!details.Any())
             {
@@ -461,7 +466,7 @@ namespace MyTradingApp.Core.ViewModels
 
                 // Get associated stop orders
                 StatusText = "Getting associated stop orders";
-                var orders = (await _positionManager.RequestOpenOrdersAsync().ConfigureAwait(false)).ToList();
+                var orders = await _positionManager.RequestOpenOrdersAsync().ConfigureAwait(false);
 
                 StatusText = $"Processing stop orders";
                 ProcessOpenOrders(orders);
@@ -540,7 +545,7 @@ namespace MyTradingApp.Core.ViewModels
         private async Task ProcessStopOrderAsync(string symbol)
         {
             LogStatus("Getting associated stop orders");
-            var orders = (await _positionManager.RequestOpenOrdersAsync()).ToList();
+            var orders = await _positionManager.RequestOpenOrdersAsync();
 
             var order = orders.SingleOrDefault(o => o.Contract.Symbol == symbol);
             if (order != null)
@@ -604,7 +609,7 @@ namespace MyTradingApp.Core.ViewModels
             {
                 try
                 {
-                    Log.Debug("In RequestStreamingAsync for {0}", symbol);
+                    Log.Debug("In {0} for {1}", nameof(RequestStreamingAsync), symbol);
                     hadException = false;
                     var tickerId = await _marketDataManager.RequestStreamingPriceAsync(newContract).ConfigureAwait(false);
                     _tickerIds.Add(symbol, tickerId);

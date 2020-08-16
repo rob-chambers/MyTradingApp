@@ -19,10 +19,16 @@ namespace MyTradingApp.Core.Services
             _twsObjectFactory = twsObjectFactory;
         }
 
-        public async Task<List<HistoricalDataEventArgs>> GetHistoricalDataAsync(Contract contract, DateTime endDateTime, TwsDuration duration, TwsBarSizeSetting barSizeSetting, TwsHistoricalDataRequestType whatToShow, bool useRegularTradingHours = true, bool formatDate = true)
+        public Task<List<HistoricalDataEventArgs>> GetHistoricalDataAsync(
+            Contract contract, 
+            DateTime endDateTime, 
+            TwsDuration duration, 
+            TwsBarSizeSetting barSizeSetting, 
+            TwsHistoricalDataRequestType whatToShow, 
+            bool useRegularTradingHours = true, 
+            bool formatDate = true)
         {
-            var historicalDataEvents = await _twsObjectFactory.TwsController.GetHistoricalDataAsync(contract, endDateTime, duration, barSizeSetting, whatToShow, useRegularTradingHours, formatDate);
-            return historicalDataEvents;
+            return _twsObjectFactory.TwsController.GetHistoricalDataAsync(contract, endDateTime, duration, barSizeSetting, whatToShow, useRegularTradingHours, formatDate);
         }
     }
 }

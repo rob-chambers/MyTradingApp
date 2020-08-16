@@ -7,7 +7,7 @@ namespace MyTradingApp.Core.Services
 {
     public interface IPositionManager
     {
-        Task<IEnumerable<OpenOrderEventArgs>> RequestOpenOrdersAsync();
+        Task<List<OpenOrderEventArgs>> RequestOpenOrdersAsync();
 
         Task UpdateStopOrderAsync(Contract contract, Order order);
     }

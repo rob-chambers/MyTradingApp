@@ -47,7 +47,9 @@ namespace MyTradingApp.Core.Services
         public async Task ConnectAsync()
         {
             if (IsConnected)
+            {
                 return;
+            }
 
             try
             {

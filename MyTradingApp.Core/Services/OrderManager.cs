@@ -31,12 +31,12 @@ namespace MyTradingApp.Core.Services
                 _isEventHandlerRegistered = true;
             }
 
-            var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync();
+            var id = await _twsObjectFactory.TwsController.GetNextValidIdAsync().ConfigureAwait(false);
 
             order.ClientId = BrokerConstants.ClientId;
             order.OrderId = id;
             _orders.Add(id, contract.Symbol);
-            var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order);
+            var acknowledged = await _twsObjectFactory.TwsController.PlaceOrderAsync(id, contract, order).ConfigureAwait(false);
             if (!acknowledged)
             {
                 Log.Warning("New order ({0}) not acknowledged", id);

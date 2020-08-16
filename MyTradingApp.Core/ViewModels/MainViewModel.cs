@@ -83,11 +83,38 @@ namespace MyTradingApp.Core.ViewModels
             Task.Run(() => _settingsViewModel.LoadSettingsAsync())
                 .ContinueWith(t =>
                 {
-                    RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
-                    var handler = new LoggingErrorHandler();
-                    _tradeRecordingService.LoadTradesAsync().FireAndForgetSafeAsync(handler);
+                    HandleLoadSettingsTaskResult(t);
                 })
                 .ConfigureAwait(false);
+        }
+
+        private void HandleLoadSettingsTaskResult(Task t)
+        {
+            RiskMultiplier = _settingsViewModel.LastRiskMultiplier;
+            LoadExistingTrades();
+
+            if (!t.IsFaulted)
+            {
+                return;
+            }
+
+            NotifyError(t.Exception);
+        }
+
+        private void NotifyError(Exception exception)
+        {
+            DispatcherHelper.InvokeOnUiThread(() =>
+            {
+                Log.Error("Error loading settings\n{0}", exception);
+                var notification = "Error loading settings";
+                Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Error, notification));
+            });
+        }
+
+        private void LoadExistingTrades()
+        {
+            var handler = new LoggingErrorHandler();
+            _tradeRecordingService.LoadTradesAsync().FireAndForgetSafeAsync(handler);
         }
 
         #endregion
@@ -337,15 +364,13 @@ namespace MyTradingApp.Core.ViewModels
                     await _connectionService.ConnectAsync();
                     SetConnectionStatus();
 
-                    await _riskCalculationService.RequestDataForCalculationAsync().ConfigureAwait(false);
+                    await Task.WhenAll(_riskCalculationService.RequestDataForCalculationAsync(), PositionsViewModel.GetPositionsAsync()).ConfigureAwait(false);
                     CalculateRiskPerTrade();
-
-                    await PositionsViewModel.GetPositionsAsync();
                 }
             }
             catch (Exception ex)
             {
-                Log.Error("Error in ToggleConnectionAsync:\n{0}", ex);
+                Log.Error("Error in {0}:\n{1}", nameof(ToggleConnectionAsync), ex);
                 DispatcherHelper.InvokeOnUiThread(() =>
                 {
                     var notification = $"Error during initialisation upon connection:\n{ex.Message}";

@@ -14,9 +14,9 @@ namespace MyTradingApp.Core.Services
             _twsObjectFactory = twsObjectFactory;
         }
 
-        public async Task<IList<ContractDetails>> RequestDetailsAsync(Contract contract)
+        public Task<List<ContractDetails>> RequestDetailsAsync(Contract contract)
         {
-            return await _twsObjectFactory.TwsController.GetContractAsync(contract);
+            return _twsObjectFactory.TwsController.GetContractAsync(contract);
         }
     }
 }

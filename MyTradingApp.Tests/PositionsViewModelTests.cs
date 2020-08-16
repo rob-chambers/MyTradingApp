@@ -33,11 +33,13 @@ namespace MyTradingApp.Tests
             if (positionManager == null)
             {
                 positionManager = Substitute.For<IPositionManager>();
+                positionManager.RequestOpenOrdersAsync().Returns(Task.FromResult(new List<OpenOrderEventArgs>()));
             }
 
             if (contractManager == null)
             {
                 contractManager = Substitute.For<IContractManager>();
+                contractManager.RequestDetailsAsync(Arg.Any<Contract>()).Returns(Task.FromResult(new List<ContractDetails>()));
             }
 
             var queueProcessor = Substitute.For<IQueueProcessor>();
