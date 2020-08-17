@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:MyTradingApp.Desktop.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:domain="clr-namespace:MyTradingApp.Domain;assembly=MyTradingApp.Domain"
     xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:MyTradingApp.Desktop.Views"
@@ -158,9 +159,33 @@
             Grid.Row="4"
             MinHeight="30"
             DataContext="{Binding StatusBar, Source={StaticResource Locator}}">
+
             <StatusBarItem Content="{Binding ConnectionStatusText, Mode=OneWay}" />
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
+                    <StackPanel Margin="50,0" Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AccountType}" Value="{x:Static domain:AccountType.Real}">
+                                        <Setter Property="Background" Value="Lime" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Padding="6,0" Text="{Binding AccountTypeContent, Mode=OneWay}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AccountType}" Value="{x:Static domain:AccountType.Real}">
+                                            <Setter Property="Foreground" Value="Black" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+
                     <TextBlock Text="Available Funds: " />
                     <TextBlock Width="100" Text="{Binding NetLiquidation, Mode=OneWay}" />
 

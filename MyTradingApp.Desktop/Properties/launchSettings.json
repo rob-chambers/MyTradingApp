@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "MyTradingApp.Desktop": {
+      "commandName": "Project"
+    }
+  }
+}

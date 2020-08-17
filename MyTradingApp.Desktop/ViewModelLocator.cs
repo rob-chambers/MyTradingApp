@@ -34,6 +34,20 @@ namespace MyTradingApp.Desktop
             ConfigureServices(serviceCollection, isDesignTime);
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
+
+            EnsureDatabaseIsCreated();
+        }
+
+        private void EnsureDatabaseIsCreated()
+        {
+            var config = _serviceProvider.GetService<IConfiguration>();
+            if (config.GetValue<AccountType>(Domain.Settings.AccountType) == AccountType.Paper)
+            {
+                return;
+            }
+
+            var context = _serviceProvider.GetService<IApplicationContext>();
+            context.Database.Migrate();
         }
 
         public MainViewModel Main => _serviceProvider.GetService<MainViewModel>();
@@ -50,13 +64,13 @@ namespace MyTradingApp.Desktop
 
         public DetailsViewModel Details => _serviceProvider.GetService<DetailsViewModel>();
 
-        private static void ConfigureServices(IServiceCollection services, bool isDesignTime)
+        private void ConfigureServices(IServiceCollection services, bool isDesignTime)
         {
             Log.Debug("Configuring services");
 
             var app = (App)Application.Current;
             if (!isDesignTime)
-            {                
+            {
                 var connectionString = ConfigurationExtensions.GetConnectionString(app.Configuration, "DefaultConnection");
                 services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
                 services.AddSingleton<IApplicationContext, ApplicationContext>();
@@ -82,7 +96,7 @@ namespace MyTradingApp.Desktop
             services.AddScoped<IExchangeRateService, ExchangeRateService>();
             services.AddScoped<ITradeRepository, TradeRepository>();
             services.AddScoped<ISettingsRepository, SettingsRepository>();
-            services.AddSingleton<ITwsObjectFactory>(new TwsObjectFactory("127.0.0.1", 7497, BrokerConstants.ClientId));
+            services.AddSingleton((ITwsObjectFactory)GetTwsObjectFactory());
             services.AddScoped<IDispatcherHelper, DispatcherHelper>();
             services.AddScoped<IQueueProcessor, BlockingCollectionQueue>();
             services.AddScoped<IFindSymbolService, FindSymbolService>();
@@ -90,6 +104,16 @@ namespace MyTradingApp.Desktop
             services.AddScoped(x => app.Configuration);
             services.AddScoped<IRiskCalculationService, RiskCalculationService>();
             services.AddScoped<ITradeRecordingService, TradeRecordingService>();
+        }
+
+        private TwsObjectFactory GetTwsObjectFactory()
+        {
+            return new TwsObjectFactory("127.0.0.1", GetPort(), BrokerConstants.ClientId);
+        }
+
+        private int GetPort()
+        {
+            return ((App)Application.Current).Configuration.GetValue<int>(Domain.Settings.Port);
         }
     }
 }

@@ -4,6 +4,7 @@ using Serilog;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 
@@ -24,7 +25,9 @@ namespace MyTradingApp.Desktop
             InitGlobalExceptionHandler();
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                .AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true);
+
+            CheckForProductionEnvironment(e, builder);
 
             Log.Debug("Building config");
             Configuration = builder.Build();
@@ -32,6 +35,24 @@ namespace MyTradingApp.Desktop
             var mainWindow = new MainWindow();
             mainWindow.Show();
             Log.Debug($"Starting up took {sw.ElapsedMilliseconds}ms");
+        }
+
+        private static void CheckForProductionEnvironment(StartupEventArgs e, IConfigurationBuilder builder)
+        {
+            var prodArgs = e.Args
+                .Where(a => a.Equals("/Production", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (prodArgs.Any())
+            {
+                AddProductionSettings(builder);
+            }
+        }
+
+        private static IConfigurationBuilder AddProductionSettings(IConfigurationBuilder builder)
+        {
+            builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            return builder;
         }
 
         private static void InitLogging()

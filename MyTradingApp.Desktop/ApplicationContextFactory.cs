@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using MyTradingApp.Core.Persistence;
+using MyTradingApp.Domain;
 using System.IO;
 
 namespace MyTradingApp.Desktop
@@ -19,7 +20,7 @@ namespace MyTradingApp.Desktop
 
             var configuration = builder.Build();
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-            var connectionString = ConfigurationExtensions.GetConnectionString(configuration, "DefaultConnection");
+            var connectionString = ConfigurationExtensions.GetConnectionString(configuration, Settings.DefaultConnection);
             optionsBuilder.UseSqlServer(connectionString);
 
             return new ApplicationContext(optionsBuilder.Options);

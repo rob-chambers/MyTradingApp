@@ -21,7 +21,7 @@ namespace MyTradingApp.Core.Services
         public AccountManager(ITwsObjectFactory twsObjectFactory, IConfiguration configuration)
         {
             _twsObjectFactory = twsObjectFactory;
-            _accountId = configuration.GetValue<string>("AccountId");
+            _accountId = configuration.GetValue<string>(Settings.AccountId);
         }
 
         public async Task<AccountSummary> RequestAccountSummaryAsync()
