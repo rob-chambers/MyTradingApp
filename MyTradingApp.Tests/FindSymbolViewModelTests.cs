@@ -275,5 +275,52 @@ namespace MyTradingApp.Tests
             // Assert
             Assert.True(fired);
         }
+
+        [Fact]
+        public async Task FindCommandTriesAgainToGetPriceIfFirstAttemptReturnsZero()
+        {
+            // Arrange
+            const string Symbol = "MSFT";
+            const string CompanyName = "Microsoft";
+
+            var findSymbolService = Substitute.For<IFindSymbolService>();
+            var vm = GetVm(findSymbolService);
+
+            vm.Symbol.Code = Symbol;
+            var firstAttempt = true;
+            var model = new FindCommandResultsModel
+            {
+                Details = new List<ContractDetails>
+                {
+                    new ContractDetails { LongName = CompanyName }
+                },
+                PriceHistory = new List<HistoricalDataEventArgs>()
+            };
+
+            findSymbolService.IssueFindSymbolRequestAsync(Arg.Any<Contract>()).Returns(Task.FromResult(model));
+            findSymbolService
+                .When(x => x.IssueFindSymbolRequestAsync(Arg.Any<Contract>()))
+                .Do(x => 
+                {
+                    if (firstAttempt)
+                    {
+                        firstAttempt = false;
+                        model.LatestPrice = 0;
+                        return;
+                    }
+
+                    model.LatestPrice = 10;
+                });
+
+            // Act
+            await vm.FindCommand.ExecuteAsync();
+
+            // Assert
+            var order = vm.OrdersListViewModel.Orders.First();
+            Assert.Equal(Symbol, order.Symbol.Code);
+            Assert.Equal(CompanyName, order.Symbol.Name);
+            Assert.Equal(10, order.Symbol.LatestPrice);
+            await findSymbolService.Received(2).IssueFindSymbolRequestAsync(Arg.Any<Contract>());
+        }
     }
 }

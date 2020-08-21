@@ -1,8 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
-using IBApi;
 using MyTradingApp.Core.Services;
 using MyTradingApp.Core.Utils;
-using MyTradingApp.Domain;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,7 +41,11 @@ namespace MyTradingApp.Core.ViewModels
         public bool IsBusy
         {
             get => _isBusy;
-            private set => Set(ref _isBusy, value);
+            private set
+            {
+                Set(ref _isBusy, value);
+                DispatcherHelper.InvokeOnUiThread(() => FindCommand.RaiseCanExecuteChanged());
+            }
         }
 
         public string FindCommandCaption
@@ -75,12 +77,20 @@ namespace MyTradingApp.Core.ViewModels
             try
             {
                 var contract = Symbol.ToContract();
-                var results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
+                FindCommandResultsModel results = null;
+
+                results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
                 if (results.Details == null)
                 {
                     var message = "This symbol was not found.";
                     Messenger.Default.Send(new NotificationMessage<NotificationType>(NotificationType.Warning, message));
                     return;
+                }
+
+                if (results.LatestPrice <= 0)
+                {
+                    // Try again to get price.  The API can give us a back 0 for some unknown reason
+                    results = await _findSymbolService.IssueFindSymbolRequestAsync(contract).ConfigureAwait(false);
                 }
 
                 var details = results.Details.First();
