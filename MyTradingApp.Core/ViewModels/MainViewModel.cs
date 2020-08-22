@@ -250,6 +250,12 @@ namespace MyTradingApp.Core.ViewModels
                     Label = "Home",
                     ToolTip = "Welcome Home"
                 },
+                new PositionSizerViewModel
+                {
+                    Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Calculator },
+                    Label = "Position Sizer",
+                    ToolTip = "A calculator to size positions correctly"
+                },
                 new AboutViewModel
                 {
                     Icon = new PackIconMaterial() { Kind = PackIconMaterialKind.Help },

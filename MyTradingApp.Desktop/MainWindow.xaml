@@ -54,6 +54,9 @@
             <DataTemplate DataType="{x:Type vms:HomeViewModel}">
                 <views:MainView DataContext="{Binding}" />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vms:PositionSizerViewModel}">
+                <views:PositionSizerView DataContext="{Binding}" />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vms:AboutViewModel}">
                 <views:AboutView DataContext="{Binding}" />
             </DataTemplate>

@@ -1,0 +1,118 @@
+﻿<UserControl
+    x:Class="MyTradingApp.Desktop.Views.PositionSizerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:core="clr-namespace:MyTradingApp.Core.ViewModels;assembly=MyTradingApp.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="350"
+    d:DesignWidth="600"
+    mc:Ignorable="d">
+    <UserControl.DataContext>
+        <core:PositionSizerViewModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <Style TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style TargetType="mahapps:NumericUpDown">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,10" />
+            <Setter Property="Width" Value="100" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="6,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!--  Input  -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0">Risk ($):</Label>
+                <mahapps:NumericUpDown
+                    Grid.Column="1"
+                    DecimalPointCorrection="Number"
+                    Maximum="9999"
+                    Minimum="0"
+                    NumericInputMode="Numbers"
+                    Value="{Binding RiskAmount}" />
+                <Slider
+                    Grid.Column="2"
+                    Margin="20,0"
+                    Maximum="2500"
+                    Minimum="250"
+                    Value="{Binding RiskAmount}" />
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0">Entry Price:</Label>
+                <mahapps:NumericUpDown
+                    Grid.Column="1"
+                    DecimalPointCorrection="Number"
+                    Maximum="999"
+                    Minimum="0"
+                    NumericInputMode="Decimal"
+                    Value="{Binding EntryPrice}" />
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0">Stop Loss:</Label>
+                <mahapps:NumericUpDown
+                    Grid.Column="1"
+                    DecimalPointCorrection="Number"
+                    Maximum="999"
+                    Minimum="0"
+                    NumericInputMode="Decimal"
+                    Value="{Binding StopLoss}" />
+            </Grid>
+        </Grid>
+
+        <!--  Output  -->
+        <Line
+            Margin="0,20"
+            Fill="{StaticResource MahApps.Brushes.Accent}"
+            Stroke="{StaticResource MahApps.Brushes.Accent}"
+            X1="0"
+            X2="10000" />
+
+        <StackPanel
+            Grid.Row="3"
+            Margin="30,0"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal">
+            <Label FontSize="22" FontWeight="Bold">Position Size:</Label>
+            <TextBox
+                Height="40"
+                FontSize="22"
+                FontWeight="Bold"
+                IsReadOnly="True"
+                Text="{Binding Size, Mode=OneWay}" />
+        </StackPanel>
+
+    </StackPanel>
+</UserControl>
