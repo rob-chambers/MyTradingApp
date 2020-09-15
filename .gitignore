@@ -340,5 +340,5 @@ ASALocalRun/
 healthchecksdb
 
 # Hide App Settings
-MyTradingApp.Desktop/appsettings.json
-MyTradingApp.Desktop/appsettings.development.json
+**/appsettings.json
+**/appsettings.Development.json
